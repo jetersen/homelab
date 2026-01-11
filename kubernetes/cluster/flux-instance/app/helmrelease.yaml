@@ -26,7 +26,7 @@ spec:
       sync:
         name: homelab
         kind: GitRepository
-        url: https://github.com/jetersen/homelab
+        url: ssh://git@github.com/jetersen/homelab
         ref: refs/heads/main
         path: kubernetes/flux
         pullSecret: "flux-system"
