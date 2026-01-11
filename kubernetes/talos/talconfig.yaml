@@ -15,7 +15,7 @@ additionalApiServerCertSans:
 clusterPodNets:
   - 100.64.0.0/16
 clusterSvcNets:
-  - 100.65.0.0/24
+  - 100.127.0.0/16
 cniConfig:
   name: none
 patches:
