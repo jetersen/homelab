@@ -28,13 +28,6 @@ patches:
         disabled: true
 nodes:
   - hostname: talos01
-    # extensionServices:
-    #   - name: nut-client
-    #     configFiles:
-    #       - content: MONITOR upsmonHost 1 remote pass password
-    #         mountPath: /usr/local/etc/nut/upsmon.conf
-    #     environment:
-    #       - UPS_NAME=ups
     userVolumes:
       - name: local-path-provisoner
         provisioning:
@@ -72,22 +65,7 @@ nodes:
           officialExtensions:
             - siderolabs/intel-ucode
             - siderolabs/i915
-    # machineFiles:
-    #   - content: |
-    #       TS_AUTHKEY=123456
-    #     permissions: 0o644
-    #     path: /var/etc/tailscale/auth.env
-    #     op: create
-    #   - content: "@./tsauth.env"
-    #     permissions: 0o644
-    #     path: /var/etc/tailscale2/auth.env
-    #     op: create
     installDisk: /dev/nvme0n1
-      # TODO: broken since Talos 1.9 and I need to investigate
-      # name: /sys/block/sda/device/name
-      # busPath: /pci0000:00/0000:00:17.0/ata1/host0/target0:0:0/0:0:0:0
-    # nodeLabels:
-
     nodeAnnotations:
       installerUrl: '{{ .MachineConfig.MachineInstall.InstallImage }}'
     nameservers:
@@ -95,34 +73,3 @@ nodes:
     networkInterfaces:
       - interface: enp1s0
         dhcp: true
-# controlPlane:
-#   patches:
-#     - |-
-#       machine:
-#         kubelet:
-#           extraArgs:
-#             feature-gates: GracefulNodeShutdown=true,MixedProtocolLBService=true
-#             rotate-server-certificates: "true"
-# worker:
-#   ingressFirewall:
-#     defaultAction: block
-#     rules:
-#       - name: apid-ingress
-#         portSelector:
-#           ports:
-#             - 50000
-#           protocol: tcp
-#         ingress:
-#           - subnet: 10.96.0.0/12
-#   patches:
-#     - |-
-#       machine:
-#         kubelet:
-#           extraArgs:
-#             feature-gates: GracefulNodeShutdown=false,MixedProtocolLBService=false
-#             rotate-server-certificates: "true"
-#   schematic:
-#     customization:
-#       systemExtensions:
-#         officialExtensions:
-#           - siderolabs/intel-ucode
