@@ -1,0 +1,40 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/helmrelease-helm-v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: external-dns
+  namespace: external-dns
+spec:
+  interval: 24h
+  chartRef:
+    name: external-dns
+    kind: OCIRepository
+  values:
+    interval: 1440m0s
+    managedRecordTypes:
+      - CNAME
+    policy: upsert-only
+    triggerLoopOnEvent: true
+    txtOwnerId: homelab
+    txtPrefix: "_owner_"
+    annotationFilter: external-dns.alpha.kubernetes.io/exclude notin (true,private)
+    domainFilters:
+      - jetersen.dev
+    env:
+      - name: CF_API_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: cloudflare-api-token-secret
+            key: api-token
+    extraArgs:
+      - --cloudflare-proxied
+    source:
+      - gateway-httproute
+      - gateway-grpcroute
+      - gateway-tlsroute
+      - gateway-tcproute
+      - gateway-udproute
+      - service
+    provider:
+      name: cloudflare

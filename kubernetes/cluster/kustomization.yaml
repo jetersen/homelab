@@ -5,6 +5,7 @@ kind: Kustomization
 resources:
   - cert-manager/flux-ks.yaml
   - cilium/flux-ks.yaml
+  - external-dns/flux-ks.yaml
   - flux-instance/flux-ks.yaml
   - flux-operator/flux-ks.yaml
   - gateway-api/flux-ks.yaml
