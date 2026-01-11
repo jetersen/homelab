@@ -6,3 +6,4 @@ resources:
   - cilium/flux-ks.yaml
   - flux-instance/flux-ks.yaml
   - flux-operator/flux-ks.yaml
+  - gateway-api/flux-ks.yaml
