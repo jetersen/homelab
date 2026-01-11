@@ -7,3 +7,4 @@ resources:
   - home-assistant.yaml
   - monitoring.yaml
   - newt.yaml
+  - reflector.yaml
