@@ -29,6 +29,7 @@ spec:
             key: api-token
     extraArgs:
       - --cloudflare-proxied
+      - --default-targets=public.jetersen.dev
     source:
       - gateway-httproute
       - gateway-grpcroute
