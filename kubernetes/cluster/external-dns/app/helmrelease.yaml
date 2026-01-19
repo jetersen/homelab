@@ -30,7 +30,7 @@ spec:
     extraArgs:
       - --cloudflare-proxied
       - --default-targets=public.jetersen.dev
-    source:
+    sources:
       - gateway-httproute
       - gateway-grpcroute
       - gateway-tlsroute
