@@ -8,7 +8,7 @@ spec:
   hostnames:
     - flux-operator.local.jetersen.dev
   parentRefs:
-    - name: envoy-gateway
+    - name: envoy-proxy
       namespace: kube-system
   rules:
     - backendRefs:
