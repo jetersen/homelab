@@ -27,6 +27,8 @@ metadata:
   name: &app envoy-gateway-config
   namespace: &ns kube-system
 spec:
+  dependsOn:
+    - name: envoy-gateway
   targetNamespace: *ns
   commonMetadata:
     labels:
