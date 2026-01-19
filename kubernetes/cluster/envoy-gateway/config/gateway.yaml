@@ -3,9 +3,9 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
-  name: envoy-gateway
+  name: envoy-proxy
 spec:
-  gatewayClassName: envoy
+  gatewayClassName: envoy-proxy
   infrastructure:
     annotations:
       lbipam.cilium.io/ips: 192.168.1.20
@@ -35,16 +35,16 @@ spec:
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: EnvoyPatchPolicy
 metadata:
-  name: envoy-gateway
+  name: envoy-proxy
 spec:
   targetRef:
     group: gateway.networking.k8s.io
     kind: Gateway
-    name: envoy-gateway
+    name: envoy-proxy
   type: JSONPatch
   jsonPatches:
     - type: type.googleapis.com/envoy.config.listener.v3.Listener
-      name: kube-system/envoy-gateway/https
+      name: kube-system/envoy-proxy/https
       operation:
         op: add
         jsonPath: ..filters[*].typed_config.http_filters[?(@.name=="envoy.filters.http.compressor.zstd")].typed_config
