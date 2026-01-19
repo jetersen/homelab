@@ -6,7 +6,7 @@ metadata:
   name: flux-operator
 spec:
   hostnames:
-    - flux-operator.local.jetersen.dev
+    - flux-operator.lan.jetersen.dev
   parentRefs:
     - name: envoy-proxy
       namespace: kube-system
