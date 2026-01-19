@@ -18,9 +18,11 @@ spec:
     triggerLoopOnEvent: true
     txtOwnerId: homelab
     txtPrefix: "_owner_"
-    annotationFilter: external-dns.alpha.kubernetes.io/exclude notin (true,private)
+    annotationFilter: external-dns.alpha.kubernetes.io/exclude notin (true)
     domainFilters:
       - jetersen.dev
+    excludeDomains:
+      - lan.jetersen.dev
     env:
       - name: CF_API_TOKEN
         valueFrom:
@@ -29,7 +31,6 @@ spec:
             key: api-token
     extraArgs:
       - --cloudflare-proxied
-      - --default-targets=public.jetersen.dev
     sources:
       - gateway-httproute
       - gateway-grpcroute
