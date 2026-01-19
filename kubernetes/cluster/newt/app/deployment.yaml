@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: newt
+  namespace: newt
+  labels:
+    app.kubernetes.io/component: newt
+    app.kubernetes.io/instance: newt
+    app.kubernetes.io/managed-by: Flux
+    app.kubernetes.io/name: newt
+    app.kubernetes.io/version: 1.5.0
+    newt.instance: main
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: newt
+      newt.instance: main
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: newt
+        app.kubernetes.io/instance: newt
+        newt.instance: main
+    spec:
+      containers:
+      - name: newt
+        image: docker.io/fosrl/newt:1.8.1
+        ports:
+        - name: wg
+          containerPort: 51820
+          protocol: UDP
+        - name: tester
+          containerPort: 51821
+          protocol: UDP
+        env:
+        - name: PANGOLIN_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: homelab-newt-site
+              key: PANGOLIN_ENDPOINT
+        - name: NEWT_ID
+          valueFrom:
+            secretKeyRef:
+              name: homelab-newt-site
+              key: NEWT_ID
+        - name: NEWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: homelab-newt-site
+              key: NEWT_SECRET
+        - name: LOG_LEVEL
+          value: INFO
+        - name: HEALTH_FILE
+          value: /tmp/healthy
+        resources:
+          limits:
+            cpu: 200m
+            ephemeral-storage: 256Mi
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            ephemeral-storage: 128Mi
+            memory: 128Mi
+        livenessProbe:
+          exec:
+            command:
+            - test
+            - "-f"
+            - /tmp/healthy
+          initialDelaySeconds: 10
+          timeoutSeconds: 1
+          periodSeconds: 15
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - test
+            - "-f"
+            - /tmp/healthy
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          runAsUser: 0
+          readOnlyRootFilesystem: false
+          allowPrivilegeEscalation: true
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      automountServiceAccountToken: false
+      securityContext: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 3
+  progressDeadlineSeconds: 600
