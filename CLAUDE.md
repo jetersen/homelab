@@ -65,6 +65,9 @@ component/
 - **External DNS**: Syncs HTTPRoutes to Cloudflare
 - **Cert-manager**: Let's Encrypt certificates for jetersen.dev and lan.jetersen.dev
 
+### Cluster Components
+- **Metrics Server**: Cluster resource metrics for kubectl top and HPA (deployed to kube-system)
+
 ## Maintenance
 
 When adding new components to `kubernetes/cluster/` or `kubernetes/apps/`:
