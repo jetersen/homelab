@@ -67,6 +67,31 @@ component/
 
 ### Cluster Components
 - **Metrics Server**: Cluster resource metrics for kubectl top and HPA (deployed to kube-system)
+- **Local Path Provisioner**: Dynamic PV provisioner using local node storage (deployed to kube-system)
+  - Default StorageClass for the cluster
+  - Storage path: `/var/mnt/local-path-provisioner`
+
+### Monitoring Stack
+All monitoring components deploy to the `monitoring` namespace.
+
+- **VictoriaMetrics**: Time-series metrics database (Prometheus-compatible)
+  - 30-day retention, 20Gi storage
+  - Built-in scraping via Prometheus annotations (`prometheus.io/scrape: "true"`)
+  - Query endpoint: `http://victoria-metrics-server:8428`
+
+- **VictoriaLogs**: Log storage backend
+  - 7-day retention, 20Gi storage
+  - Insert endpoint: `http://victoria-logs-server:9428`
+
+- **VictoriaLogs Collector**: DaemonSet collecting container logs
+  - Depends on: victoria-logs
+  - Tolerates all nodes for full cluster coverage
+
+- **Grafana**: Visualization and dashboards
+  - Depends on: victoria-metrics, victoria-logs, victoria-logs-collector
+  - Pre-configured datasources for VictoriaMetrics and VictoriaLogs
+  - Dashboard sidecar enabled (label: `grafana_dashboard: "1"`)
+  - Access: `kubectl port-forward svc/grafana 3000:80 -n monitoring`
 
 ## Maintenance
 
