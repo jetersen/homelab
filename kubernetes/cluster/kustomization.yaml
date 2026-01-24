@@ -10,5 +10,6 @@ resources:
   - flux-instance/flux-ks.yaml
   - flux-operator/flux-ks.yaml
   - gateway-api/flux-ks.yaml
+  - local-path-provisioner/flux-ks.yaml
   - metrics-server/flux-ks.yaml
   - newt/flux-ks.yaml
