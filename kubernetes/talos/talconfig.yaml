@@ -1,6 +1,8 @@
 ---
 clusterName: homelab
+# renovate: depName=siderolabs/talos datasource=github-releases
 talosVersion: v1.11.5
+# renovate: depName=kubernetes/kubernetes datasource=github-releases
 kubernetesVersion: v1.34.1
 endpoint: https://192.168.1.10:6443
 domain: cluster.local

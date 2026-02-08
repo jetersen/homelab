@@ -1,0 +1,28 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  packageRules: [
+    {
+      description: "Auto-merge Grafana + Victoria Metrics/Logs",
+      matchManagers: ["docker"],
+      matchUpdateTypes: ["minor", "patch"],
+      automerge: true,
+      automergeType: "pr",
+      matchPackageNames: [
+        "/grafana/",
+        "/victoria-logs-single/",
+        "/victoria-metrics-single/",
+        "/victoria-logs-collector/",
+      ],
+      ignoreTests: false,
+    },
+    {
+      description: "Auto-merge GitHub Actions",
+      matchManagers: ["github-actions"],
+      automerge: true,
+      automergeType: "branch",
+      matchUpdateTypes: ["minor", "patch", "digest"],
+      minimumReleaseAge: "3 days",
+      ignoreTests: true,
+    },
+  ],
+}
