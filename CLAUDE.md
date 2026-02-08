@@ -54,6 +54,9 @@ component/
 3. Add to `kubernetes/cluster/kustomization.yaml` resources list
 4. For namespaced apps, add namespace to `kubernetes/flux/namespaces/`
 
+### Kustomize Patch Convention
+When patching resources from remote bases (e.g., GitHub URLs), strategic merge patches must reference the resource's **upstream namespace**, not the target namespace. The top-level `namespace` field in the kustomization handles namespace transformation after patches are matched.
+
 ### Secrets Management
 - SOPS encryption with age keys (config in `.sops.yaml`)
 - Encrypted files use `*.sops.yaml` naming
