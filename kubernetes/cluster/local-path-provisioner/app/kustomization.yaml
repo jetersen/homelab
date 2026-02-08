@@ -11,7 +11,7 @@ patches:
       apiVersion: v1
       metadata:
         name: local-path-config
-        namespace: kube-system
+        namespace: local-path-storage
       data:
         config.json: |-
           {
