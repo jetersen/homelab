@@ -25,7 +25,7 @@ spec:
     spec:
       containers:
       - name: newt
-        image: docker.io/fosrl/newt:1.8.1
+        image: docker.io/fosrl/newt:1.9.0
         ports:
         - name: wg
           containerPort: 51820
