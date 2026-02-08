@@ -96,6 +96,15 @@ All monitoring components deploy to the `monitoring` namespace.
   - Dashboard sidecar enabled (label: `grafana_dashboard: "1"`)
   - Access: `kubectl port-forward svc/grafana 3000:80 -n monitoring`
 
+### Dependency Management
+- **Renovate**: Automated dependency update PRs via GitHub-hosted Renovate
+  - Base config shared from `jetersen/.github` repo (`renovate.json`)
+  - Repo config at `.github/renovate.json` with modular overrides in `.renovate/`
+  - Custom regex managers for Talos/Kubernetes versions (`talconfig.yaml`) and Flux distribution version
+  - Built-in managers auto-detect OCIRepository tags, HelmRelease chart versions, and container images
+  - Dependency annotations use `# renovate: depName=<name> datasource=<source>` comments above version fields
+  - Groups: Flux, Talos, Kubernetes, VictoriaMetrics
+
 ## Maintenance
 
 When adding new components to `kubernetes/cluster/` or `kubernetes/apps/`:

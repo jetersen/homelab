@@ -1,0 +1,40 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "github>jetersen/.github",
+    "github>jetersen/homelab//.renovate/autoMerge.json5",
+    "github>jetersen/homelab//.renovate/labels.json5",
+    "github>jetersen/homelab//.renovate/semantic.json5",
+    "github>jetersen/homelab//.renovate/versioning.json5",
+    "github>jetersen/homelab//.renovate/changelogs.json5",
+    "github>jetersen/homelab//.renovate/groups.json5"
+  ],
+  "flux": {
+    "managerFilePatterns": ["/^kubernetes/.+\\.ya?ml$/"]
+  },
+  "helm-values": {
+    "managerFilePatterns": ["/^kubernetes/.+\\.ya?ml$/"]
+  },
+  "kubernetes": {
+    "managerFilePatterns": ["/^kubernetes/.+\\.ya?ml$/"]
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update Talos and Kubernetes versions in talconfig.yaml",
+      "managerFilePatterns": ["/^kubernetes/talos/talconfig\\.ya?ml$/"],
+      "matchStrings": [
+        "# renovate: depName=(?<depName>.*?) datasource=(?<datasource>.*?)\\s+talosVersion: (?<currentValue>.*)",
+        "# renovate: depName=(?<depName>.*?) datasource=(?<datasource>.*?)\\s+kubernetesVersion: (?<currentValue>.*)"
+      ]
+    },
+    {
+      "customType": "regex",
+      "description": "Flux Instance distribution version",
+      "managerFilePatterns": ["/^kubernetes/.+\\.ya?ml$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)\\s+version: (?<currentValue>.*)"
+      ]
+    }
+  ]
+}
