@@ -8,3 +8,4 @@ resources:
   - monitoring.yaml
   - newt.yaml
   - reflector.yaml
+  - technitium.yaml
