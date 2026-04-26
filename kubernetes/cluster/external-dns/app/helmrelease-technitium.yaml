@@ -1,0 +1,70 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/helmrelease-helm-v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: external-dns-technitium
+  namespace: external-dns
+spec:
+  interval: 24h
+  chartRef:
+    name: external-dns
+    kind: OCIRepository
+  values:
+    fullnameOverride: external-dns-technitium
+    interval: 1440m0s
+    managedRecordTypes:
+      - A
+      - AAAA
+    policy: upsert-only
+    triggerLoopOnEvent: true
+    txtOwnerId: homelab-technitium
+    txtPrefix: "_owner_"
+    annotationFilter: technitium.alpha.kubernetes.io/exclude notin (true)
+    domainFilters:
+      - jetersen.dev
+    extraArgs:
+      - --annotation-prefix=technitium.alpha.kubernetes.io/
+    sources:
+      - gateway-httproute
+      - gateway-grpcroute
+      - gateway-tlsroute
+      - gateway-tcproute
+      - gateway-udproute
+      - service
+    provider:
+      name: webhook
+      webhook:
+        image:
+          repository: ghcr.io/djr747/external-dns-technitium-webhook
+          tag: 1.0.6
+        env:
+          - name: TECHNITIUM_URL
+            value: http://technitium.technitium.svc.cluster.local:5380
+          - name: TECHNITIUM_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: technitium-auth
+                key: username
+          - name: TECHNITIUM_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: technitium-auth
+                key: password
+          - name: ZONE
+            value: jetersen.dev
+          - name: DOMAIN_FILTERS
+            value: jetersen.dev
+        resources:
+          requests:
+            cpu: 10m
+            memory: 64Mi
+          limits:
+            memory: 256Mi
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 65532
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: ["ALL"]

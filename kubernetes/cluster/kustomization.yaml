@@ -14,6 +14,7 @@ resources:
   - local-path-provisioner/flux-ks.yaml
   - metrics-server/flux-ks.yaml
   - newt/flux-ks.yaml
+  - technitium/flux-ks.yaml
   - victoria-logs/flux-ks.yaml
   - victoria-logs-collector/flux-ks.yaml
   - victoria-metrics/flux-ks.yaml
