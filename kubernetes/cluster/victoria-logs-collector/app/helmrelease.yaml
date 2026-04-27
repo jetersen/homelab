@@ -11,6 +11,8 @@ spec:
     kind: OCIRepository
     name: victoria-logs-collector
   values:
+    remoteWrite:
+      - url: http://victoria-logs-victoria-logs-single-server.monitoring.svc.cluster.local:9428/insert/jsonline?_stream_fields=stream
     tolerations:
       - operator: Exists
     resources:
