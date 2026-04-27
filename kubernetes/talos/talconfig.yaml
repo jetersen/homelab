@@ -31,7 +31,7 @@ patches:
 nodes:
   - hostname: talos01
     userVolumes:
-      - name: local-path-provisoner
+      - name: local-path-provisioner
         provisioning:
           diskSelector:
             match: disk.transport == "nvme"
