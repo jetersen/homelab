@@ -41,9 +41,17 @@ spec:
               ZIGBEE2MQTT_CONFIG_SERIAL_ADAPTER: zstack
               ZIGBEE2MQTT_CONFIG_FRONTEND_ENABLED: "true"
               ZIGBEE2MQTT_CONFIG_FRONTEND_PORT: "8080"
+              ZIGBEE2MQTT_CONFIG_ADVANCED_CHANNEL: "25"
+              ZIGBEE2MQTT_CONFIG_ADVANCED_TRANSMIT_POWER: "20"
               ZIGBEE2MQTT_CONFIG_ADVANCED_NETWORK_KEY:
                 valueFrom:
                   secretKeyRef: { name: zigbee2mqtt, key: zigbeeNetworkKey }
+              ZIGBEE2MQTT_CONFIG_ADVANCED_PAN_ID:
+                valueFrom:
+                  secretKeyRef: { name: zigbee2mqtt, key: zigbeePanId }
+              ZIGBEE2MQTT_CONFIG_ADVANCED_EXT_PAN_ID:
+                valueFrom:
+                  secretKeyRef: { name: zigbee2mqtt, key: zigbeeExtPanId }
     service:
       app:
         controller: zigbee2mqtt
