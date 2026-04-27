@@ -1,0 +1,39 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/helmrelease-helm-v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: home-assistant
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: home-assistant
+      version: 0.3.56
+      sourceRef:
+        kind: HelmRepository
+        name: pajikos
+  values:
+    controller:
+      type: Deployment
+    deploymentStrategy: Recreate
+    hostNetwork: true
+    hostPort:
+      enabled: true
+    persistence:
+      enabled: true
+      size: 5Gi
+      storageClass: local-path
+    service:
+      port: 8123
+    ingress:
+      enabled: false
+    configuration:
+      enabled: true
+      trusted_proxies:
+        - 10.0.0.0/8
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+        - 127.0.0.0/8
+        - 100.64.0.0/16
+        - 100.65.0.0/16

@@ -1,0 +1,72 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/helmrelease-helm-v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: mosquitto
+spec:
+  interval: 24h
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+    namespace: flux-system
+  values:
+    defaultPodOptions:
+      securityContext:
+        runAsUser: 1883
+        runAsGroup: 1883
+        fsGroup: 1883
+    controllers:
+      mosquitto:
+        containers:
+          app:
+            image:
+              repository: docker.io/library/eclipse-mosquitto
+              tag: 2.0.22
+    service:
+      app:
+        controller: mosquitto
+        type: LoadBalancer
+        externalTrafficPolicy: Local
+        annotations:
+          lbipam.cilium.io/ips: 192.168.1.22
+        ports:
+          mqtt: { port: 1883, protocol: TCP, targetPort: 1883 }
+          websocket: { port: 9001, protocol: TCP, targetPort: 9001 }
+    persistence:
+      config:
+        type: configMap
+        name: mosquitto-config
+        advancedMounts:
+          mosquitto:
+            app:
+              - path: /mosquitto/config
+      data:
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        size: 1Gi
+        storageClass: local-path
+        advancedMounts:
+          mosquitto:
+            app:
+              - path: /mosquitto/data
+      passwd:
+        type: secret
+        name: mqtt-auth
+        advancedMounts:
+          mosquitto:
+            app:
+              - path: /mosquitto/secrets
+                readOnly: true
+    configMaps:
+      config:
+        data:
+          mosquitto.conf: |
+            persistence true
+            persistence_location /mosquitto/data
+            log_dest stdout
+            allow_anonymous true
+            password_file /mosquitto/secrets/passwd
+            listener 1883
+            listener 9001
+            protocol websockets
