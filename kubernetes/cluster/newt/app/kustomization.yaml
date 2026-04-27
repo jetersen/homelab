@@ -6,4 +6,4 @@ metadata:
   name: newt
   namespace: newt
 resources:
-  - deployment.yaml
+  - helmrelease.yaml
