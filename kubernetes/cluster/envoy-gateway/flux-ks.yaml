@@ -4,9 +4,9 @@ apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: &app envoy-gateway
-  namespace: &ns kube-system
+  namespace: flux-system
 spec:
-  targetNamespace: *ns
+  targetNamespace: kube-system
   commonMetadata:
     labels:
       app.kubernetes.io/name: *app
@@ -25,11 +25,11 @@ apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: &app envoy-gateway-config
-  namespace: &ns kube-system
+  namespace: flux-system
 spec:
   dependsOn:
     - name: envoy-gateway
-  targetNamespace: *ns
+  targetNamespace: kube-system
   commonMetadata:
     labels:
       app.kubernetes.io/name: *app
