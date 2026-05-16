@@ -14,6 +14,7 @@ resources:
   - grafana/flux-ks.yaml
   - local-path-provisioner/flux-ks.yaml
   - metrics-server/flux-ks.yaml
+  - tailscale/flux-ks.yaml
   - technitium/flux-ks.yaml
   - victoria-logs/flux-ks.yaml
   - victoria-logs-collector/flux-ks.yaml
