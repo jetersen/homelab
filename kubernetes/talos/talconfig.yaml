@@ -1,9 +1,9 @@
 ---
 clusterName: homelab
 # renovate: depName=siderolabs/talos datasource=github-releases
-talosVersion: v1.11.5
+talosVersion: v1.13.2
 # renovate: depName=kubernetes/kubernetes datasource=github-releases
-kubernetesVersion: v1.34.1
+kubernetesVersion: v1.36.1
 endpoint: https://192.168.1.10:6443
 domain: cluster.local
 allowSchedulingOnMasters: true
@@ -15,19 +15,22 @@ additionalApiServerCertSans:
   - talos01
   - talos01.lan.jetersen.dev
 clusterPodNets:
-  - 100.64.0.0/16
+  - 172.22.0.0/16
 clusterSvcNets:
-  - 100.127.0.0/16
+  - 172.23.0.0/16
 cniConfig:
   name: none
 patches:
   - |-
     machine:
+      install:
+        wipe: true
       env:
         GRPC_GO_LOG_SEVERITY_LEVEL: error
     cluster:
       proxy:
         disabled: true
+  - "@./patch-tailscale-underlay.yaml"
 nodes:
   - hostname: talos01
     userVolumes:
@@ -67,6 +70,7 @@ nodes:
           officialExtensions:
             - siderolabs/intel-ucode
             - siderolabs/i915
+            - siderolabs/tailscale
     installDisk: /dev/nvme0n1
     nodeAnnotations:
       installerUrl: '{{ .MachineConfig.MachineInstall.InstallImage }}'
