@@ -6,6 +6,5 @@ resources:
   - external-dns.yaml
   - home-assistant.yaml
   - monitoring.yaml
-  - newt.yaml
   - reflector.yaml
   - technitium.yaml
