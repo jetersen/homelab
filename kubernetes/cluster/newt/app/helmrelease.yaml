@@ -17,7 +17,7 @@ spec:
           app:
             image:
               repository: docker.io/fosrl/newt
-              tag: 1.9.0
+              tag: 1.12.5
             env:
               LOG_LEVEL: INFO
               HEALTH_FILE: /tmp/healthy
