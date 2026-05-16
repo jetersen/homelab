@@ -12,8 +12,8 @@ set CHART (yq '.spec.url' $SOURCE)
 echo "Waiting for flux-operator to be ready..."
 kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=flux-operator -n flux-system --timeout=300s
 
-# Extract values from HelmRelease and install
-yq -o yaml '.spec.values' $HELMRELEASE | helm install flux-instance $CHART \
+# Extract values from HelmRelease and install/upgrade
+yq -o yaml '.spec.values' $HELMRELEASE | helm upgrade --install flux-instance $CHART \
     --namespace flux-system \
     --version $VERSION \
     -f -
