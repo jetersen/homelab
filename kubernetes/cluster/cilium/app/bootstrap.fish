@@ -6,9 +6,10 @@ set SOURCE $DIR/source.yaml
 
 # Extract version from OCIRepository
 set VERSION (yq '.spec.ref.tag' $SOURCE)
+set CHART (yq '.spec.url' $SOURCE)
 
-# Extract values from HelmRelease and install
-yq -o yaml '.spec.values' $HELMRELEASE | helm install cilium cilium/cilium \
+# Extract values from HelmRelease and install/upgrade
+yq -o yaml '.spec.values' $HELMRELEASE | helm upgrade --install cilium $CHART \
     --namespace kube-system \
     --version $VERSION \
     -f -
