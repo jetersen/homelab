@@ -30,7 +30,6 @@ patches:
     cluster:
       proxy:
         disabled: true
-  - "@./patch-tailscale-underlay.yaml"
 nodes:
   - hostname: talos01
     userVolumes:
@@ -70,7 +69,6 @@ nodes:
           officialExtensions:
             - siderolabs/intel-ucode
             - siderolabs/i915
-            - siderolabs/tailscale
     installDisk: /dev/nvme0n1
     nodeAnnotations:
       installerUrl: '{{ .MachineConfig.MachineInstall.InstallImage }}'
