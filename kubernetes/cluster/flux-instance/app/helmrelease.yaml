@@ -30,3 +30,12 @@ spec:
         ref: refs/heads/main
         path: kubernetes/flux
         interval: 24h
+      kustomize:
+        patches:
+          - target:
+              kind: Service
+              name: webhook-receiver
+            patch: |
+              - op: add
+                path: /spec/clusterIP
+                value: 172.23.196.164
