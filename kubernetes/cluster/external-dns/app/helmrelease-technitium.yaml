@@ -40,7 +40,7 @@ spec:
           tag: 1.0.6
         env:
           - name: TECHNITIUM_URL
-            value: http://technitium.technitium.svc.cluster.local:5380
+            value: http://technitium-app.technitium.svc.cluster.local:5380
           - name: TECHNITIUM_USERNAME
             valueFrom:
               secretKeyRef:
