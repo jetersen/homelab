@@ -27,6 +27,10 @@ patches:
         wipe: true
       env:
         GRPC_GO_LOG_SEVERITY_LEVEL: error
+      kubelet:
+        nodeIP:
+          validSubnets:
+            - 192.168.1.0/24
     cluster:
       proxy:
         disabled: true
