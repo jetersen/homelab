@@ -20,7 +20,7 @@ spec:
               repository: docker.io/technitium/dns-server
               tag: 15.2.0
             env:
-              DNS_SERVER_DOMAIN: dns.lan.jetersen.dev
+              DNS_SERVER_DOMAIN: dns.technitium.lan.jetersen.dev
               DNS_SERVER_ADMIN_PASSWORD_FILE: /run/secrets/admin/password
               DNS_SERVER_WEB_SERVICE_HTTP_PORT: "5380"
               DNS_SERVER_WEB_SERVICE_HTTPS_PORT: "53443"
