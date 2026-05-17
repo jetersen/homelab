@@ -23,6 +23,7 @@ spec:
               DNS_SERVER_DOMAIN: dns.lan.jetersen.dev
               DNS_SERVER_ADMIN_PASSWORD_FILE: /run/secrets/admin/password
               DNS_SERVER_WEB_SERVICE_HTTP_PORT: "5380"
+              DNS_SERVER_WEB_SERVICE_HTTPS_PORT: "53443"
               DNS_SERVER_WEB_SERVICE_ENABLE_HTTPS: "false"
               DNS_SERVER_WEB_SERVICE_HTTP_TO_TLS_REDIRECT: "false"
               DNS_SERVER_RECURSION: AllowOnlyForPrivateNetworks
@@ -69,6 +70,7 @@ spec:
         ports:
           dns-tcp: { port: 53, protocol: TCP, targetPort: 53 }
           dns-udp: { port: 53, protocol: UDP, targetPort: 53 }
+          https-cluster: { port: 53443, protocol: TCP, targetPort: 53443 }
       app:
         controller: technitium
         ports:
