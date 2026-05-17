@@ -30,6 +30,7 @@ spec:
         externalTrafficPolicy: Local
         annotations:
           lbipam.cilium.io/ips: 192.168.1.22
+          technitium.alpha.kubernetes.io/hostname: mqtt.jetersen.dev
         ports:
           mqtt: { port: 1883, protocol: TCP, targetPort: 1883 }
           websocket: { port: 9001, protocol: TCP, targetPort: 9001 }
