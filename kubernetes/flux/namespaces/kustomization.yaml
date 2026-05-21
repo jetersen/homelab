@@ -6,6 +6,7 @@ resources:
   - external-dns.yaml
   - home-assistant.yaml
   - monitoring.yaml
+  - openspeedtest.yaml
   - reflector.yaml
   - tailscale.yaml
   - technitium.yaml
