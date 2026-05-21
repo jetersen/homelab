@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openspeedtest
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: openspeedtest
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: openspeedtest
+    spec:
+      containers:
+        - name: openspeedtest
+          image: openspeedtest/open-speed-test:v2.0.0
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
