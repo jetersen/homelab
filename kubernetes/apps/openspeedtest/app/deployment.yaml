@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: openspeedtest
-          image: openspeedtest/latest:v2.0.0
+          image: openspeedtest/latest:v2.0.6
           ports:
             - name: http
               containerPort: 3000
