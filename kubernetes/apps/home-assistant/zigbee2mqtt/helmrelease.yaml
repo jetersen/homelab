@@ -18,7 +18,7 @@ spec:
           app:
             image:
               repository: docker.io/koenkk/zigbee2mqtt
-              tag: 2.6.3
+              tag: 2.10.1
             env:
               ZIGBEE2MQTT_DATA: /data
               ZIGBEE2MQTT_CONFIG_HOMEASSISTANT_ENABLED: "true"
