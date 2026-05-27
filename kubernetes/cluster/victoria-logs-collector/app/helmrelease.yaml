@@ -15,6 +15,12 @@ spec:
       - url: http://victoria-logs-single-server.monitoring.svc.cluster.local:9428
         format: native
         maxDiskUsagePerURL: 2GiB
+    msgField:
+      - message
+      - msg
+      - log
+      - x-envoy-origin-path
+      - :authority
     tolerations:
       - operator: Exists
     resources:
