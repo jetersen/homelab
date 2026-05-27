@@ -11,7 +11,7 @@ spec:
     labels:
       app.kubernetes.io/name: *app
   dependsOn:
-    - name: victoria-metrics
+    - name: victoria-metrics-single
     - name: victoria-logs
     - name: victoria-logs-collector
   interval: 24h

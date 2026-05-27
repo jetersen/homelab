@@ -3,10 +3,10 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: victoria-metrics
+  name: victoria-metrics-single
 spec:
   interval: 24h
-  releaseName: victoria-metrics
+  releaseName: victoria-metrics-single
   chartRef:
     kind: OCIRepository
     name: victoria-metrics-single
