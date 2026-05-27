@@ -12,7 +12,9 @@ spec:
     name: victoria-logs-collector
   values:
     remoteWrite:
-      - url: http://victoria-logs-victoria-logs-single-server.monitoring.svc.cluster.local:9428/insert/jsonline?_stream_fields=stream
+      - url: http://victoria-logs-single-server.monitoring.svc.cluster.local:9428
+        format: native
+        maxDiskUsagePerURL: 2GiB
     tolerations:
       - operator: Exists
     resources:
