@@ -42,7 +42,7 @@ spec:
             access: proxy
           - name: VictoriaLogs
             type: victoriametrics-logs-datasource
-            url: http://victoria-logs-server:9428
+            url: http://victoria-logs-single-server:9428
             access: proxy
     sidecar:
       dashboards:

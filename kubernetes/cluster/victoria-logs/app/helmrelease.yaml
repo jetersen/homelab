@@ -6,7 +6,7 @@ metadata:
   name: victoria-logs
 spec:
   interval: 24h
-  releaseName: victoria-logs
+  releaseName: victoria-logs-single
   chartRef:
     kind: OCIRepository
     name: victoria-logs-single
