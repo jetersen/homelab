@@ -15,6 +15,25 @@ spec:
         kind: HelmRepository
         name: grafana
   values:
+    envFromSecret: grafana-github-oauth
+    grafana.ini:
+      server:
+        root_url: https://grafana.jetersen.dev
+      auth:
+        disable_login_form: true
+        oauth_auto_login: false
+      auth.github:
+        enabled: true
+        allow_sign_up: true
+        allow_device_flow: false
+        client_id: $__env{GF_AUTH_GITHUB_CLIENT_ID}
+        client_secret: $__env{GF_AUTH_GITHUB_CLIENT_SECRET}
+        scopes: user:email,read:org
+        auth_url: https://github.com/login/oauth/authorize
+        token_url: https://github.com/login/oauth/access_token
+        api_url: https://api.github.com/user
+        allowed_organizations: jetersen-cloud
+        role_attribute_path: "[login=='jetersen'][0] && 'Admin' || 'Viewer'"
     # Local-path/Talos can reject recursive chown on existing data dirs.
     # Rely on pod fsGroup instead of the chart's init-chown-data container.
     initChownData:
