@@ -5,10 +5,6 @@ kind: OCIRepository
 metadata:
   name: reflector
 spec:
-  interval: 24h
-  layerSelector:
-    mediaType: application/vnd.cncf.helm.chart.content.v1.tar+gzip
-    operation: copy
   ref:
     tag: 10.0.46
   url: oci://ghcr.io/emberstack/helm-charts/reflector

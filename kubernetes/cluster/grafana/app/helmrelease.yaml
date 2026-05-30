@@ -5,7 +5,6 @@ kind: HelmRelease
 metadata:
   name: grafana
 spec:
-  interval: 24h
   releaseName: grafana
   chartRef:
     kind: OCIRepository

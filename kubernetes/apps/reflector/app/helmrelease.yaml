@@ -4,7 +4,6 @@ metadata:
   name: reflector
   namespace: reflector-system
 spec:
-  interval: 24h
   releaseName: reflector
   chartRef:
     kind: OCIRepository

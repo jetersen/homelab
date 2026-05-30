@@ -21,16 +21,15 @@ kind: Kustomization
 metadata:
   name: &app gateway-api-crd
   namespace: flux-system
+  labels:
+    homelab.jetersen.dev/flux-defaults: enabled
 spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: *app
-  prune: true
   sourceRef:
     kind: GitRepository
     name: gateway-api-crd
     namespace: flux-system
   wait: true
-  interval: 24h
   retryInterval: 1m
-  timeout: 5m

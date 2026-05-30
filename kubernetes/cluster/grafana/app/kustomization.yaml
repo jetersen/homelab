@@ -4,3 +4,6 @@ resources:
   - helmrelease.yaml
   - httproute.yaml
   - source.yaml
+components:
+  - ../../../components/helmrelease-defaults
+  - ../../../components/oci-source-defaults

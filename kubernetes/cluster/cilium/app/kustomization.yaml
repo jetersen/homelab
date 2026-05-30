@@ -6,3 +6,6 @@ resources:
   - helmrelease.yaml
   - l2-pool.yaml
   - source.yaml
+components:
+  - ../../../components/helmrelease-defaults
+  - ../../../components/oci-source-defaults

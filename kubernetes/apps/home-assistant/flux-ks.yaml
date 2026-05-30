@@ -5,6 +5,10 @@ kind: Kustomization
 metadata:
   name: home-assistant
   namespace: home-assistant
+  labels:
+    homelab.jetersen.dev/flux-defaults: enabled
+    homelab.jetersen.dev/flux-homelab-source: enabled
+    homelab.jetersen.dev/flux-wait: disabled
 spec:
   targetNamespace: home-assistant
   commonMetadata:
@@ -12,15 +16,7 @@ spec:
       app.kubernetes.io/name: home-assistant
   dependsOn:
     - name: mosquitto
-  interval: 24h
-  timeout: 5m
   path: ./kubernetes/apps/home-assistant/home-assistant
-  prune: true
-  sourceRef:
-    kind: GitRepository
-    name: homelab
-    namespace: flux-system
-  wait: false
 ---
 # yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
 apiVersion: kustomize.toolkit.fluxcd.io/v1
@@ -28,20 +24,16 @@ kind: Kustomization
 metadata:
   name: mosquitto
   namespace: home-assistant
+  labels:
+    homelab.jetersen.dev/flux-defaults: enabled
+    homelab.jetersen.dev/flux-homelab-source: enabled
+    homelab.jetersen.dev/flux-wait: disabled
 spec:
   targetNamespace: home-assistant
   commonMetadata:
     labels:
       app.kubernetes.io/name: mosquitto
-  interval: 24h
-  timeout: 5m
   path: ./kubernetes/apps/home-assistant/mosquitto
-  prune: true
-  sourceRef:
-    kind: GitRepository
-    name: homelab
-    namespace: flux-system
-  wait: false
 ---
 # yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
 apiVersion: kustomize.toolkit.fluxcd.io/v1
@@ -49,6 +41,10 @@ kind: Kustomization
 metadata:
   name: zigbee2mqtt
   namespace: home-assistant
+  labels:
+    homelab.jetersen.dev/flux-defaults: enabled
+    homelab.jetersen.dev/flux-homelab-source: enabled
+    homelab.jetersen.dev/flux-wait: disabled
 spec:
   targetNamespace: home-assistant
   commonMetadata:
@@ -56,12 +52,4 @@ spec:
       app.kubernetes.io/name: zigbee2mqtt
   dependsOn:
     - name: mosquitto
-  interval: 24h
-  timeout: 5m
   path: ./kubernetes/apps/home-assistant/zigbee2mqtt
-  prune: true
-  sourceRef:
-    kind: GitRepository
-    name: homelab
-    namespace: flux-system
-  wait: false

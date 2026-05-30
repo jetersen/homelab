@@ -5,17 +5,15 @@ kind: Kustomization
 metadata:
   name: &app flux-instance
   namespace: &ns flux-system
+  labels:
+    homelab.jetersen.dev/flux-defaults: enabled
+    homelab.jetersen.dev/flux-homelab-source: enabled
 spec:
   path: ./kubernetes/cluster/flux-instance/app
   targetNamespace: *ns
   commonMetadata:
     labels:
       app.kubernetes.io/name: *app
-  prune: true
-  sourceRef:
-    kind: GitRepository
-    name: homelab
-    namespace: flux-system
   decryption:
     provider: sops
     secretRef:
@@ -25,6 +23,4 @@ spec:
       - kind: ConfigMap
         name: cluster-config
   wait: true
-  interval: 24h
   retryInterval: 1m
-  timeout: 5m

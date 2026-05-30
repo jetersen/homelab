@@ -5,5 +5,4 @@ kind: HelmRepository
 metadata:
   name: pajikos
 spec:
-  interval: 24h
   url: https://pajikos.github.io/home-assistant-helm-chart/

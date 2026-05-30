@@ -1,0 +1,22 @@
+---
+# yaml-language-server: $schema=https://www.schemastore.org/kustomization.json
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+patches:
+  - target:
+      group: kustomize.toolkit.fluxcd.io
+      version: v1
+      kind: Kustomization
+      labelSelector: homelab.jetersen.dev/flux-defaults=enabled
+    patch: |-
+      apiVersion: kustomize.toolkit.fluxcd.io/v1
+      kind: Kustomization
+      metadata:
+        name: not-used
+      spec:
+        interval: 24h
+        timeout: 5m
+        prune: true
+        deletionPolicy: WaitForTermination
+        decryption:
+          provider: sops
