@@ -11,6 +11,7 @@ spec:
   interval: 24h
   releaseName: reloader
   values:
+    fullnameOverride: reloader
     reloader:
       deployment:
         replicas: 1
