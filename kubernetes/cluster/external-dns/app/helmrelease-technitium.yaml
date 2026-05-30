@@ -6,7 +6,6 @@ metadata:
   name: external-dns-technitium
   namespace: external-dns
 spec:
-  interval: 24h
   chartRef:
     name: external-dns
     kind: OCIRepository

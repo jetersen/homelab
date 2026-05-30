@@ -6,3 +6,6 @@ resources:
   - helmrelease.yaml
   - helmrelease-technitium.yaml
   - source.yaml
+components:
+  - ../../../components/helmrelease-defaults
+  - ../../../components/oci-source-defaults

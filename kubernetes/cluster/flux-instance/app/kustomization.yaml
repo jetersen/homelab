@@ -11,3 +11,6 @@ resources:
   - receiver.yaml
   - tailscale-ingress.yaml
   - source.yaml
+components:
+  - ../../../components/helmrelease-defaults
+  - ../../../components/oci-source-defaults

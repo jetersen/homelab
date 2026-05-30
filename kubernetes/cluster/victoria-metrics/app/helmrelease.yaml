@@ -5,7 +5,6 @@ kind: HelmRelease
 metadata:
   name: victoria-metrics-single
 spec:
-  interval: 24h
   releaseName: victoria-metrics-single
   chartRef:
     kind: OCIRepository

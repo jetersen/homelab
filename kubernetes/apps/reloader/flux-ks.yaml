@@ -5,16 +5,13 @@ kind: Kustomization
 metadata:
   name: &app reloader
   namespace: &ns kube-system
+  labels:
+    homelab.jetersen.dev/flux-defaults: enabled
+    homelab.jetersen.dev/flux-homelab-source: enabled
+    homelab.jetersen.dev/flux-wait: disabled
 spec:
   targetNamespace: *ns
   commonMetadata:
     labels:
       app.kubernetes.io/name: *app
-  interval: 24h
-  timeout: 5m
   path: ./kubernetes/apps/reloader/app
-  prune: true
-  sourceRef:
-    kind: GitRepository
-    name: homelab
-    namespace: flux-system

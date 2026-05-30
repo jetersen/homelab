@@ -5,7 +5,6 @@ kind: HelmRelease
 metadata:
   name: zigbee2mqtt
 spec:
-  interval: 24h
   chartRef:
     kind: OCIRepository
     name: app-template

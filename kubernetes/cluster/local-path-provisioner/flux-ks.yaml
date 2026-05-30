@@ -5,17 +5,13 @@ kind: Kustomization
 metadata:
   name: &app local-path-provisioner
   namespace: flux-system
+  labels:
+    homelab.jetersen.dev/flux-defaults: enabled
+    homelab.jetersen.dev/flux-homelab-source: enabled
+    homelab.jetersen.dev/flux-wait: disabled
 spec:
   targetNamespace: kube-system
   commonMetadata:
     labels:
       app.kubernetes.io/name: *app
-  interval: 24h
-  timeout: 5m
   path: ./kubernetes/cluster/local-path-provisioner/app
-  prune: true
-  sourceRef:
-    kind: GitRepository
-    name: homelab
-    namespace: flux-system
-  wait: false

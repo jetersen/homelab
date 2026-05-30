@@ -5,7 +5,6 @@ kind: HelmRelease
 metadata:
   name: tailscale-operator
 spec:
-  interval: 24h
   releaseName: tailscale-operator
   chart:
     spec:

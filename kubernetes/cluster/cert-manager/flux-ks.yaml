@@ -5,20 +5,16 @@ kind: Kustomization
 metadata:
   name: &app cert-manager
   namespace: flux-system
+  labels:
+    homelab.jetersen.dev/flux-defaults: enabled
+    homelab.jetersen.dev/flux-homelab-source: enabled
+    homelab.jetersen.dev/flux-wait: disabled
 spec:
   targetNamespace: *app
   commonMetadata:
     labels:
       app.kubernetes.io/name: *app
-  interval: 24h
-  timeout: 5m
   path: ./kubernetes/cluster/cert-manager/app
-  prune: true
-  sourceRef:
-    kind: GitRepository
-    name: homelab
-    namespace: flux-system
-  wait: false
 ---
 # yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
 apiVersion: kustomize.toolkit.fluxcd.io/v1
@@ -26,6 +22,10 @@ kind: Kustomization
 metadata:
   name: cert-manager-issuers
   namespace: flux-system
+  labels:
+    homelab.jetersen.dev/flux-defaults: enabled
+    homelab.jetersen.dev/flux-homelab-source: enabled
+    homelab.jetersen.dev/flux-wait: disabled
 spec:
   dependsOn:
     - name: cert-manager
@@ -33,15 +33,7 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: cert-manager-issuers
-  interval: 24h
-  timeout: 5m
   path: ./kubernetes/cluster/cert-manager/issuers
-  prune: true
-  sourceRef:
-    kind: GitRepository
-    name: homelab
-    namespace: flux-system
-  wait: false
 ---
 # yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
 apiVersion: kustomize.toolkit.fluxcd.io/v1
@@ -49,6 +41,10 @@ kind: Kustomization
 metadata:
   name: cert-manager-certificates
   namespace: flux-system
+  labels:
+    homelab.jetersen.dev/flux-defaults: enabled
+    homelab.jetersen.dev/flux-homelab-source: enabled
+    homelab.jetersen.dev/flux-wait: disabled
 spec:
   dependsOn:
     - name: cert-manager-issuers
@@ -56,12 +52,4 @@ spec:
   commonMetadata:
     labels:
       app.kubernetes.io/name: cert-manager-certificates
-  interval: 24h
-  timeout: 5m
   path: ./kubernetes/cluster/cert-manager/certificates
-  prune: true
-  sourceRef:
-    kind: GitRepository
-    name: homelab
-    namespace: flux-system
-  wait: false

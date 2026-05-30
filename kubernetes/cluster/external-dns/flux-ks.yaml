@@ -5,17 +5,13 @@ kind: Kustomization
 metadata:
   name: &app external-dns
   namespace: flux-system
+  labels:
+    homelab.jetersen.dev/flux-defaults: enabled
+    homelab.jetersen.dev/flux-homelab-source: enabled
+    homelab.jetersen.dev/flux-wait: disabled
 spec:
   targetNamespace: *app
   commonMetadata:
     labels:
       app.kubernetes.io/name: *app
-  interval: 24h
-  timeout: 5m
   path: ./kubernetes/cluster/external-dns/app
-  prune: true
-  sourceRef:
-    kind: GitRepository
-    name: homelab
-    namespace: flux-system
-  wait: false

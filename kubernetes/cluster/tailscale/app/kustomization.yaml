@@ -6,3 +6,6 @@ resources:
   - helmrelease.yaml
   - source.yaml
   - connector.yaml
+components:
+  - ../../../components/helmrelease-defaults
+  - ../../../components/helm-source-defaults

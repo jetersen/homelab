@@ -19,3 +19,7 @@ resources:
   - victoria-logs/flux-ks.yaml
   - victoria-logs-collector/flux-ks.yaml
   - victoria-metrics/flux-ks.yaml
+components:
+  - ../components/flux-kustomization-defaults
+  - ../components/flux-homelab-source-defaults
+  - ../components/flux-wait-defaults

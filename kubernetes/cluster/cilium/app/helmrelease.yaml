@@ -6,7 +6,6 @@ metadata:
   name: cilium
   namespace: kube-system
 spec:
-  interval: 24h
   chartRef:
     name: cilium
     kind: OCIRepository

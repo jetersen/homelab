@@ -5,6 +5,10 @@ kind: Kustomization
 metadata:
   name: &app grafana
   namespace: flux-system
+  labels:
+    homelab.jetersen.dev/flux-defaults: enabled
+    homelab.jetersen.dev/flux-homelab-source: enabled
+    homelab.jetersen.dev/flux-wait: disabled
 spec:
   targetNamespace: monitoring
   commonMetadata:
@@ -14,12 +18,4 @@ spec:
     - name: victoria-metrics-single
     - name: victoria-logs
     - name: victoria-logs-collector
-  interval: 24h
-  timeout: 5m
   path: ./kubernetes/cluster/grafana/app
-  prune: true
-  sourceRef:
-    kind: GitRepository
-    name: homelab
-    namespace: flux-system
-  wait: false

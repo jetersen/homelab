@@ -5,7 +5,6 @@ kind: HelmRelease
 metadata:
   name: metrics-server
 spec:
-  interval: 24h
   releaseName: metrics-server
   chartRef:
     kind: OCIRepository
