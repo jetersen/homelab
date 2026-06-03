@@ -39,7 +39,7 @@ spec:
         readOnly: true
     configuration:
       enabled: true
-      forceInit: false
+      forceInit: true
       trusted_proxies:
         - 10.0.0.0/8
         - 172.16.0.0/12
@@ -48,7 +48,6 @@ spec:
         - 100.64.0.0/10
         - 100.65.0.0/16
       templateConfig: |-
-        # Loads default set of integrations. Do not remove.
         default_config:
 
         http:
@@ -58,7 +57,6 @@ spec:
             - {{ . }}
             {{- end }}
 
-        # Load frontend themes from the themes folder
         frontend:
           themes: !include_dir_merge_named themes
 
@@ -66,11 +64,6 @@ spec:
         script: !include scripts.yaml
         scene: !include scenes.yaml
 
-        # UniFi sends WOL from the gateway/IoT side. HA direct directed-broadcast WOL does not cross VLANs reliably.
-        # Required secrets.yaml keys:
-        #   unifi_wol_url: https://<unifi-host>/proxy/network/api/s/default/cmd/devmgr
-        #   unifi_token: <UniFi API token>
-        #   tv_mac: <device-mac>
         rest_command:
           unifi_wake_on_lan:
             url: !secret unifi_wol_url
