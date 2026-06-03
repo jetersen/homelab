@@ -30,7 +30,7 @@ spec:
       external: true
     configuration:
       enabled: true
-      forceInit: true
+      forceInit: false
       trusted_proxies:
         - 10.0.0.0/8
         - 172.16.0.0/12
