@@ -79,4 +79,4 @@ spec:
             headers:
               X-API-KEY: !secret unifi_token
               Content-Type: application/json
-            payload: '{"cmd":"wake-on-lan","mac":"{{ mac }}"}'
+            payload: '{"cmd":"wake-on-lan","mac":"{{ "{{ mac }}" }}"}'
