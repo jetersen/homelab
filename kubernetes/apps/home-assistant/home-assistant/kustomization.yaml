@@ -5,6 +5,7 @@ kind: Kustomization
 resources:
   - helmrelease.yaml
   - httproute.yaml
+  - secrets.sops.yaml
   - source.yaml
 components:
   - ../../../components/helmrelease-defaults

@@ -1,1 +1,11 @@
 *.decrypted~*
+node_modules/
+
+# Local environment values managed by Varlock
+.env
+.env.*
+!.env.schema
+!.env.example
+
+__pycache__/
+*.pyc
