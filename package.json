@@ -1,0 +1,26 @@
+{
+  "name": "homelab",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "env:load": "varlock load --agent",
+    "env:run": "varlock run --"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jetersen/homelab.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/jetersen/homelab/issues"
+  },
+  "homepage": "https://github.com/jetersen/homelab#readme",
+  "devDependencies": {
+    "@varlock/proton-pass-plugin": "^1.0.0",
+    "varlock": "^1.3.0"
+  }
+}
