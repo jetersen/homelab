@@ -3,24 +3,40 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: victoria-metrics-single
+  name: victoria-metrics-k8s-stack
 spec:
-  releaseName: victoria-metrics-single
+  releaseName: victoria-metrics-k8s-stack
   chartRef:
     kind: OCIRepository
-    name: victoria-metrics-single
+    name: victoria-metrics-k8s-stack
   values:
-    server:
-      retentionPeriod: 30d
-      persistentVolume:
-        enabled: true
-        size: 20Gi
-      resources:
-        requests:
-          cpu: 50m
-          memory: 256Mi
-        limits:
-          cpu: 500m
-          memory: 1Gi
-      scrape:
-        enabled: true
+    grafana:
+      enabled: false
+    defaultDashboards:
+      enabled: true
+      labels:
+        grafana_dashboard: "1"
+    vmsingle:
+      enabled: true
+      spec:
+        retentionPeriod: 30d
+        storage:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 20Gi
+        resources:
+          requests:
+            cpu: 50m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 1Gi
+    vmagent:
+      enabled: true
+      spec:
+        selectAllByDefault: true
+        scrapeInterval: 20s
+    victoria-metrics-operator:
+      enabled: true
