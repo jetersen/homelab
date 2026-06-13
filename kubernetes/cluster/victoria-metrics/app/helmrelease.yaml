@@ -5,17 +5,16 @@ kind: HelmRelease
 metadata:
   name: victoria-metrics-k8s-stack
 spec:
-  releaseName: victoria-metrics-k8s-stack
+  releaseName: vm
   chartRef:
     kind: OCIRepository
     name: victoria-metrics-k8s-stack
   values:
+    fullnameOverride: vm
     grafana:
       enabled: false
     defaultDashboards:
       enabled: true
-      labels:
-        grafana_dashboard: "1"
     vmsingle:
       enabled: true
       spec:
