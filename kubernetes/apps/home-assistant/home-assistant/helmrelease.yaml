@@ -17,6 +17,15 @@ spec:
     controllers:
       home-assistant:
         strategy: Recreate
+        initContainers:
+          init-config:
+            image:
+              repository: docker.io/library/busybox
+              tag: 1.37.0
+            command:
+              - /bin/sh
+              - -c
+              - touch /config/automations.yaml /config/scripts.yaml /config/scenes.yaml
         containers:
           app:
             nameOverride: home-assistant
@@ -66,8 +75,11 @@ spec:
         size: 5Gi
         storageClass: local-path
         forceRename: home-assistant-pvc
+        retain: true
         advancedMounts:
           home-assistant:
+            init-config:
+              - path: /config
             app:
               - path: /config
       configuration:
