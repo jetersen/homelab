@@ -17,15 +17,6 @@ spec:
     controllers:
       home-assistant:
         strategy: Recreate
-        initContainers:
-          init-config:
-            image:
-              repository: docker.io/library/busybox
-              tag: 1.37.0
-            command:
-              - /bin/sh
-              - -c
-              - touch /config/automations.yaml /config/scripts.yaml /config/scenes.yaml
         containers:
           app:
             nameOverride: home-assistant
@@ -78,58 +69,5 @@ spec:
         retain: true
         advancedMounts:
           home-assistant:
-            init-config:
-              - path: /config
             app:
               - path: /config
-      configuration:
-        type: configMap
-        name: home-assistant-configuration
-        advancedMounts:
-          home-assistant:
-            app:
-              - path: /config/configuration.yaml
-                subPath: configuration.yaml
-                readOnly: true
-      secrets:
-        type: secret
-        name: home-assistant-secrets
-        advancedMounts:
-          home-assistant:
-            app:
-              - path: /config/secrets.yaml
-                subPath: secrets.yaml
-                readOnly: true
-    configMaps:
-      configuration:
-        forceRename: home-assistant-configuration
-        data:
-          configuration.yaml: |-
-            default_config:
-
-            http:
-              use_x_forwarded_for: true
-              trusted_proxies:
-                - 10.0.0.0/8
-                - 172.16.0.0/12
-                - 192.168.0.0/16
-                - 127.0.0.0/8
-                - 100.64.0.0/10
-                - 100.65.0.0/16
-
-            frontend:
-              themes: !include_dir_merge_named themes
-
-            automation: !include automations.yaml
-            script: !include scripts.yaml
-            scene: !include scenes.yaml
-
-            rest_command:
-              unifi_wake_on_lan:
-                url: !secret unifi_wol_url
-                method: POST
-                verify_ssl: false
-                headers:
-                  X-API-KEY: !secret unifi_token
-                  Content-Type: application/json
-                payload: '{"cmd":"wake-on-lan","mac":"{{ "{{ mac }}" }}"}'
