@@ -5,71 +5,119 @@ kind: HelmRelease
 metadata:
   name: home-assistant
 spec:
-  chart:
-    spec:
-      chart: home-assistant
-      version: 0.3.61
-      sourceRef:
-        kind: HelmRepository
-        name: pajikos
+  upgrade:
+    force: true
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+    namespace: flux-system
   values:
-    controller:
-      type: Deployment
-    deploymentStrategy: Recreate
-    hostNetwork: true
-    hostPort:
-      enabled: true
-    persistence:
-      enabled: true
-      size: 5Gi
-      storageClass: local-path
+    defaultPodOptions:
+      hostNetwork: true
+    controllers:
+      home-assistant:
+        strategy: Recreate
+        containers:
+          app:
+            nameOverride: home-assistant
+            image:
+              repository: ghcr.io/home-assistant/home-assistant
+              tag: 2026.5.4
+              pullPolicy: IfNotPresent
+            ports:
+              - name: http
+                containerPort: 8123
+                hostPort: 8123
+                protocol: TCP
+            probes:
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: http
+                    scheme: HTTP
+                  periodSeconds: 20
+                  timeoutSeconds: 2
+                  failureThreshold: 3
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /
+                    port: http
+                    scheme: HTTP
+                  periodSeconds: 10
+                  timeoutSeconds: 1
+                  failureThreshold: 3
     service:
-      port: 8123
-    ingress:
-      enabled: false
-      external: true
-    additionalVolumes:
-      - name: home-assistant-secrets
-        secret:
-          secretName: home-assistant-secrets
-    additionalMounts:
-      - name: home-assistant-secrets
-        mountPath: /config/secrets.yaml
-        subPath: secrets.yaml
-        readOnly: true
-    configuration:
-      enabled: true
-      forceInit: true
-      trusted_proxies:
-        - 10.0.0.0/8
-        - 172.16.0.0/12
-        - 192.168.0.0/16
-        - 127.0.0.0/8
-        - 100.64.0.0/10
-        - 100.65.0.0/16
-      templateConfig: |-
-        default_config:
+      app:
+        controller: home-assistant
+        ports:
+          http:
+            port: 8123
+            targetPort: 8123
+    persistence:
+      config:
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        size: 5Gi
+        storageClass: local-path
+        forceRename: home-assistant-pvc
+        advancedMounts:
+          home-assistant:
+            app:
+              - path: /config
+      configuration:
+        type: configMap
+        name: home-assistant-configuration
+        advancedMounts:
+          home-assistant:
+            app:
+              - path: /config/configuration.yaml
+                subPath: configuration.yaml
+                readOnly: true
+      secrets:
+        type: secret
+        name: home-assistant-secrets
+        advancedMounts:
+          home-assistant:
+            app:
+              - path: /config/secrets.yaml
+                subPath: secrets.yaml
+                readOnly: true
+    configMaps:
+      configuration:
+        forceRename: home-assistant-configuration
+        data:
+          configuration.yaml: |-
+            default_config:
 
-        http:
-          use_x_forwarded_for: true
-          trusted_proxies:
-            {{- range .Values.configuration.trusted_proxies }}
-            - {{ . }}
-            {{- end }}
+            http:
+              use_x_forwarded_for: true
+              trusted_proxies:
+                - 10.0.0.0/8
+                - 172.16.0.0/12
+                - 192.168.0.0/16
+                - 127.0.0.0/8
+                - 100.64.0.0/10
+                - 100.65.0.0/16
 
-        frontend:
-          themes: !include_dir_merge_named themes
+            frontend:
+              themes: !include_dir_merge_named themes
 
-        automation: !include automations.yaml
-        script: !include scripts.yaml
-        scene: !include scenes.yaml
+            automation: !include automations.yaml
+            script: !include scripts.yaml
+            scene: !include scenes.yaml
 
-        rest_command:
-          unifi_wake_on_lan:
-            url: !secret unifi_wol_url
-            method: POST
-            verify_ssl: false
-            headers:
-              X-API-KEY: !secret unifi_token
-              Content-Type: application/json
-            payload: '{"cmd":"wake-on-lan","mac":"{{ "{{ mac }}" }}"}'
+            rest_command:
+              unifi_wake_on_lan:
+                url: !secret unifi_wol_url
+                method: POST
+                verify_ssl: false
+                headers:
+                  X-API-KEY: !secret unifi_token
+                  Content-Type: application/json
+                payload: '{"cmd":"wake-on-lan","mac":"{{ "{{ mac }}" }}"}'

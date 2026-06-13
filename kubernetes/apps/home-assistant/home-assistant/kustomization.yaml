@@ -6,7 +6,5 @@ resources:
   - helmrelease.yaml
   - httproute.yaml
   - secrets.sops.yaml
-  - source.yaml
 components:
   - ../../../components/helmrelease-defaults
-  - ../../../components/helm-source-defaults

@@ -8,4 +8,4 @@ resources:
   - connector.yaml
 components:
   - ../../../components/helmrelease-defaults
-  - ../../../components/helm-source-defaults
+  - ../../../components/oci-source-defaults
