@@ -15,7 +15,7 @@ spec:
     labels:
       app.kubernetes.io/name: *app
   dependsOn:
-    - name: victoria-metrics-single
+    - name: victoria-metrics-k8s-stack
     - name: victoria-logs
     - name: victoria-logs-collector
   path: ./kubernetes/cluster/grafana/app
