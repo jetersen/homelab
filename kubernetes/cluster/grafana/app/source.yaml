@@ -6,5 +6,5 @@ metadata:
   name: grafana
 spec:
   ref:
-    tag: 12.4.1
+    tag: 12.4.8
   url: oci://ghcr.io/grafana-community/helm-charts/grafana
