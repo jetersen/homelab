@@ -6,5 +6,5 @@ metadata:
   name: reloader
 spec:
   ref:
-    tag: 2.2.12
+    tag: 2.2.14
   url: oci://ghcr.io/stakater/charts/reloader
