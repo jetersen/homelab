@@ -4,13 +4,13 @@ apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
   name: &app konflate
-  namespace: &ns konflate
+  namespace: flux-system
   labels:
     homelab.jetersen.dev/flux-defaults: enabled
     homelab.jetersen.dev/flux-homelab-source: enabled
     homelab.jetersen.dev/flux-wait: disabled
 spec:
-  targetNamespace: *ns
+  targetNamespace: konflate
   commonMetadata:
     labels:
       app.kubernetes.io/name: *app
