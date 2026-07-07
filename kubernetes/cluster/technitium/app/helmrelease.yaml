@@ -13,6 +13,8 @@ spec:
     controllers:
       technitium:
         strategy: Recreate
+        pod:
+          terminationGracePeriodSeconds: 10
         containers:
           app:
             image:
@@ -49,7 +51,7 @@ spec:
                 custom: true
                 spec:
                   httpGet: { path: /, port: 5380 }
-                  initialDelaySeconds: 10
+                  initialDelaySeconds: 5
                   periodSeconds: 10
             securityContext:
               allowPrivilegeEscalation: false
