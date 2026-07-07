@@ -5,6 +5,7 @@ resources:
   - cert-manager.yaml
   - external-dns.yaml
   - home-assistant.yaml
+  - konflate.yaml
   - monitoring.yaml
   - openspeedtest.yaml
   - reflector.yaml
