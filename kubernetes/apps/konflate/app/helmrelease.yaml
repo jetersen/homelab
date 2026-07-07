@@ -1,0 +1,23 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: konflate
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: konflate
+  releaseName: konflate
+  values:
+    config:
+      repo: github://jetersen/homelab
+      statusChecks: true
+      prComments: true
+      publicUrl: https://konflate.jetersen.dev
+    secret:
+      existingSecret: konflate-secrets
+    persistence:
+      enabled: true
+      storageClass: local-path
+      size: 5Gi
