@@ -10,6 +10,8 @@ spec:
     name: konflate
   releaseName: konflate
   values:
+    deploymentAnnotations:
+      reloader.stakater.com/auto: "true"
     config:
       repo: github://jetersen/homelab
       statusChecks: true
