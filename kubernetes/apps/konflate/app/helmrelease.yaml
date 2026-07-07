@@ -12,6 +12,11 @@ spec:
   values:
     config:
       repo: github://jetersen/homelab
+      statusChecks: true
+      prComments: true
+      publicUrl: https://konflate.jetersen.dev
+    secret:
+      existingSecret: konflate-secrets
     persistence:
       enabled: true
       storageClass: local-path
