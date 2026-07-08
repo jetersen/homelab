@@ -6,5 +6,5 @@ metadata:
   name: cert-manager
 spec:
   ref:
-    tag: v1.20.3
+    tag: v1.21.0
   url: oci://quay.io/jetstack/charts/cert-manager
