@@ -1,28 +1,16 @@
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  // Auto-merge everything via GitHub native auto-merge; a ruleset on main
+  // requires 1 approval, so nothing merges until reviewed.
+  automerge: true,
+  automergeType: "pr",
+  automergeStrategy: "rebase",
   packageRules: [
     {
-      description: "Auto-merge Grafana + Victoria Metrics/Logs",
-      matchManagers: ["docker"],
-      matchUpdateTypes: ["minor", "patch"],
-      automerge: true,
-      automergeType: "pr",
-      matchPackageNames: [
-        "/grafana/",
-        "/victoria-logs-single/",
-        "/victoria-metrics-single/",
-        "/victoria-logs-collector/",
-      ],
-      ignoreTests: false,
-    },
-    {
-      description: "Auto-merge GitHub Actions",
+      description: "GitHub Actions: wait out fresh releases",
       matchManagers: ["github-actions"],
-      automerge: true,
-      automergeType: "branch",
       matchUpdateTypes: ["minor", "patch", "digest"],
       minimumReleaseAge: "3 days",
-      ignoreTests: true,
     },
   ],
 }
