@@ -5,6 +5,9 @@
   automerge: true,
   automergeType: "pr",
   automergeStrategy: "rebase",
+  // GitHub-native auto-merge ignores automergeStrategy and picks the repo's
+  // detected method (squash first). Renovate merging directly honors rebase.
+  platformAutomerge: false,
   packageRules: [
     {
       description: "GitHub Actions: wait out fresh releases",
