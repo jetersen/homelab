@@ -25,6 +25,7 @@ spec:
     extraArgs:
       - --annotation-prefix=technitium.alpha.kubernetes.io/
     sources:
+      - crd
       - gateway-httproute
       - gateway-grpcroute
       - gateway-tlsroute
