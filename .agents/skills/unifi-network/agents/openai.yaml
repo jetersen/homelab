@@ -1,0 +1,4 @@
+interface:
+  display_name: "UniFi Network"
+  short_description: "Safely inspect and update the homelab UniFi"
+  default_prompt: "Use $unifi-network to inspect or safely update my homelab UniFi configuration."
