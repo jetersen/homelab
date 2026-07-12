@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "varlock": {
+      "source": "dmno-dev/varlock",
+      "sourceType": "github",
+      "skillPath": "skills/varlock/SKILL.md",
+      "computedHash": "f3d4c2196ff45c3fa8aeb4e0c64297ce7aa5751a6e64e0c3ae9d90e38a42d765"
+    }
+  }
+}
