@@ -1,0 +1,13 @@
+---
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: unifi
+  namespace: external-dns
+spec:
+  endpoints:
+    - dnsName: unifi.lan.jetersen.dev
+      recordTTL: 300
+      recordType: A
+      targets:
+        - 192.168.1.1
