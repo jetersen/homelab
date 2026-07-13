@@ -6,5 +6,5 @@ metadata:
   name: reflector
 spec:
   ref:
-    tag: 10.0.58
+    tag: 10.0.59
   url: oci://ghcr.io/emberstack/helm-charts/reflector
