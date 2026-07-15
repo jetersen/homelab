@@ -13,11 +13,11 @@ spec:
     interval: 1440m0s
     managedRecordTypes:
       - CNAME
-    policy: upsert-only
+    policy: sync
     triggerLoopOnEvent: true
     txtOwnerId: homelab
     txtPrefix: "_owner_"
-    annotationFilter: external-dns.alpha.kubernetes.io/exclude notin (true)
+    annotationFilter: external-dns.alpha.kubernetes.io/public in (true)
     domainFilters:
       - jetersen.dev
     excludeDomains:

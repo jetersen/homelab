@@ -19,7 +19,7 @@ spec:
     triggerLoopOnEvent: true
     txtOwnerId: homelab-technitium
     txtPrefix: "_owner_"
-    annotationFilter: technitium.alpha.kubernetes.io/exclude notin (true)
+    annotationFilter: technitium.alpha.kubernetes.io/private notin (false)
     domainFilters:
       - jetersen.dev
     extraArgs:
