@@ -1,3 +1,9 @@
 [mcp_servers.homeassistant]
-command = "npx"
-args = ["varlock", "run", "--path", ".", "--inject", "vars", "--", "npx", "-y", "mcp-remote", "${HOME_ASSISTANT_HOST}/api/mcp", "--header", "Authorization: Bearer ${HOME_ASSISTANT_TOKEN}"]
+url = "https://homeassistant.jetersen.dev/api/mcp"
+bearer_token_env_var = "HOME_ASSISTANT_TOKEN"
+
+[mcp_servers.flux]
+url = "https://flux-mcp.lan.jetersen.dev/mcp"
+
+[mcp_servers.flux.tools.get_flux_instance]
+approval_mode = "approve"
