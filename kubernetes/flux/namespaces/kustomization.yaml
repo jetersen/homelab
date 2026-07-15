@@ -11,3 +11,4 @@ resources:
   - reflector.yaml
   - tailscale.yaml
   - technitium.yaml
+  - towonel-system.yaml

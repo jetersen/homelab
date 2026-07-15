@@ -1,0 +1,18 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: towonel-tunnel
+  namespace: flux-system
+  labels:
+    homelab.jetersen.dev/flux-defaults: enabled
+    homelab.jetersen.dev/flux-homelab-source: enabled
+spec:
+  dependsOn:
+    - name: towonel-operator
+  targetNamespace: towonel-system
+  commonMetadata:
+    labels:
+      app.kubernetes.io/name: towonel-tunnel
+  path: ./kubernetes/cluster/towonel-operator/tunnel

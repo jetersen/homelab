@@ -7,6 +7,7 @@ metadata:
   annotations:
     external-dns.alpha.kubernetes.io/target: public.jetersen.dev
     technitium.alpha.kubernetes.io/target: 192.168.1.20
+    towonel.io/gateway-service: kube-system/envoy-proxy:443
 spec:
   gatewayClassName: envoy-proxy
   infrastructure:
