@@ -13,4 +13,4 @@ spec:
       existingSecret: towonel-api
       tokenKey: token
     towonel:
-      apiURL: https://console.towonel.dev
+      apiURL: https://hub.towonel.dev
