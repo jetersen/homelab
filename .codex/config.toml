@@ -1,0 +1,3 @@
+[mcp_servers.homeassistant]
+command = "npx"
+args = ["varlock", "run", "--path", ".", "--inject", "vars", "--", "npx", "-y", "mcp-remote", "${HOME_ASSISTANT_HOST}/api/mcp", "--header", "Authorization: Bearer ${HOME_ASSISTANT_TOKEN}"]
