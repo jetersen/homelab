@@ -1,0 +1,14 @@
+---
+# yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/gateway.envoyproxy.io/httproutefilter_v1alpha1.json
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: HTTPRouteFilter
+metadata:
+  name: webhook-test-response
+  namespace: flux-system
+spec:
+  directResponse:
+    contentType: text/plain
+    statusCode: 200
+    body:
+      type: Inline
+      inline: "Towonel webhook route is working.\n"
