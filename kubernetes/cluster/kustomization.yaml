@@ -16,6 +16,8 @@ resources:
   - metrics-server/flux-ks.yaml
   - tailscale/flux-ks.yaml
   - technitium/flux-ks.yaml
+  - towonel-operator/flux-ks.yaml
+  - towonel-operator/tunnel-ks.yaml
   - victoria-logs/flux-ks.yaml
   - victoria-logs-collector/flux-ks.yaml
   - victoria-metrics/flux-ks.yaml

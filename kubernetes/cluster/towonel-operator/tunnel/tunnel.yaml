@@ -1,0 +1,11 @@
+---
+apiVersion: towonel.io/v1alpha1
+kind: TowonelTunnel
+metadata:
+  name: homelab
+spec:
+  region: EU
+  apiKeySecretRef:
+    name: towonel-api
+    key: token
+  deletionPolicy: Retain
