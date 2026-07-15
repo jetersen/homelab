@@ -18,6 +18,16 @@ spec:
   rules:
     - matches:
         - path:
+            type: Exact
+            value: /test
+      filters:
+        - type: ExtensionRef
+          extensionRef:
+            group: gateway.envoyproxy.io
+            kind: HTTPRouteFilter
+            name: webhook-test-response
+    - matches:
+        - path:
             type: PathPrefix
             value: /flux/hook
       filters:

@@ -8,6 +8,7 @@ metadata:
 resources:
   - helmrelease.yaml
   - webhook-httproute.yaml
+  - webhook-test-filter.yaml
   - receiver.yaml
   - tailscale-ingress.yaml
   - source.yaml
