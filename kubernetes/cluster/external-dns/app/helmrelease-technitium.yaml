@@ -40,7 +40,7 @@ spec:
           tag: v0.2.0
         env:
           - name: TECHNITIUM_HOST
-            value: http://technitium-app.technitium.svc.cluster.local:5380
+            value: http://technitium-app.technitium.svc.cluster.local
           - name: TECHNITIUM_PORT
             value: "5380"
           - name: TECHNITIUM_USER
