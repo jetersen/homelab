@@ -6,5 +6,5 @@ metadata:
   name: envoy-gateway
 spec:
   ref:
-    tag: 1.8.2
+    tag: 1.8.3
   url: oci://docker.io/envoyproxy/gateway-helm
