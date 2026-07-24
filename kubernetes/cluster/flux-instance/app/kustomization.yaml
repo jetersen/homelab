@@ -10,7 +10,6 @@ resources:
   - webhook-httproute.yaml
   - webhook-test-filter.yaml
   - receiver.yaml
-  - tailscale-ingress.yaml
   - source.yaml
 components:
   - ../../../components/helmrelease-defaults
