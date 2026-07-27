@@ -5,8 +5,12 @@ kind: Gateway
 metadata:
   name: envoy-proxy
   annotations:
-    external-dns.alpha.kubernetes.io/target: public.jetersen.dev
-    technitium.alpha.kubernetes.io/target: 192.168.1.20
+    # Public tier must override: this Gateway's own address is private and must
+    # never be published. Routes opt in via public.external-dns.../enabled.
+    public.external-dns.alpha.kubernetes.io/target: public.jetersen.dev
+    # The internal tier needs no target annotation: both providers derive the
+    # address from .status.addresses, so it tracks lbipam.cilium.io/ips rather
+    # than being hardcoded a second time.
     towonel.io/gateway-service: kube-system/envoy-proxy:443
 spec:
   gatewayClassName: envoy-proxy
