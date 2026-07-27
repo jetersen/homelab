@@ -1,0 +1,101 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/helmrelease-helm-v2.json
+# Internal DNS tier, 2 of 2. This tier must not depend on Technitium: Technitium
+# runs inside this cluster, and the nodes need DNS before the cluster exists.
+# Hence a synced copy here rather than forwarding. Shares its record set and
+# annotation prefix with external-dns-technitium.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: external-dns-unifi
+  namespace: external-dns
+spec:
+  chartRef:
+    name: external-dns
+    kind: OCIRepository
+  values:
+    fullnameOverride: external-dns-unifi
+    interval: 1440m0s
+    managedRecordTypes:
+      - A
+      - AAAA
+    policy: sync
+    triggerLoopOnEvent: true
+    txtOwnerId: homelab-unifi
+    txtPrefix: "_owner_"
+    annotationFilter: internal.external-dns.alpha.kubernetes.io/enabled notin (false)
+    domainFilters:
+      - jetersen.dev
+    extraArgs:
+      - --annotation-prefix=internal.external-dns.alpha.kubernetes.io/
+    sources:
+      - crd
+      - gateway-httproute
+      - gateway-grpcroute
+      - gateway-tlsroute
+      - gateway-tcproute
+      - gateway-udproute
+      - service
+    provider:
+      name: webhook
+      webhook:
+        image:
+          repository: ghcr.io/home-operations/external-dns-unifi-webhook
+          tag: 0.10.9
+        env:
+          # Addressed by hostname so the controller's publicly-trusted cert can
+          # be verified; the hostAliases patch below resolves it without DNS,
+          # since this instance writes the very records it would otherwise need.
+          - name: UNIFI_HOST
+            value: https://unifi.lan.jetersen.dev
+          - name: UNIFI_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: unifi-dns-secret
+                key: UNIFI_API_KEY
+          - name: UNIFI_SITE
+            value: default
+          - name: UNIFI_SKIP_TLS_VERIFY
+            value: "false"
+          - name: SERVER_PORT
+            value: "8888"
+          - name: HEALTH_SERVER_ADDR
+            value: ":8080"
+        resources:
+          requests:
+            cpu: 10m
+            memory: 64Mi
+          limits:
+            memory: 256Mi
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 65532
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: ["ALL"]
+  # The chart does not expose hostAliases (upstream renders a fixed allowlist of
+  # pod fields), so inject it here. This pins the controller's hostname into the
+  # pod's /etc/hosts, which is consulted before any resolver: the webhook gets a
+  # verifiable TLS hostname without depending on the DNS it is responsible for
+  # publishing. Drop this once the chart gains a hostAliases value.
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              version: v1
+              group: apps
+              kind: Deployment
+              name: external-dns-unifi
+            patch: |-
+              apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: external-dns-unifi
+              spec:
+                template:
+                  spec:
+                    hostAliases:
+                      - ip: 192.168.1.1
+                        hostnames:
+                          - unifi.lan.jetersen.dev

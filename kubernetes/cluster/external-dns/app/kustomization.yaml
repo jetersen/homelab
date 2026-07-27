@@ -6,6 +6,8 @@ resources:
   - dnsendpoint.yaml
   - helmrelease.yaml
   - helmrelease-technitium.yaml
+  - helmrelease-unifi.yaml
+  - secret.sops.yaml
   - source.yaml
 components:
   - ../../../components/helmrelease-defaults

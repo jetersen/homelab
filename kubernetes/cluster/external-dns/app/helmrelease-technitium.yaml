@@ -1,5 +1,9 @@
 ---
 # yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/helmrelease-helm-v2.json
+# Internal DNS tier, 1 of 2. Shares its record set and annotation prefix with
+# external-dns-unifi; only the provider and txtOwnerId differ. external-dns
+# supports one provider per instance, which is the sole reason these are two
+# releases rather than one.
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -15,15 +19,15 @@ spec:
     managedRecordTypes:
       - A
       - AAAA
-    policy: upsert-only
+    policy: sync
     triggerLoopOnEvent: true
     txtOwnerId: homelab-technitium
     txtPrefix: "_owner_"
-    annotationFilter: technitium.alpha.kubernetes.io/private notin (false)
+    annotationFilter: internal.external-dns.alpha.kubernetes.io/enabled notin (false)
     domainFilters:
       - jetersen.dev
     extraArgs:
-      - --annotation-prefix=technitium.alpha.kubernetes.io/
+      - --annotation-prefix=internal.external-dns.alpha.kubernetes.io/
     sources:
       - crd
       - gateway-httproute
