@@ -1,0 +1,167 @@
+---
+name: Flux incident
+
+on:
+  repository_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+
+concurrency:
+  group: flux-incident-${{ github.event.action }}
+  cancel-in-progress: false
+
+jobs:
+  issue:
+    name: Create or update issue
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create or update incident issue
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const crypto = require("crypto");
+
+            const event = context.payload.client_payload ?? {};
+            if (event.severity !== "error") {
+              core.notice(`Ignoring ${event.severity ?? "unknown"} Flux event`);
+              return;
+            }
+
+            const object = event.involvedObject ?? {};
+            const kind = String(object.kind ?? "Unknown");
+            const namespace = String(object.namespace ?? "default");
+            const name = String(object.name ?? "unknown");
+            const reason = String(event.reason ?? "Unknown");
+            const message = String(event.message ?? "No message provided").slice(0, 12000);
+            const timestamp = String(event.timestamp ?? "Unknown");
+            const metadata = event.metadata ?? {};
+            const revisionEntry = Object.entries(metadata).find(([key]) => key.endsWith("/revision"));
+            const revision = String(revisionEntry?.[1] ?? "Unknown");
+            const objectKey = `${kind}/${namespace}/${name}`;
+            const objectMarker = `<!-- flux-incident:${Buffer.from(objectKey).toString("base64url")} -->`;
+            const fingerprint = crypto
+              .createHash("sha256")
+              .update(JSON.stringify({ objectKey, reason, message, revision }))
+              .digest("hex")
+              .slice(0, 24);
+            const eventMarker = `<!-- flux-event:${fingerprint} -->`;
+            const { owner, repo } = context.repo;
+
+            let revisionReference = `\`${revision}\``;
+            const sha = revision.match(/[0-9a-f]{40}/i)?.[0];
+            if (sha) {
+              revisionReference = `[\`${sha.slice(0, 7)}\`](https://github.com/${owner}/${repo}/commit/${sha})`;
+
+              try {
+                const response = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                  owner,
+                  repo,
+                  commit_sha: sha,
+                });
+                const pullRequest = response.data.find((candidate) => candidate.merged_at) ?? response.data[0];
+                if (pullRequest) {
+                  revisionReference += ` from [#${pullRequest.number}](${pullRequest.html_url})`;
+                }
+              } catch (error) {
+                core.warning(`Could not resolve the pull request for ${sha}: ${error.message}`);
+              }
+            }
+
+            const quotedMessage = message
+              .split("\n")
+              .map((line) => `> ${line || " "}`)
+              .join("\n");
+            const eventDetails = [
+              `- **Object:** \`${objectKey}\``,
+              `- **Reason:** \`${reason}\``,
+              `- **Revision:** ${revisionReference}`,
+              `- **Observed:** \`${timestamp}\``,
+              `- **Controller:** \`${event.reportingController ?? "Unknown"}\``,
+              "",
+              "**Message**",
+              "",
+              quotedMessage,
+            ].join("\n");
+
+            const label = "flux-incident";
+            try {
+              await github.rest.issues.getLabel({ owner, repo, name: label });
+            } catch (error) {
+              if (error.status !== 404) throw error;
+              try {
+                await github.rest.issues.createLabel({
+                  owner,
+                  repo,
+                  name: label,
+                  color: "d73a4a",
+                  description: "Flux reconciliation failure",
+                });
+              } catch (createError) {
+                if (createError.status !== 422) throw createError;
+              }
+            }
+
+            const issues = await github.paginate(github.rest.issues.listForRepo, {
+              owner,
+              repo,
+              state: "open",
+              labels: label,
+              per_page: 100,
+            });
+            const existing = issues.find(
+              (issue) => !issue.pull_request && issue.body?.includes(objectMarker),
+            );
+
+            if (!existing) {
+              const body = [
+                objectMarker,
+                eventMarker,
+                `@${owner}, Flux reported a reconciliation failure after a repository update.`,
+                "",
+                eventDetails,
+                "",
+                "Repeated identical events are suppressed; materially different failures are added as comments.",
+              ].join("\n");
+
+              const created = await github.rest.issues.create({
+                owner,
+                repo,
+                title: `[Flux] ${objectKey} reconciliation failed`,
+                body,
+                labels: [label],
+              });
+              core.notice(`Created ${created.data.html_url}`);
+              return;
+            }
+
+            if (existing.body?.includes(eventMarker)) {
+              core.notice(`Issue #${existing.number} already contains this event`);
+              return;
+            }
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner,
+              repo,
+              issue_number: existing.number,
+              per_page: 100,
+            });
+            if (comments.some((comment) => comment.body?.includes(eventMarker))) {
+              core.notice(`Issue #${existing.number} already contains this event`);
+              return;
+            }
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: existing.number,
+              body: [
+                eventMarker,
+                "Flux reported a different failure for this object.",
+                "",
+                eventDetails,
+              ].join("\n"),
+            });
+            core.notice(`Updated issue #${existing.number}`);

@@ -6,6 +6,7 @@ metadata:
   name: flux-instance
   namespace: flux-system
 resources:
+  - github-dispatch.yaml
   - helmrelease.yaml
   - webhook-httproute.yaml
   - webhook-test-filter.yaml
