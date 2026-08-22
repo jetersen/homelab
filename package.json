@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "env:load": "varlock load --agent",
-    "env:run": "varlock run --"
+    "env:run": "varlock run -- fish -c 'eval (string escape -- $argv)' --"
   },
   "repository": {
     "type": "git",
