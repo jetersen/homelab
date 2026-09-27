@@ -1,0 +1,39 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: media-data
+  annotations:
+    kustomize.toolkit.fluxcd.io/prune: disabled
+spec:
+  # Binding capacity only; actual free space and quotas are managed on TrueNAS.
+  capacity:
+    storage: 1Ti
+  accessModes: [ReadWriteMany]
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""
+  mountOptions:
+    - nfsvers=4.2
+    - hard
+    - timeo=600
+    - retrans=2
+  claimRef:
+    namespace: media
+    name: media-data
+  nfs:
+    server: 192.168.1.2
+    path: /mnt/nvme/media
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: media-data
+  annotations:
+    kustomize.toolkit.fluxcd.io/prune: disabled
+spec:
+  accessModes: [ReadWriteMany]
+  storageClassName: ""
+  volumeName: media-data
+  resources:
+    requests:
+      storage: 1Ti

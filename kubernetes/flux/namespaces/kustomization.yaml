@@ -6,6 +6,7 @@ resources:
   - external-dns.yaml
   - home-assistant.yaml
   - konflate.yaml
+  - media.yaml
   - monitoring.yaml
   - openspeedtest.yaml
   - reflector.yaml

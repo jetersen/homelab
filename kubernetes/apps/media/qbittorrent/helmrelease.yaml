@@ -1,0 +1,197 @@
+---
+# qBittorrent starts after the native VPN sidecar passes its startup probe.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: qbittorrent
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+    namespace: flux-system
+  values:
+    defaultPodOptions:
+      dnsPolicy: None
+      dnsConfig:
+        nameservers:
+        - 127.0.0.1
+        options:
+        - name: ndots
+          value: '1'
+      securityContext:
+        fsGroup: 568
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+    controllers:
+      qbittorrent:
+        strategy: Recreate
+        containers:
+          app:
+            image:
+              repository: lscr.io/linuxserver/qbittorrent
+              tag: 5.2.3_v2.0.15-ls478@sha256:caab2ebce30799ab342c374ea268fef4ec063a8ec3733a4e5d4a8e856ee32ce8
+            env:
+              TZ: Europe/Copenhagen
+              PUID: '568'
+              PGID: '568'
+              UMASK: '002'
+              WEBUI_PORT: '8080'
+            securityContext:
+              allowPrivilegeEscalation: false
+            probes:
+              liveness:
+                enabled: true
+                type: TCP
+              readiness:
+                enabled: true
+                type: TCP
+              startup:
+                enabled: true
+                type: TCP
+                spec:
+                  failureThreshold: 60
+                  periodSeconds: 10
+            resources:
+              requests:
+                cpu: 50m
+                memory: 256Mi
+              limits:
+                memory: 2Gi
+        initContainers:
+          config:
+            image:
+              repository: docker.io/library/busybox
+              tag: 1.37.0@sha256:bdf57e528e45e4433820e045b29b4597825a1c9e38353532d90a01445013f82e
+            command:
+              - sh
+              - -ec
+              - |
+                mkdir -p /config/qBittorrent
+                if [ ! -f /config/qBittorrent/qBittorrent.conf ]; then
+                  cp /defaults/qBittorrent.conf /config/qBittorrent/qBittorrent.conf
+                fi
+            securityContext:
+              allowPrivilegeEscalation: false
+          vpn:
+            restartPolicy: Always
+            image:
+              repository: docker.io/qmcgaw/gluetun
+              tag: v3.41.3@sha256:fa19cc76b2af13d57a8d3dc3066f2ada061b1c761b8aecf989b3877c0486e027
+            env:
+              TZ: Europe/Copenhagen
+              VPN_SERVICE_PROVIDER: protonvpn
+              VPN_TYPE: wireguard
+              WIREGUARD_IMPLEMENTATION: kernelspace
+              VPN_PORT_FORWARDING: 'on'
+              FIREWALL_INPUT_PORTS: '8080'
+              # Return traffic to Envoy pods and the node must stay on the cluster network.
+              FIREWALL_OUTBOUND_SUBNETS: 172.22.0.0/16,192.168.1.10/32
+              VPN_PORT_FORWARDING_UP_COMMAND: '/bin/sh /hooks/port-forward.sh {{ "{{PORT}}" }} tun0'
+              VPN_PORT_FORWARDING_DOWN_COMMAND: /bin/sh /hooks/port-forward.sh 0 lo
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                add:
+                - NET_ADMIN
+            probes:
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                    - /gluetun-entrypoint
+                    - healthcheck
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 60
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command:
+                    - /gluetun-entrypoint
+                    - healthcheck
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+              limits:
+                memory: 512Mi
+    service:
+      app:
+        controller: qbittorrent
+        ports:
+          http:
+            port: 8080
+    route:
+      app:
+        hostnames:
+        - qbittorrent.lan.jetersen.dev
+        parentRefs:
+        - name: envoy-proxy
+          namespace: kube-system
+          sectionName: https
+        rules:
+        - backendRefs:
+          - identifier: app
+            port: 8080
+    persistence:
+      config:
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        storageClass: local-path
+        size: 5Gi
+        retain: true
+        advancedMounts:
+          qbittorrent:
+            app:
+            - path: /config
+            config:
+            - path: /config
+      data:
+        type: persistentVolumeClaim
+        existingClaim: media-data
+        advancedMounts:
+          qbittorrent:
+            app:
+            - path: /data
+      wireguard:
+        type: secret
+        name: qbittorrent-wireguard
+        defaultMode: 256
+        advancedMounts:
+          qbittorrent:
+            vpn:
+            - path: /gluetun/wireguard
+              readOnly: true
+      defaults:
+        type: configMap
+        name: qbittorrent-defaults
+        advancedMounts:
+          qbittorrent:
+            config:
+            - path: /defaults
+              readOnly: true
+            vpn:
+            - path: /hooks
+              readOnly: true
+      vpn-state:
+        type: emptyDir
+        advancedMounts:
+          qbittorrent:
+            vpn:
+            - path: /gluetun
+      tun:
+        type: hostPath
+        hostPath: /dev/net/tun
+        hostPathType: CharDevice
+        advancedMounts:
+          qbittorrent:
+            vpn:
+            - path: /dev/net/tun

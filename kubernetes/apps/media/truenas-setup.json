@@ -1,0 +1,23 @@
+{
+  "filesystem.setperm": {
+    "path": "/mnt/nvme/media",
+    "uid": 568,
+    "gid": 568,
+    "mode": "775",
+    "options": {
+      "recursive": false,
+      "stripacl": false
+    }
+  },
+  "sharing.nfs.create": {
+    "path": "/mnt/nvme/media",
+    "comment": "Kubernetes homelab media stack",
+    "hosts": ["192.168.1.10"],
+    "networks": [],
+    "ro": false,
+    "mapall_user": "apps",
+    "mapall_group": "apps",
+    "security": ["SYS"],
+    "enabled": true
+  }
+}

@@ -1,0 +1,92 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/helmrelease-helm-v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: sonarr
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+    namespace: flux-system
+  values:
+    defaultPodOptions:
+      # External DNS goes directly to Technitium. Use the LAN URLs for app integrations.
+      dnsPolicy: None
+      dnsConfig:
+        nameservers: [192.168.1.21]
+        options:
+          - name: ndots
+            value: "1"
+      securityContext:
+        fsGroup: 568
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+    controllers:
+      sonarr:
+        strategy: Recreate
+        containers:
+          app:
+            image:
+              repository: lscr.io/linuxserver/sonarr
+              tag: 4.0.20.3014-ls326@sha256:f247545d23ba8b233d6604575347e48a623fe6ad75dda02348bf81917f3b5c06
+            env:
+              TZ: Europe/Copenhagen
+              PUID: "568"
+              PGID: "568"
+              UMASK: "002"
+            securityContext:
+              allowPrivilegeEscalation: false
+            probes:
+              liveness:
+                enabled: true
+                type: TCP
+              readiness:
+                enabled: true
+                type: TCP
+              startup:
+                enabled: true
+                type: TCP
+                spec:
+                  failureThreshold: 60
+                  periodSeconds: 10
+            resources:
+              requests:
+                cpu: 50m
+                memory: 256Mi
+              limits:
+                memory: 2Gi
+    service:
+      app:
+        controller: sonarr
+        ports:
+          http:
+            port: 8989
+    route:
+      app:
+        hostnames: [sonarr.lan.jetersen.dev]
+        parentRefs:
+          - name: envoy-proxy
+            namespace: kube-system
+            sectionName: https
+        rules:
+          - backendRefs:
+              - identifier: app
+                port: 8989
+    persistence:
+      config:
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        storageClass: local-path
+        size: 5Gi
+        retain: true
+        globalMounts:
+          - path: /config
+      data:
+        type: persistentVolumeClaim
+        existingClaim: media-data
+        advancedMounts:
+          sonarr:
+            app:
+              - path: /data

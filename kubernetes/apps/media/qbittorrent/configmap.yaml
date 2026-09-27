@@ -1,0 +1,43 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: qbittorrent-defaults
+data:
+  # Seed only on first startup. UI changes are retained in the config PVC.
+  qBittorrent.conf: |
+    [LegalNotice]
+    Accepted=true
+
+    [BitTorrent]
+    Session\DefaultSavePath=/data/torrents
+    Session\TempPath=/data/torrents/incomplete
+    Session\TempPathEnabled=true
+    Session\Interface=tun0
+    Session\InterfaceName=tun0
+    Session\Port=6881
+    Session\UseUPnP=false
+
+    [Preferences]
+    WebUI\Port=8080
+    WebUI\LocalHostAuth=false
+    WebUI\AuthSubnetWhitelistEnabled=false
+  # Gluetun supplies the allocated port. Localhost bypass applies only inside this pod.
+  port-forward.sh: |
+    #!/bin/sh
+    set -eu
+    port="$1"
+    interface="$2"
+    case "$port" in ''|*[!0-9]*) exit 1 ;; esac
+    case "$interface" in tun0|lo) ;; *) exit 1 ;; esac
+    # The VPN can obtain a port before qBittorrent's first startup finishes.
+    for attempt in $(seq 1 60); do
+      if wget -q -O /dev/null --timeout=5 \
+        --post-data="json={\"listen_port\":$port,\"current_network_interface\":\"$interface\",\"random_port\":false,\"upnp\":false}" \
+        http://127.0.0.1:8080/api/v2/app/setPreferences; then
+        exit 0
+      fi
+      sleep 5
+    done
+    echo "Could not update qBittorrent's forwarded port" >&2
+    exit 1
