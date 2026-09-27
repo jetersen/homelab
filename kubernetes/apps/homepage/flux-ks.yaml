@@ -1,0 +1,13 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: homepage
+  namespace: flux-system
+  labels:
+    homelab.jetersen.dev/flux-defaults: enabled
+    homelab.jetersen.dev/flux-homelab-source: enabled
+spec:
+  targetNamespace: homepage
+  path: ./kubernetes/apps/homepage/app
+  wait: true

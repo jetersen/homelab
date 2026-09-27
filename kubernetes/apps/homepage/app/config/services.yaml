@@ -1,0 +1,75 @@
+- Home:
+  - Home Assistant:
+      href: https://homeassistant.jetersen.dev
+      description: Home automation
+      icon: home-assistant.png
+      namespace: home-assistant
+      app: home-assistant
+  - Zigbee2MQTT:
+      href: https://zigbee2mqtt.jetersen.dev
+      description: Zigbee devices
+      icon: zigbee2mqtt.png
+      namespace: home-assistant
+      app: zigbee2mqtt
+- Media:
+  - Jellyfin:
+      href: https://jellyfin.lan.jetersen.dev
+      description: Movies and television
+      icon: jellyfin.png
+      namespace: media
+      app: jellyfin
+  - Sonarr:
+      href: https://sonarr.lan.jetersen.dev
+      description: TV library
+      icon: sonarr.png
+      namespace: media
+      app: sonarr
+  - Radarr:
+      href: https://radarr.lan.jetersen.dev
+      description: Movie library
+      icon: radarr.png
+      namespace: media
+      app: radarr
+  - Prowlarr:
+      href: https://prowlarr.lan.jetersen.dev
+      description: Indexer management
+      icon: prowlarr.png
+      namespace: media
+      app: prowlarr
+  - qBittorrent:
+      href: https://qbittorrent.lan.jetersen.dev
+      description: Downloads
+      icon: qbittorrent.png
+      namespace: media
+      app: qbittorrent
+- Infrastructure:
+  - Grafana:
+      href: https://grafana.jetersen.dev
+      description: Metrics and logs
+      icon: grafana.png
+      namespace: monitoring
+      app: grafana
+  - Flux:
+      href: https://flux-operator.lan.jetersen.dev
+      description: GitOps reconciliation
+      icon: flux-cd.png
+      namespace: flux-system
+      app: flux-operator
+  - Technitium:
+      href: https://dns.lan.jetersen.dev
+      description: DNS management
+      icon: technitium.png
+      namespace: technitium
+      app: technitium
+  - OpenSpeedTest:
+      href: https://openspeedtest.jetersen.dev
+      description: Network speed test
+      icon: openspeedtest.png
+      namespace: openspeedtest
+      app: openspeedtest
+  - Konflate:
+      href: https://konflate.jetersen.dev
+      description: Manifest rendering
+      icon: konflate.png
+      namespace: konflate
+      app: konflate

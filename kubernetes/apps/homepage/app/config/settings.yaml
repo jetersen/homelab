@@ -1,0 +1,17 @@
+title: Homelab
+description: Home, media, and infrastructure
+language: en
+theme: dark
+color: slate
+headerStyle: clean
+statusStyle: dot
+layout:
+  Home:
+    style: row
+    columns: 2
+  Media:
+    style: row
+    columns: 3
+  Infrastructure:
+    style: row
+    columns: 3

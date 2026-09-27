@@ -1,0 +1,5 @@
+mode: cluster
+# Explicit service links keep the layout in Git and avoid discovery permissions.
+ingress: false
+gateway: false
+traefik: false
