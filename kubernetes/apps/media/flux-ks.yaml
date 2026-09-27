@@ -49,23 +49,6 @@ spec:
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: lidarr
-  namespace: flux-system
-  labels:
-    homelab.jetersen.dev/flux-defaults: enabled
-    homelab.jetersen.dev/flux-homelab-source: enabled
-spec:
-  targetNamespace: media
-  path: ./kubernetes/apps/media/lidarr
-  wait: true
-  dependsOn:
-    - name: media-storage
-    - name: app-template
-    - name: technitium
----
-apiVersion: kustomize.toolkit.fluxcd.io/v1
-kind: Kustomization
-metadata:
   name: prowlarr
   namespace: flux-system
   labels:
