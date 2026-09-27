@@ -5,6 +5,7 @@ kind: Kustomization
 resources:
   - home-assistant/flux-ks.yaml
   - konflate/flux-ks.yaml
+  - media/flux-ks.yaml
   - openspeedtest/flux-ks.yaml
   - reflector/flux-ks.yaml
   - reloader/flux-ks.yaml
