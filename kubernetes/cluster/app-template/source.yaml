@@ -7,5 +7,5 @@ metadata:
   namespace: flux-system
 spec:
   ref:
-    tag: 5.0.1
+    tag: 5.2.1
   url: oci://ghcr.io/bjw-s-labs/helm/app-template
