@@ -1,0 +1,22 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: homepage
+resources:
+  - deployment.yaml
+  - service.yaml
+  - httproute.yaml
+  - rbac.yaml
+configMapGenerator:
+  - name: homepage-config
+    files:
+      - config/settings.yaml
+      - config/services.yaml
+      - config/widgets.yaml
+      - config/kubernetes.yaml
+    literals:
+      - 'bookmarks.yaml=[]'
+      - 'docker.yaml={}'
+      - 'proxmox.yaml={}'
+      - 'custom.css='
+      - 'custom.js='
