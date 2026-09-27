@@ -41,7 +41,7 @@ spec:
       webhook:
         image:
           repository: ghcr.io/bugs5382/external-dns-technitium-webhook
-          tag: v0.2.0
+          tag: v0.2.1
         env:
           - name: TECHNITIUM_HOST
             value: http://technitium-app.technitium.svc.cluster.local
