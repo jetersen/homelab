@@ -1,10 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
+    "github>home-operations/renovate-presets",
     "github>jetersen/.github",
-    "github>home-operations/renovate-presets//config/managerFilePatterns.json5",
-    "github>home-operations/renovate-presets//managers/annotated.json5",
-    "github>home-operations/renovate-presets//policies/semanticCommits.json5",
     "github>jetersen/homelab//.renovate/autoMerge.json5",
     "github>jetersen/homelab//.renovate/labels.json5",
     "github>jetersen/homelab//.renovate/versioning.json5",
