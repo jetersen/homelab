@@ -1,12 +1,12 @@
-# Upgrade preparation
+# Talos upgrade and native Tailscale
 
-Prepared on 2026-10-03 for the single control-plane/workload node `talos01`,
-`192.168.1.10`, Kubernetes context `homelab`. Preparation does not apply machine
-configuration or initiate upgrades.
+Talos was upgraded on 2026-10-03 on the single control-plane/workload node
+`talos01`, `192.168.1.10`, Kubernetes context `homelab`. Kubernetes was not
+upgraded and no full regenerated machine configuration was applied.
 
 | Component | Running | Prepared target |
 | --- | --- | --- |
-| Talos | 1.13.4 | 1.14.2 |
+| Talos | 1.14.2 | 1.14.2, applied |
 | Kubernetes | 1.36.1 | 1.36.5 |
 
 Kubernetes 1.36.5 is the latest patch in the installed minor. Installed Cilium
@@ -53,11 +53,23 @@ factory.talos.dev/metal-installer/5245e77b57a2435517211aec267ba032349120adc66954
 sha256:ca02fe5fac3f8ab47d3f3934f0df3b6358fd3eb12dbed55e574bc12bd4709a4e
 ```
 
-Factory's matching extensions are `intel-ucode:20260812`,
-`i915:20260916-v1.14.2`, and `tailscale:1.102.3`. The running node reports no
-installed extensions, so the requested Intel extensions would also be added
-by either target image. The node's installer annotation is stale (1.13.2);
-use live Talos version and extension inventory for verification.
+The running node reports `intel-ucode:20260812`, `i915:20260916-v1.14.2`,
+and `tailscale:1.102.3`. Before the upgrade it reported no installed extensions.
+The node's installer annotation was stale (1.13.2); use live Talos version and
+extension inventory for verification. Etcd upgraded to 3.7.1 with storage
+version 3.7.0 and passed health, leadership, and raft consistency checks.
+
+Recovery checks passed: 42 Deployments, four StatefulSets, three DaemonSets,
+15 bound PVCs, 40 Flux Kustomizations, and 28 HelmReleases. Jellyfin's NAS NFS
+mount was readable. Verified-TLS HTTP/2 and repeated HTTP/3 checks passed for
+Homepage and Jellyfin through both the LAN VIP and operator's tailnet address.
+Monitoring recovered to 55/55 healthy scrape targets and 18/18 successful probes;
+VictoriaLogs was receiving fresh logs without dropped rows.
+
+NAS DNS stayed available during the observed API outage, including UDP/TCP
+queries over tailnet IPv4 and IPv6 and uncached public/local queries from Rocket.
+An encrypted etcd snapshot was taken and checksum/round-trip verified before
+the upgrade and again after the etcd data upgrade. These are not restore tests.
 
 ## Execution sequence
 
@@ -73,9 +85,13 @@ use live Talos version and extension inventory for verification.
    ```sh
    talosctl --talosconfig kubernetes/talos/clusterconfig/talosconfig \
      --endpoints 192.168.1.10 --nodes 192.168.1.10 upgrade \
-     --image factory.talos.dev/metal-installer/5245e77b57a2435517211aec267ba032349120adc66954d24c551d548e6196b2:v1.14.2@sha256:ca02fe5fac3f8ab47d3f3934f0df3b6358fd3eb12dbed55e574bc12bd4709a4e \
+     --image factory.talos.dev/metal-installer/5245e77b57a2435517211aec267ba032349120adc66954d24c551d548e6196b2@sha256:ca02fe5fac3f8ab47d3f3934f0df3b6358fd3eb12dbed55e574bc12bd4709a4e \
      --wait --timeout 30m
    ```
+
+   Use the digest-only reference above. Talos 1.13 pulls a tag-plus-digest
+   reference under its digest-only name, then fails to find the original name
+   in containerd's store when starting the installer.
 
 4. Verify Talos 1.14.2, etcd health, Kubernetes remains 1.36.1, node Ready,
    mounted/PVC-backed storage, workloads, DNS, metrics, and HTTP/2/HTTP/3.
@@ -97,10 +113,26 @@ use live Talos version and extension inventory for verification.
 
 ## Later native Tailscale evaluation
 
-The selected image includes Tailscale so later enrollment does not need another
+The installed image includes Tailscale so later enrollment does not need another
 image upgrade or reboot. `patches/tailscale-service.example.yaml` remains a
-candidate and is not included by `talconfig.yaml`. The extension waits for its
-service configuration; activate it after the OS and existing services recover.
+candidate and is not included by `talconfig.yaml`.
+
+An extension without service configuration blocks Talos's `startAllServices`
+boot task. During this upgrade, `ext-tailscale` was stopped through the supported
+service API, allowing boot to finish and the node to uncordon:
+
+```sh
+talosctl --talosconfig kubernetes/talos/clusterconfig/talosconfig \
+  --endpoints 192.168.1.10 --nodes 192.168.1.10 service ext-tailscale stop
+```
+
+The service is `Finished` and the node has not joined the tailnet. This stop is
+not persistent across reboot. Configure and enroll the extension before the
+next reboot; otherwise repeat the stop to release the boot wait. There is no
+`enabled` flag in `ExtensionServiceConfig`. An empty configuration is insufficient
+to leave containerboot dormant: it attempts initial login and eventually exits
+when its boot timeout expires. After applying the reviewed service configuration
+without reboot, start `ext-tailscale` and complete its interactive enrollment.
 
 The extension uses kernel TUN and persistent `/var/lib/tailscale` state. Keep
 node DNS independent of Tailscale with `TS_ACCEPT_DNS=false`, retain the LAN
