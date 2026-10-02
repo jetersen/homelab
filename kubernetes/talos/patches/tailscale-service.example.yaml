@@ -1,0 +1,15 @@
+# Candidate only. Not included by talconfig.yaml and not applied to talos01.
+# Requires a Talos image containing siderolabs/tailscale.
+# Initial interactive enrollment must be completed through Tailscale's login URL.
+apiVersion: v1alpha1
+kind: ExtensionServiceConfig
+name: tailscale
+environment:
+  - TS_HOSTNAME=talos01
+  - TS_USERSPACE=false
+  - TS_ACCEPT_DNS=false
+  - TS_AUTH_ONCE=true
+  - TS_BOOT_TIMEOUT=15m
+  - TS_ROUTES=192.168.1.10/32,192.168.1.20/32
+  - TS_EXTRA_ARGS=--accept-routes=false --advertise-tags=tag:k8s-subnet-router
+  - TS_TUN_DISABLE_UDP_GRO=true
