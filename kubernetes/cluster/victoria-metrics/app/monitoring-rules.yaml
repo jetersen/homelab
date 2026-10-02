@@ -16,15 +16,28 @@ spec:
         description: The {{ $labels.job }} probe has failed continuously for five
           minutes.
     - alert: ServiceProbeMetricsMissing
-      expr: up{job=~"application-http|nas-mqtt-tcp|technitium-dns|gateway-https"}
-        == 0
+      expr: |
+        up{job=~"application-http|nas-mqtt-tcp|technitium-dns|gateway-https"} == 0
+        or absent(up{job="application-http"})
+        or absent(up{job="nas-mqtt-tcp"})
+        or absent(up{job="technitium-dns"})
+        or absent(up{job="gateway-https"})
       for: 5m
       labels:
         severity: warning
       annotations:
-        summary: Probe metrics unavailable for {{ $labels.instance }}
+        summary: Probe metrics unavailable for {{ $labels.job }}
         description: The blackbox exporter could not supply probe metrics for this
           configured target.
+    - alert: EnvoyConfigurationRejected
+      expr: increase(envoy_listener_manager_lds_update_rejected[5m]) > 0
+      for: 0m
+      labels:
+        severity: warning
+      annotations:
+        summary: Envoy rejected listener configuration on {{ $labels.pod }}
+        description: Inspect Envoy's listener rejection errors; Gateway and policy
+          status alone do not verify that the proxy loaded its listeners.
     - alert: VictoriaLogsDroppedRows
       expr: sum(increase(vl_rows_dropped_total[10m])) > 0
       for: 0m
