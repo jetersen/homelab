@@ -6,5 +6,5 @@ metadata:
   name: towonel-operator
 spec:
   ref:
-    tag: v1.8.0
+    tag: v1.9.0
   url: oci://ghcr.io/jacaudi/charts/towonel-operator
