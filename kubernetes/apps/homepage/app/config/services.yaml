@@ -43,10 +43,6 @@
       namespace: media
       app: qbittorrent
 - Infrastructure:
-  - TrueNAS:
-      href: https://192.168.1.2/
-      description: Network storage
-      icon: truenas.png
   - Grafana:
       href: https://grafana.jetersen.dev
       description: Metrics and logs
@@ -77,3 +73,7 @@
       icon: konflate.png
       namespace: konflate
       app: konflate
+  - TrueNAS:
+      href: https://192.168.1.2/
+      description: Network storage
+      icon: truenas.png
