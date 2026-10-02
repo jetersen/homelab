@@ -77,3 +77,10 @@
       href: https://192.168.1.2/
       description: Network storage
       icon: truenas.png
+      widget:
+        type: truenas
+        url: https://192.168.1.2
+        version: 2
+        key: "{{HOMEPAGE_VAR_TRUENAS_KEY}}"
+        enablePools: true
+        fields: []
