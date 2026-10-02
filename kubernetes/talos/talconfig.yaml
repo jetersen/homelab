@@ -72,6 +72,7 @@ nodes:
           officialExtensions:
             - siderolabs/intel-ucode
             - siderolabs/i915
+            - siderolabs/tailscale
     installDisk: /dev/nvme0n1
     nodeAnnotations:
       installerUrl: '{{ .MachineConfig.MachineInstall.InstallImage }}'

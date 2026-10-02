@@ -36,16 +36,17 @@ explicit installer image, verify recovery, and upgrade Kubernetes separately.
 
 ## Reviewed images
 
-The normal target preserves the repository's kernel arguments and requested
-Intel microcode/i915 extensions:
+The reviewed Intel-only alternative preserves the repository's kernel arguments
+and requested microcode/i915 extensions:
 
 ```text
 factory.talos.dev/metal-installer/dbe5c41cf2e93f426705e87651cba6c188429e0f30f28db79c41bd85549abc7a:v1.14.2
 sha256:7ac138957fab853b0947b4bf8c0291e0a6a12337cdcc5945633f5395856f642d
 ```
 
-The separate Tailscale candidate adds only `siderolabs/tailscale` to that
-schematic. Both installer manifests were resolved through Image Factory:
+The selected target adds `siderolabs/tailscale` to that schematic and is now
+configured in `talconfig.yaml`. Both installer manifests were resolved through
+Image Factory:
 
 ```text
 factory.talos.dev/metal-installer/5245e77b57a2435517211aec267ba032349120adc66954d24c551d548e6196b2:v1.14.2
@@ -72,7 +73,7 @@ use live Talos version and extension inventory for verification.
    ```sh
    talosctl --talosconfig kubernetes/talos/clusterconfig/talosconfig \
      --endpoints 192.168.1.10 --nodes 192.168.1.10 upgrade \
-     --image factory.talos.dev/metal-installer/dbe5c41cf2e93f426705e87651cba6c188429e0f30f28db79c41bd85549abc7a:v1.14.2@sha256:7ac138957fab853b0947b4bf8c0291e0a6a12337cdcc5945633f5395856f642d \
+     --image factory.talos.dev/metal-installer/5245e77b57a2435517211aec267ba032349120adc66954d24c551d548e6196b2:v1.14.2@sha256:ca02fe5fac3f8ab47d3f3934f0df3b6358fd3eb12dbed55e574bc12bd4709a4e \
      --wait --timeout 30m
    ```
 
@@ -96,10 +97,10 @@ use live Talos version and extension inventory for verification.
 
 ## Later native Tailscale evaluation
 
-The Tailscale image and `patches/tailscale-service.example.yaml` are candidates,
-not enabled by `talconfig.yaml`. Installing the image separately isolates OS
-upgrade validation from host routing changes. Including it in the first reboot
-could avoid a second reboot, but that decision belongs in the reviewed action.
+The selected image includes Tailscale so later enrollment does not need another
+image upgrade or reboot. `patches/tailscale-service.example.yaml` remains a
+candidate and is not included by `talconfig.yaml`. The extension waits for its
+service configuration; activate it after the OS and existing services recover.
 
 The extension uses kernel TUN and persistent `/var/lib/tailscale` state. Keep
 node DNS independent of Tailscale with `TS_ACCEPT_DNS=false`, retain the LAN
