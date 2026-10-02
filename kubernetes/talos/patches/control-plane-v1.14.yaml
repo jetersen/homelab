@@ -1,0 +1,22 @@
+# Talos 1.14 moves component configuration into dedicated documents.
+# Retain authenticated HTTPS metrics and localhost health probe access.
+apiVersion: v1alpha1
+kind: KubeControllerManagerConfig
+extraArgs:
+  bind-address: 0.0.0.0
+---
+apiVersion: v1alpha1
+kind: KubeSchedulerConfig
+extraArgs:
+  bind-address: 0.0.0.0
+---
+# Cilium supplies kube-proxy replacement.
+apiVersion: v1alpha1
+kind: KubeProxyConfig
+enabled: false
+---
+# Expose metrics only, retaining etcd's authenticated client API settings.
+cluster:
+  etcd:
+    extraArgs:
+      listen-metrics-urls: http://127.0.0.1:2381,http://192.168.1.10:2381

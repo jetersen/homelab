@@ -3,7 +3,7 @@ clusterName: homelab
 # renovate: datasource=github-releases depName=siderolabs/talos
 talosVersion: v1.14.2
 # renovate: datasource=github-releases depName=kubernetes/kubernetes
-kubernetesVersion: v1.37.1
+kubernetesVersion: v1.36.5
 endpoint: https://192.168.1.10:6443
 domain: cluster.local
 allowSchedulingOnMasters: true
@@ -31,13 +31,10 @@ patches:
         nodeIP:
           validSubnets:
             - 192.168.1.0/24
-    cluster:
-      proxy:
-        disabled: true
 nodes:
   - hostname: talos01
     patches:
-      - "@./patches/control-plane-metrics.yaml"
+      - "@./patches/control-plane-v1.14.yaml"
     userVolumes:
       - name: local-path-provisioner
         provisioning:
