@@ -9,8 +9,14 @@ Kustomize generates a content-hashed ConfigMap, so configuration changes roll
 out a new pod. Runtime files use ephemeral storage; no PVC is needed.
 
 The service account can only read nodes, namespaces, pods, and metrics. Service
-links are explicit; ingress and Gateway discovery are disabled. Service API
-widgets and authentication are not configured. Keep access internal.
+links are explicit; ingress and Gateway discovery are disabled. Keep access
+internal; dashboard authentication is not configured.
+
+The TrueNAS widget uses the WebSocket API (`version: 2`) and shows pool storage
+used, total capacity, usage percentage, and health. Load, uptime, and alert blocks
+are hidden. Its existing API key from Proton Pass is stored in the SOPS-encrypted
+`app/secret.sops.yaml` Secret and injected as `HOMEPAGE_VAR_TRUENAS_KEY`; the
+ConfigMap contains only a placeholder. Other service API widgets are not configured.
 
 Validate locally with:
 

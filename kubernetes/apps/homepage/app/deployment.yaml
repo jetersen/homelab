@@ -30,6 +30,11 @@ spec:
               value: Europe/Copenhagen
             - name: HOMEPAGE_ALLOWED_HOSTS
               value: home.jetersen.dev
+            - name: HOMEPAGE_VAR_TRUENAS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: homepage-truenas
+                  key: api-key
           ports:
             - name: http
               containerPort: 3000
