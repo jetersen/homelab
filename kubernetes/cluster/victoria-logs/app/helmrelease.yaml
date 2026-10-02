@@ -11,6 +11,8 @@ spec:
     name: victoria-logs-single
   values:
     server:
+      vmServiceScrape:
+        enabled: true
       retentionPeriod: 7d
       persistentVolume:
         enabled: true

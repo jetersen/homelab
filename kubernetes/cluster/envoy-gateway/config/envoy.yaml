@@ -76,6 +76,7 @@ spec:
     onInvalidMessage: TerminateStream
   http3: {}
   proxyProtocol:
+    # Towonel TLS passthrough sends PROXY v2; retain it on TCP listeners.
     optional: true
   targetSelectors:
     - group: gateway.networking.k8s.io
@@ -89,6 +90,26 @@ spec:
     alpnProtocols:
       - h2
       - http/1.1
+---
+# Envoy Gateway 1.9.2 also adds the TCP PROXY filter to its QUIC listener,
+# which Envoy rejects. Remove only that filter from UDP, preserving Towonel
+# passthrough and client IP detection on the TCP listener.
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyPatchPolicy
+metadata:
+  name: envoy-proxy-http3
+spec:
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: envoy-proxy
+  type: JSONPatch
+  jsonPatches:
+    - type: type.googleapis.com/envoy.config.listener.v3.Listener
+      name: kube-system/envoy-proxy/https-quic
+      operation:
+        op: remove
+        jsonPath: '$.listener_filters[?(@.name == "envoy.filters.listener.proxy_protocol")]'
 ---
 # yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/gateway.networking.k8s.io/httproute_v1.json
 apiVersion: gateway.networking.k8s.io/v1

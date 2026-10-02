@@ -3,6 +3,10 @@ kind: Kustomization
 resources:
   - helmrelease.yaml
   - source.yaml
+  - infrastructure-scrapes.yaml
+  - blackbox.yaml
+  - probes.yaml
+  - monitoring-rules.yaml
 components:
   - ../../../components/helmrelease-defaults
   - ../../../components/oci-source-defaults
