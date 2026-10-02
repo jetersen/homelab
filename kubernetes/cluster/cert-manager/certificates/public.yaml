@@ -21,4 +21,5 @@ spec:
     - "*.jetersen.dev"
   privateKey:
     algorithm: ECDSA
-    size: 384
+    # Envoy's QUIC listener requires the P-256 curve.
+    size: 256
