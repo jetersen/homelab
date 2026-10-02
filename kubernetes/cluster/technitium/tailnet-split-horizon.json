@@ -1,0 +1,20 @@
+{
+  "appPreference": 40,
+  "networks": {},
+  "enableAddressTranslation": true,
+  "domainGroupMap": {},
+  "networkGroupMap": {
+    "100.99.0.0/16": "tailnet",
+    "fd7a:115c:a1e0::/48": "tailnet"
+  },
+  "groups": [
+    {
+      "name": "tailnet",
+      "enabled": true,
+      "translateReverseLookups": false,
+      "externalToInternalTranslation": {
+        "192.168.1.20/32": "100.99.86.238/32"
+      }
+    }
+  ]
+}

@@ -8,9 +8,9 @@ metadata:
     # Public tier must override: this Gateway's own address is private and must
     # never be published. Routes opt in via public.external-dns.../enabled.
     public.external-dns.alpha.kubernetes.io/target: public.jetersen.dev
-    # The internal tier needs no target annotation: both providers derive the
-    # address from .status.addresses, so it tracks lbipam.cilium.io/ips rather
-    # than being hardcoded a second time.
+    # Internal providers derive the LAN VIP from .status.addresses. Technitium's
+    # source-based Split Horizon app translates that VIP for tailnet clients;
+    # changing the internal target to a tailnet IP would also change LAN DNS.
     towonel.io/gateway-service: kube-system/envoy-proxy:443
 spec:
   gatewayClassName: envoy-proxy
