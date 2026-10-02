@@ -1,0 +1,77 @@
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMProbe
+metadata:
+  name: application-http
+spec:
+  jobName: application-http
+  module: http_2xx
+  interval: 30s
+  scrapeTimeout: 10s
+  vmProberSpec:
+    url: blackbox-exporter.monitoring.svc.cluster.local:9115
+  targets:
+    staticConfig:
+      targets:
+      - http://home-assistant.home-assistant.svc.cluster.local:8123/
+      - http://zigbee2mqtt-app.home-assistant.svc.cluster.local:8080/
+      - http://konflate.konflate.svc.cluster.local:8080/
+      - http://openspeedtest.openspeedtest.svc.cluster.local:3000/
+      - http://jellyfin.media.svc.cluster.local:8096/health
+      - http://grafana.monitoring.svc.cluster.local/api/health
+      - http://technitium-app.technitium.svc.cluster.local:5380/
+      - http://prowlarr.media.svc.cluster.local:9696/ping
+      - http://radarr.media.svc.cluster.local:7878/ping
+      - http://sonarr.media.svc.cluster.local:8989/ping
+      - http://qbittorrent.media.svc.cluster.local:8080/
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMProbe
+metadata:
+  name: nas-mqtt-tcp
+spec:
+  jobName: nas-mqtt-tcp
+  module: tcp_connect
+  interval: 30s
+  scrapeTimeout: 10s
+  vmProberSpec:
+    url: blackbox-exporter.monitoring.svc.cluster.local:9115
+  targets:
+    staticConfig:
+      targets:
+      - 192.168.1.2:443
+      - 192.168.1.2:2049
+      - mosquitto.home-assistant.svc.cluster.local:1883
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMProbe
+metadata:
+  name: technitium-dns
+spec:
+  jobName: technitium-dns
+  module: dns_udp
+  interval: 30s
+  scrapeTimeout: 10s
+  vmProberSpec:
+    url: blackbox-exporter.monitoring.svc.cluster.local:9115
+  targets:
+    staticConfig:
+      targets:
+      - technitium-dns.technitium.svc.cluster.local:53
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMProbe
+metadata:
+  name: gateway-https
+spec:
+  jobName: gateway-https
+  module: http_2xx
+  interval: 30s
+  scrapeTimeout: 10s
+  vmProberSpec:
+    url: blackbox-exporter.monitoring.svc.cluster.local:9115
+  targets:
+    staticConfig:
+      targets:
+      - https://home.jetersen.dev/
+      - https://homeassistant.jetersen.dev/
+      - https://grafana.jetersen.dev/

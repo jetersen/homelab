@@ -1,0 +1,13 @@
+# Keep localhost reachable for Talos's control-plane health probes.
+# Scheduler/controller-manager metrics retain HTTPS and Kubernetes auth.
+# Expose only etcd's metrics endpoint, never its client API, on the node IP.
+cluster:
+  controllerManager:
+    extraArgs:
+      bind-address: 0.0.0.0
+  scheduler:
+    extraArgs:
+      bind-address: 0.0.0.0
+  etcd:
+    extraArgs:
+      listen-metrics-urls: http://127.0.0.1:2381,http://192.168.1.10:2381

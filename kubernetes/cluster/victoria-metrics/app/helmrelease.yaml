@@ -32,6 +32,37 @@ spec:
           limits:
             cpu: 500m
             memory: 1Gi
+    # Talos generates localhost serving certificates for these authenticated endpoints.
+    kubeControllerManager:
+      vmScrape:
+        spec:
+          endpoints:
+            - port: http-metrics
+              scheme: https
+              bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+              tlsConfig:
+                insecureSkipVerify: true
+    kubeScheduler:
+      vmScrape:
+        spec:
+          endpoints:
+            - port: http-metrics
+              scheme: https
+              bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+              tlsConfig:
+                insecureSkipVerify: true
+    # Talos runs etcd as a host service, with a separate metrics-only listener.
+    kubeEtcd:
+      endpoints:
+        - 192.168.1.10
+      service:
+        port: 2381
+        targetPort: 2381
+      vmScrape:
+        spec:
+          endpoints:
+            - port: http-metrics
+              scheme: http
     vmagent:
       enabled: true
       spec:

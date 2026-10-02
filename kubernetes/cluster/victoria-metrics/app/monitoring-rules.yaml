@@ -1,0 +1,73 @@
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+metadata:
+  name: homelab-monitoring
+spec:
+  groups:
+  - name: homelab.service-health
+    rules:
+    - alert: ServiceProbeFailed
+      expr: probe_success == 0
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: Service probe failed for {{ $labels.instance }}
+        description: The {{ $labels.job }} probe has failed continuously for five
+          minutes.
+    - alert: ServiceProbeMetricsMissing
+      expr: up{job=~"application-http|nas-mqtt-tcp|technitium-dns|gateway-https"}
+        == 0
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: Probe metrics unavailable for {{ $labels.instance }}
+        description: The blackbox exporter could not supply probe metrics for this
+          configured target.
+    - alert: VictoriaLogsDroppedRows
+      expr: sum(increase(vl_rows_dropped_total[10m])) > 0
+      for: 0m
+      labels:
+        severity: warning
+      annotations:
+        summary: VictoriaLogs is dropping log rows
+        description: Inspect ingestion errors and timestamp/field limits; rows were
+          discarded over the last ten minutes.
+    - alert: VictoriaLogsIngestionStopped
+      expr: sum(increase(vl_rows_ingested_total[15m])) == 0
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: VictoriaLogs ingestion has stopped
+        description: No logs were ingested for at least fifteen minutes while this
+          cluster normally emits continuous logs.
+    - alert: VictoriaLogsMetricsMissing
+      expr: absent(vl_rows_ingested_total)
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: VictoriaLogs metrics are missing
+        description: VictoriaLogs ingestion health cannot be monitored because its
+          metrics series is absent.
+    - alert: FluxReconciliationFailed
+      expr: gotk_reconcile_condition{type="Ready",status="False"} == 1
+      for: 15m
+      labels:
+        severity: warning
+      annotations:
+        summary: Flux resource {{ $labels.name }} is not ready
+        description: '{{ $labels.kind }} in {{ $labels.namespace }} remains unready
+          after fifteen minutes.'
+    - alert: CertificateExpiresSoon
+      expr: certmanager_certificate_expiration_timestamp_seconds - time() < 7 * 24
+        * 3600
+      for: 1h
+      labels:
+        severity: warning
+      annotations:
+        summary: Certificate {{ $labels.name }} expires within seven days
+        description: Inspect cert-manager renewal and DNS validation before this certificate
+          expires.

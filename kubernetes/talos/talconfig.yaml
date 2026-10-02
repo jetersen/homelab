@@ -36,6 +36,8 @@ patches:
         disabled: true
 nodes:
   - hostname: talos01
+    patches:
+      - "@./patches/control-plane-metrics.yaml"
     userVolumes:
       - name: local-path-provisioner
         provisioning:
