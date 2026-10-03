@@ -20,10 +20,5 @@ The entrypoint runs the staging helper. Pass `--recover` for the pause watchdog.
 Staging still needs the source and destination volumes, writable `/cache` and
 `/tmp`, and the scoped Kubernetes service account used by the backup Job.
 
-The [OCI publishing workflows](/.ci/README.md) publish this image to both Forgejo
-Packages and GHCR. Deploy the tested registry digest with a read-only image pull
-credential and `imagePullPolicy: IfNotPresent`. The staging and watchdog Jobs can
-then use the image entrypoint and drop their script ConfigMap mounts.
-
 See [Forgejo v16 container registry documentation](https://forgejo.org/docs/v16.0/user/packages/container/)
 and [application backup procedures](/kubernetes/apps/forgejo/README.md#backup-and-recovery).
