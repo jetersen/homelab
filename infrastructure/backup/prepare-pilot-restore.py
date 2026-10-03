@@ -30,6 +30,11 @@ def main():
             or status.get('latestMoverStatus', {}).get('result') != 'Successful'):
         raise RuntimeError('The requested manual pilot has not completed successfully.')
     completed = datetime.datetime.fromisoformat(status['lastSyncTime'].replace('Z', '+00:00'))
+    if source['spec'].get('kopia', {}).get('repository') == f'{args.application}-kopia-nas':
+        workflow = json.loads(kubectl(namespace, 'get', 'cronjob', f'{args.application}-backup', '-o', 'json'))
+        replicated = workflow.get('status', {}).get('lastSuccessfulTime')
+        if not replicated or datetime.datetime.fromisoformat(replicated.replace('Z', '+00:00')) < completed:
+            raise RuntimeError('S3 replication has not completed after the latest NAS backup.')
     if cutoff < completed or cutoff > datetime.datetime.now(datetime.timezone.utc):
         raise RuntimeError('Cutoff must be between pilot completion and the current time.')
     name = f'{args.application}-kopia-pilot-restore'

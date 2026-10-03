@@ -20,11 +20,14 @@ class RestoreTests(unittest.TestCase):
                        'status': {'lastManualSync': 'pilot-1',
                                   'latestMoverStatus': {'result': 'Successful'},
                                   'lastSyncTime': (now - datetime.timedelta(minutes=2)).isoformat()}}
+        self.workflow = {'status': {'lastSuccessfulTime': (now - datetime.timedelta(minutes=1)).isoformat()}}
 
     def render(self, application, existing=False):
         def read(*args):
             if args[2] == 'replicationsource':
                 return json.dumps(self.source)
+            if args[2] == 'cronjob':
+                return json.dumps(self.workflow)
             return 'persistentvolumeclaim/existing' if existing else ''
         with patch.object(restore, 'kubectl', side_effect=read), \
                 patch('sys.argv', ['prepare-pilot-restore.py', application, '--as-of', self.cutoff]), \
@@ -57,6 +60,17 @@ class RestoreTests(unittest.TestCase):
         self.source['status']['latestMoverStatus'] = {}
         with self.assertRaisesRegex(RuntimeError, 'not completed'):
             self.render('home-assistant')
+
+    def test_nas_source_still_restores_from_s3_after_verified_replication(self):
+        self.source['spec']['kopia'] = {'repository': 'sonarr-kopia-nas'}
+        _, destination = self.render('sonarr')
+        self.assertEqual(destination['spec']['kopia']['repository'], 'sonarr-kopia')
+
+    def test_cloud_restore_is_rejected_when_latest_nas_backup_has_not_replicated(self):
+        self.source['spec']['kopia'] = {'repository': 'sonarr-kopia-nas'}
+        self.workflow['status'] = {}
+        with self.assertRaisesRegex(RuntimeError, 'S3 replication has not completed'):
+            self.render('sonarr')
 
 
 if __name__ == '__main__':
