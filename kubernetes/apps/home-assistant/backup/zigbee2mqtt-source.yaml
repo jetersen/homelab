@@ -3,7 +3,7 @@ kind: ReplicationSource
 metadata:
   name: zigbee2mqtt-backup
 spec:
-  paused: false
+  paused: true
   sourcePVC: zigbee-backup-exports
   trigger:
     manual: pilot-2
@@ -27,3 +27,10 @@ spec:
         memory: 128Mi
       limits:
         memory: 1Gi
+    retain:
+      hourly: 0
+      daily: 14
+      weekly: 8
+      monthly: 6
+      yearly: 0
+      latest: 1

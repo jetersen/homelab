@@ -18,6 +18,7 @@ class RestoreTests(unittest.TestCase):
         self.cutoff = (now - datetime.timedelta(minutes=1)).isoformat()
         self.source = {'spec': {'trigger': {'manual': 'pilot-1'}},
                        'status': {'lastManualSync': 'pilot-1',
+                                  'latestMoverStatus': {'result': 'Successful'},
                                   'lastSyncTime': (now - datetime.timedelta(minutes=2)).isoformat()}}
 
     def render(self, application, existing=False):
@@ -50,6 +51,11 @@ class RestoreTests(unittest.TestCase):
         self.source['status']['lastManualSync'] = 'older-trigger'
         with self.assertRaisesRegex(RuntimeError, 'not completed'):
             self.render('zigbee2mqtt')
+
+    def test_manual_status_without_a_successful_mover_is_rejected(self):
+        self.source['status']['latestMoverStatus'] = {}
+        with self.assertRaisesRegex(RuntimeError, 'not completed'):
+            self.render('home-assistant')
 
 
 if __name__ == '__main__':

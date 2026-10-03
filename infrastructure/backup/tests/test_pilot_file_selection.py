@@ -22,6 +22,8 @@ class FileSelectionTests(unittest.TestCase):
                 data = folder / 'data'
                 (data / 'backups/nested').mkdir(parents=True)
                 (folder / 'cache').mkdir()
+                (folder / 'global-policy.json').write_text(json.dumps({'retention': {
+                    'keepHourly': 0, 'keepDaily': 14, 'keepWeekly': 8, 'keepMonthly': 6, 'keepYearly': 0}}))
                 archive = data / f'backups/ready.{extension}'
                 if extension == 'tar':
                     with tarfile.open(archive, 'w') as output:
@@ -40,11 +42,14 @@ class FileSelectionTests(unittest.TestCase):
                            '--user', f'{os.getuid()}:{os.getgid()}', '-e', 'HOME=/cache',
                            '-v', f'{data}:/data:ro', '-v', f'{folder}/cache:/cache',
                            '-v', f'{BACKUP}/check-source.sh:/kopia-config/check-source.sh:ro',
+                           '-v', f'{folder}/global-policy.json:/kopia-config/global-policy.json:ro',
                            '-v', f'{BACKUP}/{application}-policy.json:/kopia-config/policy.json:ro', IMAGE,
                            '-c', f'''set -e
 export KOPIA_PASSWORD=offline-test KOPIA_CACHE_DIR=/cache KOPIA_CONFIG_PATH=/kopia-config KOPIA_CHECK_FOR_UPDATES=false
 export DIRECTION=source DATA_DIR=/data KOPIA_REPOSITORY=filesystem:///cache/repository
 export KOPIA_OVERRIDE_USERNAME={application} KOPIA_OVERRIDE_HOSTNAME=homelab
+export KOPIA_GLOBAL_POLICY_FILE=/kopia-config/global-policy.json
+export KOPIA_RETAIN_HOURLY=0 KOPIA_RETAIN_DAILY=14 KOPIA_RETAIN_WEEKLY=8 KOPIA_RETAIN_MONTHLY=6 KOPIA_RETAIN_YEARLY=0 KOPIA_RETAIN_LATEST=1
 export KOPIA_BEFORE_SNAPSHOT='bash /kopia-config/check-source.sh {application}'
 /mover-kopia/entry.sh >/cache/mover-first.log 2>&1
 /mover-kopia/entry.sh >/cache/mover-second.log 2>&1

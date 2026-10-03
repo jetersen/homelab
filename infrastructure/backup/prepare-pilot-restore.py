@@ -25,7 +25,8 @@ def main():
     source = json.loads(kubectl('get', 'replicationsource', f'{args.application}-backup', '-o', 'json'))
     status = source.get('status', {})
     manual = source['spec'].get('trigger', {}).get('manual')
-    if not manual or status.get('lastManualSync') != manual or not status.get('lastSyncTime'):
+    if (not manual or status.get('lastManualSync') != manual or not status.get('lastSyncTime')
+            or status.get('latestMoverStatus', {}).get('result') != 'Successful'):
         raise RuntimeError('The requested manual pilot has not completed successfully.')
     completed = datetime.datetime.fromisoformat(status['lastSyncTime'].replace('Z', '+00:00'))
     if cutoff < completed or cutoff > datetime.datetime.now(datetime.timezone.utc):

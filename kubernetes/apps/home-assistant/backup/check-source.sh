@@ -9,7 +9,7 @@ test ! -e /data/backups/.kopiaignore
 config="${KOPIA_CACHE_DIR}/kopia.config"
 policy="${KOPIA_CONFIG_PATH}/policy.json"
 kopia --config-file="$config" --disable-file-logging policy import --global --from-file="$policy" >/dev/null
-kopia --config-file="$config" --disable-file-logging policy show --global --json |
+kopia --config-file="$config" --disable-file-logging policy show /data --json |
   jq -e --slurpfile expected "$policy" '
     .files == $expected[0]["(global)"].files and
     .retention == $expected[0]["(global)"].retention and
