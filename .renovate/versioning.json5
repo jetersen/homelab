@@ -2,6 +2,16 @@
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
   packageRules: [
     {
+      description: "Track backup helper SemVer releases on both registries",
+      matchDatasources: ["docker"],
+      matchPackageNames: [
+        "forgejo.jetersen.dev/jetersen/homelab/backup-helper",
+        "ghcr.io/jetersen/homelab/backup-helper",
+      ],
+      versioning: "semver",
+      pinDigests: true,
+    },
+    {
       description: "Review Forgejo and chart major upgrades before database migrations",
       matchPackageNames: [
         "code.forgejo.org/forgejo/forgejo",

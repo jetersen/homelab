@@ -68,7 +68,7 @@ spec:
               type: RuntimeDefault
           containers:
           - name: backup
-            image: ghcr.io/jetersen/homelab/backup-helper:main@sha256:0b2ee03aa9a4922904a64be9f500900f42b6fa2e44c7dfe18a50ccc3892c7245
+            image: ghcr.io/jetersen/homelab/backup-helper:0.1.0@sha256:adf327827d20dfe7e5476093dfb5f7291d8f679fafae9e8b2f442ccb0b490e51
             args:
             - forgejo-recover
             securityContext:
