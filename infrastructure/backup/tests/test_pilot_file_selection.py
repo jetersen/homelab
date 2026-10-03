@@ -23,7 +23,7 @@ class FileSelectionTests(unittest.TestCase):
         (data / 'backups/nested').mkdir(parents=True, exist_ok=True)
         (folder / 'cache').mkdir(exist_ok=True)
         if application == 'home-assistant':
-            archive = data / 'backups/ready.tar'
+            archive = data / 'backups/Automatic backup v2026.9.4.tar'
             with tarfile.open(archive, 'w') as output:
                 payload = json.dumps({'fixture': revision}).encode()
                 member = tarfile.TarInfo('backup.json')

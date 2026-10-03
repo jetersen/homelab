@@ -25,7 +25,10 @@ case "$1" in
     done
     test "$(( $(date +%s) - $(stat -c %Y "$latest") ))" -le 108000
     name="$(basename "$latest")"
-    [[ "$name" =~ ^[a-zA-Z0-9_-]+\.tar$ ]]
+    # Native names can include spaces and version dots. Refuse only characters
+    # that would turn this exact path into a glob or another ignore rule.
+    [[ "$name" != *'*'* && "$name" != *'?'* && "$name" != *'['* &&
+       "$name" != *']'* && "$name" != *'\'* && "$name" != *$'\n'* ]]
     effective="${KOPIA_CACHE_DIR}/effective-policy.json"
     jq --arg archive "/backups/$name" '."(global)".files.ignore[-1] = ("!" + $archive)' "$policy" >"$effective"
     policy="$effective"
