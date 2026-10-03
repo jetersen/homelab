@@ -16,7 +16,7 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Build and test the backup helper image
+    - name: Build and smoke test the backup helper image
       shell: bash
       env:
         REGISTRY: ${{ inputs.registry }}
