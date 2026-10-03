@@ -9,6 +9,10 @@ range. Pods use a dedicated public subnet from the ISP's fixed allocation.
 Cilium uses Kubernetes IPAM and native routing with IPv6 masquerading disabled;
 IPv4 masquerading remains enabled.
 
+Keep Cilium's egress gateway disabled while no policies require it. It enables
+tunnel MTU overhead even with native routing; subtracting that overhead from
+Tailscale's 1280-byte MTU puts Pod routes below IPv6's minimum MTU.
+
 Before enabling public Pod addresses, configure the gateway's static IPv6 WAN
 address and route the Pod subnet through the node's LAN ULA address. Keep the
 LAN's public subnet separate from the Pod subnet and retain the IPv6 firewall.
