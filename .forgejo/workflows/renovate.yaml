@@ -39,7 +39,7 @@ jobs:
           private-key: ${{ secrets.GH_READ_APP_PRIVATE_KEY }}
           owner: jetersen
           repositories: homelab
-          permission-contents: read
+          permission-metadata: read
           github-api-url: https://api.github.com
       - name: Update Forgejo dependencies
         shell: bash
