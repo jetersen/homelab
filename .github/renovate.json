@@ -7,5 +7,12 @@
     "github>jetersen/homelab//.renovate/labels.json5",
     "github>jetersen/homelab//.renovate/versioning.json5",
     "github>jetersen/homelab//.renovate/groups.json5"
+  ],
+  "packageRules": [
+    {
+      "description": "GitHub Actions: prefer the latest update over separate major and minor PRs",
+      "matchManagers": ["github-actions"],
+      "separateMajorMinor": false
+    }
   ]
 }
