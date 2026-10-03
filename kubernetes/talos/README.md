@@ -27,6 +27,10 @@ TrueNAS also needs a persistent route for the public Pod subnet through the
 node's LAN ULA address. This keeps Pod-to-NAS traffic symmetric instead of
 sending replies through the gateway, which can break TCP DNS.
 
+Include the public Pod subnet in source-IP restrictions for outbound API
+credentials, including the Cloudflare token shared by cert-manager and
+external-dns. IPv6 requests retain the Pod's public source address.
+
 When migrating an existing IPv4-only cluster, configure Talos's dual-stack
 ranges and give every Node an IPv6 Pod CIDR before enabling Cilium IPv6.
 Kubernetes does not allow changing an allocated Node's Pod CIDRs; recreating
