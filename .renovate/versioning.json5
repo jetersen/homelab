@@ -2,6 +2,16 @@
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
   packageRules: [
     {
+      description: "Review Forgejo and chart major upgrades before database migrations",
+      matchPackageNames: [
+        "code.forgejo.org/forgejo/forgejo",
+        "code.forgejo.org/forgejo-helm/forgejo",
+      ],
+      matchUpdateTypes: ["major"],
+      dependencyDashboardApproval: true,
+      automerge: false,
+    },
+    {
       description: "Talos version management",
       matchDatasources: ["github-releases"],
       matchPackageNames: ["siderolabs/talos"],

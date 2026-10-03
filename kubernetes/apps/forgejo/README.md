@@ -1,6 +1,8 @@
 # Forgejo
 
-Forgejo uses the official Helm chart and the v15 LTS release. Flux manages the
+Forgejo uses the official Helm chart with an explicit application version.
+Application and chart major upgrades require Renovate dashboard approval and
+manual merge because upgrades can change the database schema. Flux manages the
 application and backup jobs. Web access is available at
 `https://forgejo.jetersen.dev` on the LAN and Tailscale. The gateway policy
 allows private client networks and cluster workloads; public DNS publication

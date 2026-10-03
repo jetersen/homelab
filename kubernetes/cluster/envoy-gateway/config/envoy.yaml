@@ -66,7 +66,9 @@ metadata:
 spec:
   clientIPDetection:
     xForwardedFor:
-      numTrustedHops: 1
+      # Towonel supplies the peer address with PROXY v2 before TLS. HTTP clients
+      # must not override that address through an untrusted forwarded header.
+      numTrustedHops: 0
   connection:
     bufferLimit: 8Mi
     maxAcceptPerSocketEvent: 0
@@ -78,9 +80,11 @@ spec:
   proxyProtocol:
     # Towonel TLS passthrough sends PROXY v2; retain it on TCP listeners.
     optional: true
-  targetSelectors:
+  targetRefs:
     - group: gateway.networking.k8s.io
       kind: Gateway
+      name: envoy-proxy
+      sectionName: https
   tcpKeepalive: {}
   timeout:
     http:
