@@ -3,10 +3,10 @@ kind: ReplicationSource
 metadata:
   name: zigbee2mqtt-backup
 spec:
-  paused: true
+  paused: false
   sourcePVC: zigbee-backup-exports
   trigger:
-    manual: pilot-1
+    manual: pilot-2
   kopia:
     repository: zigbee2mqtt-kopia
     copyMethod: Direct
