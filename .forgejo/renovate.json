@@ -3,10 +3,10 @@
   "extends": [
     "github>home-operations/renovate-presets",
     "github>jetersen/.github",
-    "forgejo>jetersen/homelab//.renovate/autoMerge.json5",
-    "forgejo>jetersen/homelab//.renovate/labels.json5",
-    "forgejo>jetersen/homelab//.renovate/versioning.json5",
-    "forgejo>jetersen/homelab//.renovate/groups.json5"
+    "local>jetersen/homelab//.renovate/autoMerge.json5",
+    "local>jetersen/homelab//.renovate/labels.json5",
+    "local>jetersen/homelab//.renovate/versioning.json5",
+    "local>jetersen/homelab//.renovate/groups.json5"
   ],
   "packageRules": [
     {
