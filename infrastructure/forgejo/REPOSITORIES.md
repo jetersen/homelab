@@ -16,6 +16,8 @@ Renovate dispatch with `dry_run` enabled inspects updates without creating PRs.
 Konflate reviews Forgejo pull requests and receives signed Forgejo webhooks.
 Its read and write credentials belong to a dedicated collaborator with access
 only to the public homelab repository.
+Forgejo protects `main` with the required `Konflate` status check and permits
+direct pushes only from the owner. Renovate can merge PRs after that check passes.
 
 The secrets repository remains private on both services and has no OCI publisher.
 Flux reads it independently through a read-only SSH deploy key. Application

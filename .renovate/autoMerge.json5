@@ -1,7 +1,6 @@
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
-  // Auto-merge everything via GitHub native auto-merge; a ruleset on main
-  // requires 1 approval, so nothing merges until reviewed.
+  // Use platform-native auto-merge after main's required Konflate check passes.
   automerge: true,
   automergeType: "pr",
   automergeStrategy: "rebase",
