@@ -27,3 +27,4 @@ spec:
   path: ./kubernetes/apps/forgejo/backup
   dependsOn:
     - name: forgejo
+    - name: kopiur

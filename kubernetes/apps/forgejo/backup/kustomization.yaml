@@ -1,11 +1,14 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: forgejo
+generatorOptions:
+  disableNameSuffixHash: true
 resources:
-  - secret.sops.yaml
-  - nas-storage.sops.yaml
-  - automation.yaml
+- secret.sops.yaml
+- nas-storage.sops.yaml
+- automation.yaml
+- kopiur.yaml
 configMapGenerator:
-  - name: forgejo-backup-runner
-    files:
-      - backup.py
+- name: forgejo-backup-staging-script
+  files:
+  - stage-forgejo.py

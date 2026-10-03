@@ -49,11 +49,11 @@ quota; monitor node disk space and dataset usage before importing large repos.
 
 ## Backup and recovery
 
-At 03:00 UTC, `forgejo-backup` stages both stores on a separate NAS dataset.
+At 03:00 UTC, Kopiur invokes a pre-backup Job that stages both stores on a separate NAS dataset.
 It first copies while Forgejo is online, stops the deployment, waits for all
 application pods to terminate, then performs a checksum synchronization.
 It validates a local copy of the staged SQLite database and resumes Forgejo
-before uploading an encrypted Kopia snapshot to the dedicated S3 repository.
+before Kopiur snapshots the staged copy to the dedicated S3 repository.
 Staging is not an independent backup. The S3 snapshot is the offsite copy.
 
 Retention keeps 3 latest, 14 daily, 8 weekly, and 6 monthly snapshots.
@@ -67,12 +67,14 @@ existing SOPS manifests as the schema for NAS volumes, administrator credentials
 and the backup connection. Resolve credentials through Varlock, keep NAS destination
 records private, and encrypt protected values before writing manifests. Review
 existing storage and credentials before replacing them. Initialize the dedicated
-S3 repository once using the backup runner's `--initialize` option; scheduled jobs only connect
-and fail if the repository is unavailable.
+S3 repository once with Kopiur's `Repository.spec.create.enabled: true`; set it back to `false`
+after initialization so an unavailable repository fails closed.
 
-For recovery, suspend the backup and recovery CronJobs and the HelmRelease,
+For recovery, suspend the Kopiur SnapshotSchedule, maintenance, the recovery
+CronJob, and the HelmRelease,
 then stop Forgejo. Connect to Kopia with the backup Secret and restore one
-snapshot into an isolated destination. Restore its `local/` and `nas/` trees
+snapshot into an isolated destination. Restore its `current/local/` and
+`current/nas/` trees
 together onto the corresponding volumes, preserving configuration, generated
 secrets, host keys, and UID/GID 1000 permissions. Validate SQLite on local
 storage and run `git fsck` on restored repositories before starting Forgejo.

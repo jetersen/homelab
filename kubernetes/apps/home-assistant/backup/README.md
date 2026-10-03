@@ -5,7 +5,8 @@ The Zigbee export includes device and coordinator recovery data, configuration,
 custom extensions, and Kubernetes-injected settings. Logs and firmware are excluded.
 Scheduling, file selection, and Kopia retention are configured in the manifests.
 Each workflow backs up to the NAS, verifies retained files locally, then replicates
-the encrypted repository to S3. Both destinations share the same retention policy.
+the encrypted repository to S3. Repository replication mirrors the primary repository, including retention changes.
+Its hourly schedule is separate from the snapshot schedule.
 
 Keep Home Assistant's emergency kit outside the cluster. Its archive encryption
 key is separate from the Kopia password. Backup archives and recovered settings
@@ -23,25 +24,23 @@ to reclaim expired data; see [Kopia's maintenance guide](https://kopia.io/docs/a
 
 ## Backup
 
-Schedules are defined in `automation.yaml`. Home Assistant creates its native
-backup first; the offsite workflow requires a recent completed archive. To run
-an offsite backup manually:
+Kopiur schedules are defined in `kopiur.yaml`. Home Assistant creates its native
+backup first; the pre-backup Job validates and stages only the newest completed
+archive on a dedicated export PVC. The source must contain one to three native
+archives, none being written, and the newest must be less than 30 hours old.
+Kopiur never reads the live recorder database.
 
-```bash
-kubectl --context homelab -n home-assistant create job home-assistant-backup-UNIQUE_TRIGGER \
-  --from=cronjob/home-assistant-backup
-kubectl --context homelab -n home-assistant wait --for=condition=complete \
-  job/home-assistant-backup-UNIQUE_TRIGGER --timeout=3600s
-```
-
-Use `zigbee2mqtt-backup` for Zigbee, which exports before uploading. Pause schedules
-through GitOps by setting the workflow CronJob's `spec.suspend` to `true`.
+Zigbee's pre-backup Job requests and validates a fresh native export before its
+snapshot. Follow the [manual backup procedure](/kubernetes/cluster/kopiur/README.md#manual-backups)
+with policy `home-assistant-backup` or `zigbee2mqtt-backup` in namespace
+`home-assistant`. Pause snapshots through GitOps with
+`SnapshotSchedule.spec.schedule.suspend: true`.
 
 ## Restore
 
-Follow the [isolated restore procedure](/kubernetes/cluster/volsync/README.md#isolated-restores)
+Follow the [isolated restore procedure](/kubernetes/cluster/kopiur/README.md#isolated-restores)
 with application `home-assistant` or `zigbee2mqtt` in namespace `home-assistant`.
-Use the application's S3 connection and a new PVC after verifying completed
+Use the application's read-only `APPLICATION-offsite` repository and a new PVC after verifying completed
 replication. Verify the restored archives before following the application's
 recovery procedure. Home Assistant needs the saved
 emergency key. Keep Zigbee recovery tests disconnected from the live coordinator.

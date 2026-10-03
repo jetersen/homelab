@@ -2,21 +2,14 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: media
 resources:
-- sonarr-source.yaml
 - sonarr-export.yaml
 - sonarr-secret.sops.yaml
 - sonarr-nas-secret.sops.yaml
-- automation.yaml
 - nas-storage.sops.yaml
+- kopiur.yaml
 generatorOptions:
   disableNameSuffixHash: true
 configMapGenerator:
-- name: sonarr-backup-policy
+- name: sonarr-backup-export-script
   files:
-  - policy.json=sonarr-policy.json
-  - check-source.sh
   - export-sonarr.py
-  literals:
-  - global-policy.json={"retention":{"keepLatest":3,"keepHourly":0,"keepDaily":0,"keepWeekly":0,"keepMonthly":0,"keepAnnual":0}}
-components:
-- ../../../components/application-backup

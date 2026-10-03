@@ -70,3 +70,89 @@ spec:
         scrapeInterval: 20s
     victoria-metrics-operator:
       enabled: true
+    kube-state-metrics:
+      rbac:
+        extraRules:
+          - apiGroups: [kopiur.home-operations.com]
+            resources: [maintenances, repositoryreplications, snapshotschedules]
+            verbs: [list, watch]
+      customResourceState:
+        enabled: true
+        config:
+          kind: CustomResourceStateMetrics
+          spec:
+            resources:
+              - groupVersionKind:
+                  group: kopiur.home-operations.com
+                  version: v1alpha1
+                  kind: Maintenance
+                metricNamePrefix: homelab_kopiur
+                labelsFromPath:
+                  namespace: [metadata, namespace]
+                  name: [metadata, name]
+                metrics:
+                  - name: maintenance_created
+                    help: Creation timestamp of a Kopiur maintenance resource.
+                    each:
+                      type: Gauge
+                      gauge:
+                        path: [metadata, creationTimestamp]
+                  - name: maintenance_full_last_success_timestamp_seconds
+                    help: Last successful full maintenance timestamp.
+                    each:
+                      type: Gauge
+                      gauge:
+                        path: [status, full, lastRunAt]
+                        nilIsZero: true
+                  - name: maintenance_full_failures
+                    help: Consecutive failed full maintenance runs.
+                    each:
+                      type: Gauge
+                      gauge:
+                        path: [status, full, consecutiveFailures]
+                        nilIsZero: true
+                  - name: maintenance_quick_failures
+                    help: Consecutive failed quick maintenance runs.
+                    each:
+                      type: Gauge
+                      gauge:
+                        path: [status, quick, consecutiveFailures]
+                        nilIsZero: true
+              - groupVersionKind:
+                  group: kopiur.home-operations.com
+                  version: v1alpha1
+                  kind: RepositoryReplication
+                metricNamePrefix: homelab_kopiur
+                labelsFromPath:
+                  namespace: [metadata, namespace]
+                  name: [metadata, name]
+                metrics:
+                  - name: replication_last_success_timestamp_seconds
+                    help: Last successful offsite replication timestamp.
+                    each:
+                      type: Gauge
+                      gauge:
+                        path: [status, lastReplicated]
+                        nilIsZero: true
+              - groupVersionKind:
+                  group: kopiur.home-operations.com
+                  version: v1alpha1
+                  kind: SnapshotSchedule
+                metricNamePrefix: homelab_kopiur
+                labelsFromPath:
+                  namespace: [metadata, namespace]
+                  name: [metadata, name]
+                metrics:
+                  - name: schedule_created
+                    help: Creation timestamp of a Kopiur snapshot schedule.
+                    each:
+                      type: Gauge
+                      gauge:
+                        path: [metadata, creationTimestamp]
+                  - name: schedule_suspended
+                    help: Whether a Kopiur snapshot schedule is suspended.
+                    each:
+                      type: Gauge
+                      gauge:
+                        path: [spec, schedule, suspend]
+                        nilIsZero: true

@@ -7,71 +7,53 @@ spec:
   - name: homelab.backups
     rules:
     - alert: ApplicationBackupFailed
-      expr: "(max by (namespace, cronjob) (\n  label_replace(\n    kube_job_status_start_time\n\
-        \    * on (namespace, job_name) (kube_job_failed{condition=\"true\"} == 1)\n\
-        \    * on (namespace, job_name) group_left (owner_name) kube_job_owner{owner_kind=\"\
-        CronJob\",owner_name=~\"home-assistant-backup|zigbee2mqtt-backup|sonarr-backup|forgejo-backup|forgejo-backup-recovery|.*-backup-maintenance\"\
-        },\n    \"cronjob\", \"$1\", \"owner_name\", \"(.*)\"\n  )\n) > on (namespace,\
-        \ cronjob) kube_cronjob_status_last_successful_time)\nor\n(max by (namespace,\
-        \ cronjob) (\n  label_replace(\n    kube_job_status_start_time\n    * on (namespace,\
-        \ job_name) (kube_job_failed{condition=\"true\"} == 1)\n    * on (namespace,\
-        \ job_name) group_left (owner_name) kube_job_owner{owner_kind=\"CronJob\"\
-        ,owner_name=~\"home-assistant-backup|zigbee2mqtt-backup|sonarr-backup|forgejo-backup|forgejo-backup-recovery|.*-backup-maintenance\"\
-        },\n    \"cronjob\", \"$1\", \"owner_name\", \"(.*)\"\n  )\n) unless on (namespace,\
-        \ cronjob) kube_cronjob_status_last_successful_time)"
-      for: 1m
+      expr: min by (namespace, policy) (kopiur_snapshotpolicy_last_backup_success) == 0
+      for: 5m
       labels:
         severity: warning
       annotations:
-        summary: Backup job failed for {{ $labels.namespace }}/{{ $labels.cronjob
-          }}
-        description: The latest failed job has not been followed by a successful backup
-          or maintenance run.
+        summary: Latest Kopiur backup failed for {{ $labels.namespace }}/{{ $labels.policy }}
     - alert: ApplicationBackupStale
-      expr: "(\n  time() - kube_cronjob_status_last_successful_time{namespace=~\"\
-        home-assistant|media|forgejo\",cronjob=~\"home-assistant-backup|zigbee2mqtt-backup|sonarr-backup|forgejo-backup\"\
-        } > 108000\n  or\n  ((time() - kube_cronjob_created{namespace=~\"home-assistant|media|forgejo\"\
-        ,cronjob=~\"home-assistant-backup|zigbee2mqtt-backup|sonarr-backup|forgejo-backup\"} > 108000)\n\
-        \   unless on (namespace, cronjob) kube_cronjob_status_last_successful_time)\n\
-        )\nand on (namespace, cronjob) (kube_cronjob_spec_suspend == 0)"
+      expr: "(\n  time() - kopiur_policy_last_backup_success_timestamp_seconds > 108000\n  or\n  (label_replace(time() - homelab_kopiur_schedule_created, \"policy\", \"$1\", \"name\", \"(.*)\") > 108000\n   unless on (namespace, policy) kopiur_policy_last_backup_success_timestamp_seconds)\n)\nand on (namespace, policy)\n  label_replace(homelab_kopiur_schedule_suspended == 0, \"policy\", \"$1\", \"name\", \"(.*)\")"
       for: 5m
       labels:
         severity: warning
       annotations:
-        summary: '{{ $labels.cronjob }} has no recent successful run'
-        description: Inspect the backup workflow and repository access before relying
-          on recovery.
+        summary: No recent Kopiur backup for {{ $labels.namespace }}/{{ $labels.policy }}
+    - alert: BackupRepositoryUnavailable
+      expr: max by (namespace, name) (kopiur_resource_phase{kind="Repository",phase=~"Degraded|Failed"}) == 1
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: Kopiur repository {{ $labels.namespace }}/{{ $labels.name }} is unavailable
+    - alert: BackupMaintenanceFailed
+      expr: homelab_kopiur_maintenance_full_failures > 0 or homelab_kopiur_maintenance_quick_failures > 0
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: Kopiur maintenance failed for {{ $labels.namespace }}/{{ $labels.name }}
     - alert: BackupMaintenanceStale
-      expr: "(\n  time() - kube_cronjob_status_last_successful_time{namespace=~\"\
-        home-assistant|media|forgejo\",cronjob=~\".*-backup-maintenance\"} > 172800\n  or\n\
-        \  ((time() - kube_cronjob_created{namespace=~\"home-assistant|media|forgejo\",cronjob=~\"\
-        .*-backup-maintenance\"} > 172800)\n   unless on (namespace, cronjob) kube_cronjob_status_last_successful_time)\n\
-        )\nand on (namespace, cronjob) (kube_cronjob_spec_suspend == 0)"
+      expr: '(time() - homelab_kopiur_maintenance_full_last_success_timestamp_seconds > 172800)
+
+        and on (namespace, name) (time() - homelab_kopiur_maintenance_created > 172800)'
       for: 5m
       labels:
         severity: warning
       annotations:
-        summary: '{{ $labels.cronjob }} has no recent successful run'
-        description: Inspect the backup workflow and repository access before relying
-          on recovery.
+        summary: No recent full Kopiur maintenance for {{ $labels.namespace }}/{{ $labels.name }}
+    - alert: BackupReplicationStale
+      expr: time() - homelab_kopiur_replication_last_success_timestamp_seconds > 7200
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: No successful offsite replication within two hours for {{ $labels.namespace }}/{{ $labels.name }}
     - alert: BackupMonitoringMissing
-      expr: 'absent(kube_cronjob_info{namespace="home-assistant",cronjob="home-assistant-backup"})
-
-        or
-
-        absent(kube_cronjob_info{namespace="home-assistant",cronjob="zigbee2mqtt-backup"})
-
-        or
-
-        absent(kube_cronjob_info{namespace="media",cronjob="sonarr-backup"})
-
-        or
-
-        absent(kube_cronjob_info{namespace="forgejo",cronjob="forgejo-backup"})'
+      expr: absent(homelab_kopiur_schedule_created{namespace="home-assistant",name="home-assistant-backup"}) or absent(homelab_kopiur_schedule_created{namespace="home-assistant",name="zigbee2mqtt-backup"}) or absent(homelab_kopiur_schedule_created{namespace="media",name="sonarr-backup"}) or absent(homelab_kopiur_schedule_created{namespace="forgejo",name="forgejo-backup"})
       for: 10m
       labels:
         severity: warning
       annotations:
-        summary: Backup schedule metrics are missing
-        description: The backup schedule is absent or kube-state-metrics is not reporting
-          it.
+        summary: A Kopiur backup schedule or its metrics are missing

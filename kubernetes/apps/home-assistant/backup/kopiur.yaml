@@ -1,0 +1,546 @@
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: Repository
+metadata:
+  name: home-assistant-backup
+spec:
+  backend:
+    filesystem:
+      path: /mnt/nas-repository
+      volume:
+        pvc:
+          name: home-assistant-nas-backup
+  encryption:
+    passwordSecretRef:
+      name: home-assistant-kopia-nas
+      key: KOPIA_PASSWORD
+  create:
+    enabled: false
+  mode: ReadWrite
+  catalog:
+    adoption: Ignore
+    periodicRefresh: true
+    refreshInterval: 1h
+  scheduleDefaults:
+    timezone: Etc/UTC
+  concurrency:
+    maxConcurrentJobs: 1
+  moverDefaults:
+    securityContext:
+      runAsUser: 0
+      runAsGroup: 0
+      runAsNonRoot: false
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        memory: 1Gi
+    cache:
+      capacity: 1Gi
+      metadataCacheSizeMb: 64
+      contentCacheSizeMb: 128
+    ttlSecondsAfterFinished: 3600
+  maintenance:
+    enabled: true
+    takeoverPolicy: Force
+    schedule:
+      quick:
+        cron: 0 */6 * * *
+        jitter: 0s
+      full:
+        cron: 0 10 * * *
+        jitter: 0s
+      timezone: Etc/UTC
+---
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: Repository
+metadata:
+  name: home-assistant-offsite
+spec:
+  backend:
+    s3:
+      bucket: jetersen-homelab-kopia
+      prefix: pilot/home-assistant/
+      endpoint: s3.de.io.cloud.ovh.net
+      region: de
+      auth:
+        secretRef:
+          name: home-assistant-kopia
+  encryption:
+    passwordSecretRef:
+      name: home-assistant-kopia
+      key: KOPIA_PASSWORD
+  create:
+    enabled: false
+  mode: ReadOnly
+  catalog:
+    adoption: Ignore
+    periodicRefresh: true
+    refreshInterval: 1h
+  scheduleDefaults:
+    timezone: Etc/UTC
+  concurrency:
+    maxConcurrentJobs: 1
+  moverDefaults:
+    securityContext:
+      runAsUser: 0
+      runAsGroup: 0
+      runAsNonRoot: false
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        memory: 1Gi
+    cache:
+      capacity: 1Gi
+      metadataCacheSizeMb: 64
+      contentCacheSizeMb: 128
+    ttlSecondsAfterFinished: 3600
+  maintenance:
+    enabled: false
+---
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotPolicy
+metadata:
+  name: home-assistant-backup
+spec:
+  repository:
+    kind: Repository
+    name: home-assistant-backup
+  identity:
+    username: home-assistant
+    hostname: homelab
+  sources:
+  - pvc:
+      name: home-assistant-backup-exports
+    sourcePathOverride: /data
+  copyMethod: Direct
+  defaultDeletionPolicy: Delete
+  adoption: Ignore
+  retention:
+    keepLatest: 3
+    keepHourly: 0
+    keepDaily: 0
+    keepWeekly: 0
+    keepMonthly: 0
+    keepAnnual: 0
+  files:
+    ignoreRules: []
+    ignoreCacheDirs: false
+  extraArgs:
+  - --inherit=false
+  - --clear-ignore
+  - --clear-dot-ignore
+  - --keep-latest=2147483647
+  - --keep-hourly=0
+  - --keep-daily=0
+  - --keep-weekly=0
+  - --keep-monthly=0
+  - --keep-annual=0
+  errorHandling:
+    failFast: true
+  hooks:
+    beforeSnapshot:
+    - runJob:
+        timeout: 5m
+        jobSpec:
+          backoffLimit: 0
+          activeDeadlineSeconds: 240
+          template:
+            spec:
+              automountServiceAccountToken: false
+              restartPolicy: Never
+              securityContext:
+                runAsUser: 0
+                runAsGroup: 0
+                seccompProfile:
+                  type: RuntimeDefault
+              containers:
+              - name: export
+                image: docker.io/library/python:3.14.5-slim@sha256:c845af9399020c7e562969a13689e929074a10fd057acd1b1fad06a2fb068e97
+                command:
+                - python3
+                - /scripts/stage-home-assistant.py
+                env:
+                - name: PYTHONDONTWRITEBYTECODE
+                  value: '1'
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: true
+                  capabilities:
+                    drop:
+                    - ALL
+                resources:
+                  requests:
+                    cpu: 50m
+                    memory: 64Mi
+                  limits:
+                    memory: 512Mi
+                volumeMounts:
+                - name: config
+                  mountPath: /data
+                  readOnly: true
+                - name: exports
+                  mountPath: /exports
+                - name: script
+                  mountPath: /scripts
+                  readOnly: true
+                - name: temporary
+                  mountPath: /tmp
+              volumes:
+              - name: config
+                persistentVolumeClaim:
+                  claimName: home-assistant-pvc
+              - name: exports
+                persistentVolumeClaim:
+                  claimName: home-assistant-backup-exports
+              - name: script
+                configMap:
+                  name: home-assistant-backup-export-script
+              - name: temporary
+                emptyDir:
+                  medium: Memory
+                  sizeLimit: 256Mi
+          ttlSecondsAfterFinished: 3600
+  verification:
+    verifyFilesPercent: 100
+    quick:
+      schedule:
+        cron: 0 9 * * *
+        jitter: 0s
+    successExpr: stats.files > 0 && stats.errors == 0
+---
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotSchedule
+metadata:
+  name: home-assistant-backup
+spec:
+  policyRef:
+    name: home-assistant-backup
+  schedule:
+    cron: 0 7 * * *
+    timezone: Etc/UTC
+    concurrencyPolicy: Forbid
+    startingDeadlineSeconds: 3600
+  failedJobsHistoryLimit: 2
+  deletion:
+    onScheduleDelete: Retain
+---
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: RepositoryReplication
+metadata:
+  name: home-assistant-offsite
+spec:
+  sourceRef:
+    kind: Repository
+    name: home-assistant-backup
+  destination:
+    s3:
+      bucket: jetersen-homelab-kopia
+      prefix: pilot/home-assistant/
+      endpoint: s3.de.io.cloud.ovh.net
+      region: de
+      auth:
+        secretRef:
+          name: home-assistant-kopia
+  schedule:
+    cron: 40 * * * *
+    timezone: Etc/UTC
+    jitter: 0s
+  sync:
+    parallel: 4
+    deleteExtra: true
+    mustExist: true
+    update: true
+---
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: Repository
+metadata:
+  name: zigbee2mqtt-backup
+spec:
+  backend:
+    filesystem:
+      path: /mnt/nas-repository
+      volume:
+        pvc:
+          name: zigbee2mqtt-nas-backup
+  encryption:
+    passwordSecretRef:
+      name: zigbee2mqtt-kopia-nas
+      key: KOPIA_PASSWORD
+  create:
+    enabled: false
+  mode: ReadWrite
+  catalog:
+    adoption: Ignore
+    periodicRefresh: true
+    refreshInterval: 1h
+  scheduleDefaults:
+    timezone: Etc/UTC
+  concurrency:
+    maxConcurrentJobs: 1
+  moverDefaults:
+    securityContext:
+      runAsUser: 0
+      runAsGroup: 0
+      runAsNonRoot: false
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        memory: 1Gi
+    cache:
+      capacity: 1Gi
+      metadataCacheSizeMb: 64
+      contentCacheSizeMb: 128
+    ttlSecondsAfterFinished: 3600
+  maintenance:
+    enabled: true
+    takeoverPolicy: Force
+    schedule:
+      quick:
+        cron: 20 */6 * * *
+        jitter: 0s
+      full:
+        cron: 20 10 * * *
+        jitter: 0s
+      timezone: Etc/UTC
+---
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: Repository
+metadata:
+  name: zigbee2mqtt-offsite
+spec:
+  backend:
+    s3:
+      bucket: jetersen-homelab-kopia
+      prefix: pilot/zigbee2mqtt/
+      endpoint: s3.de.io.cloud.ovh.net
+      region: de
+      auth:
+        secretRef:
+          name: zigbee2mqtt-kopia
+  encryption:
+    passwordSecretRef:
+      name: zigbee2mqtt-kopia
+      key: KOPIA_PASSWORD
+  create:
+    enabled: false
+  mode: ReadOnly
+  catalog:
+    adoption: Ignore
+    periodicRefresh: true
+    refreshInterval: 1h
+  scheduleDefaults:
+    timezone: Etc/UTC
+  concurrency:
+    maxConcurrentJobs: 1
+  moverDefaults:
+    securityContext:
+      runAsUser: 0
+      runAsGroup: 0
+      runAsNonRoot: false
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        memory: 1Gi
+    cache:
+      capacity: 1Gi
+      metadataCacheSizeMb: 64
+      contentCacheSizeMb: 128
+    ttlSecondsAfterFinished: 3600
+  maintenance:
+    enabled: false
+---
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotPolicy
+metadata:
+  name: zigbee2mqtt-backup
+spec:
+  repository:
+    kind: Repository
+    name: zigbee2mqtt-backup
+  identity:
+    username: zigbee2mqtt
+    hostname: homelab
+  sources:
+  - pvc:
+      name: zigbee-backup-exports
+    sourcePathOverride: /data
+  copyMethod: Direct
+  defaultDeletionPolicy: Delete
+  adoption: Ignore
+  retention:
+    keepLatest: 1
+    keepHourly: 0
+    keepDaily: 14
+    keepWeekly: 8
+    keepMonthly: 6
+    keepAnnual: 0
+  files:
+    ignoreRules: []
+    ignoreCacheDirs: false
+  extraArgs:
+  - --inherit=false
+  - --clear-ignore
+  - --clear-dot-ignore
+  - --keep-latest=2147483647
+  - --keep-hourly=0
+  - --keep-daily=0
+  - --keep-weekly=0
+  - --keep-monthly=0
+  - --keep-annual=0
+  errorHandling:
+    failFast: true
+  hooks:
+    beforeSnapshot:
+    - runJob:
+        timeout: 5m
+        jobSpec:
+          backoffLimit: 0
+          activeDeadlineSeconds: 240
+          template:
+            spec:
+              automountServiceAccountToken: false
+              restartPolicy: Never
+              securityContext:
+                runAsUser: 0
+                runAsGroup: 0
+                seccompProfile:
+                  type: RuntimeDefault
+              containers:
+              - name: export
+                image: docker.io/koenkk/zigbee2mqtt:2.14.2@sha256:addbfb08fcef2e4477de1535636118241e10d13e898fbe4d9faba8a4d7396311
+                command:
+                - node
+                - /scripts/export-zigbee.cjs
+                env:
+                - name: MQTT_SERVER
+                  value: mqtt://mosquitto:1883
+                - name: NODE_PATH
+                  value: /app/node_modules
+                - name: ZIGBEE2MQTT_CONFIG_MQTT_SERVER
+                  value: mqtt://mosquitto:1883
+                - name: ZIGBEE2MQTT_CONFIG_MQTT_CLIENT_ID
+                  value: zigbee2mqtt
+                - name: ZIGBEE2MQTT_CONFIG_MQTT_BASE_TOPIC
+                  value: zigbee2mqtt
+                - name: ZIGBEE2MQTT_CONFIG_SERIAL_PORT
+                  value: tcp://192.168.1.9:6638
+                - name: ZIGBEE2MQTT_CONFIG_SERIAL_ADAPTER
+                  value: zstack
+                - name: ZIGBEE2MQTT_CONFIG_SERIAL_BAUDRATE
+                  value: '115200'
+                - name: ZIGBEE2MQTT_CONFIG_SERIAL_RTSCTS
+                  value: 'false'
+                - name: ZIGBEE2MQTT_CONFIG_ADVANCED_CHANNEL
+                  value: '25'
+                - name: ZIGBEE2MQTT_CONFIG_ADVANCED_TRANSMIT_POWER
+                  value: '20'
+                - name: ZIGBEE2MQTT_CONFIG_HOMEASSISTANT_ENABLED
+                  value: 'true'
+                - name: ZIGBEE2MQTT_CONFIG_MQTT_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: zigbee2mqtt
+                      key: mqttUser
+                - name: ZIGBEE2MQTT_CONFIG_MQTT_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: zigbee2mqtt
+                      key: mqttPassword
+                - name: ZIGBEE2MQTT_CONFIG_ADVANCED_NETWORK_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: zigbee2mqtt
+                      key: zigbeeNetworkKey
+                - name: ZIGBEE2MQTT_CONFIG_ADVANCED_PAN_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: zigbee2mqtt
+                      key: zigbeePanId
+                - name: ZIGBEE2MQTT_CONFIG_ADVANCED_EXT_PAN_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: zigbee2mqtt
+                      key: zigbeeExtPanId
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: true
+                  capabilities:
+                    drop:
+                    - ALL
+                resources:
+                  requests:
+                    cpu: 50m
+                    memory: 64Mi
+                  limits:
+                    memory: 256Mi
+                volumeMounts:
+                - name: exports
+                  mountPath: /exports
+                - name: script
+                  mountPath: /scripts
+                  readOnly: true
+              volumes:
+              - name: exports
+                persistentVolumeClaim:
+                  claimName: zigbee-backup-exports
+              - name: script
+                configMap:
+                  name: zigbee-backup-export-script
+          ttlSecondsAfterFinished: 3600
+  verification:
+    verifyFilesPercent: 100
+    quick:
+      schedule:
+        cron: 0 9 * * *
+        jitter: 0s
+    successExpr: stats.files > 0 && stats.errors == 0
+---
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotSchedule
+metadata:
+  name: zigbee2mqtt-backup
+spec:
+  policyRef:
+    name: zigbee2mqtt-backup
+  schedule:
+    cron: 20 7 * * *
+    timezone: Etc/UTC
+    concurrencyPolicy: Forbid
+    startingDeadlineSeconds: 3600
+  failedJobsHistoryLimit: 2
+  deletion:
+    onScheduleDelete: Retain
+---
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: RepositoryReplication
+metadata:
+  name: zigbee2mqtt-offsite
+spec:
+  sourceRef:
+    kind: Repository
+    name: zigbee2mqtt-backup
+  destination:
+    s3:
+      bucket: jetersen-homelab-kopia
+      prefix: pilot/zigbee2mqtt/
+      endpoint: s3.de.io.cloud.ovh.net
+      region: de
+      auth:
+        secretRef:
+          name: zigbee2mqtt-kopia
+  schedule:
+    cron: 50 * * * *
+    timezone: Etc/UTC
+    jitter: 0s
+  sync:
+    parallel: 4
+    deleteExtra: true
+    mustExist: true
+    update: true

@@ -139,7 +139,7 @@ Varlock and encrypt the payload with SOPS using the destination filename and the
 repository's `.sops.yaml` rules. Keep plaintext in memory and verify that protected
 values are encrypted before writing manifests. Review existing connections before
 replacing them.
-See [application backup setup](../../kubernetes/cluster/volsync/README.md) for
+See [application backup setup](../../kubernetes/cluster/kopiur/README.md) for
 consistency, manual backup, and recovery procedures.
 
 ## Local validation

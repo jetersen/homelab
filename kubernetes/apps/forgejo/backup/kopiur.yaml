@@ -1,0 +1,208 @@
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: Repository
+metadata:
+  name: forgejo-backup
+spec:
+  backend:
+    s3:
+      bucket: jetersen-homelab-kopia
+      prefix: applications/forgejo/
+      endpoint: s3.de.io.cloud.ovh.net
+      region: de
+      auth:
+        secretRef:
+          name: forgejo-kopia
+  encryption:
+    passwordSecretRef:
+      name: forgejo-kopia
+      key: KOPIA_PASSWORD
+  create:
+    enabled: false
+  mode: ReadWrite
+  catalog:
+    adoption: Ignore
+    periodicRefresh: true
+    refreshInterval: 1h
+  scheduleDefaults:
+    timezone: Etc/UTC
+  concurrency:
+    maxConcurrentJobs: 1
+  moverDefaults:
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      runAsNonRoot: true
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        memory: 1Gi
+    cache:
+      capacity: 1Gi
+      metadataCacheSizeMb: 64
+      contentCacheSizeMb: 128
+    ttlSecondsAfterFinished: 3600
+    podSecurityContext:
+      fsGroup: 1000
+      fsGroupChangePolicy: OnRootMismatch
+  maintenance:
+    enabled: true
+    takeoverPolicy: Force
+    schedule:
+      quick:
+        cron: 0 */6 * * *
+        jitter: 0s
+      full:
+        cron: 0 10 * * *
+        jitter: 0s
+      timezone: Etc/UTC
+---
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotPolicy
+metadata:
+  name: forgejo-backup
+spec:
+  repository:
+    kind: Repository
+    name: forgejo-backup
+  identity:
+    username: forgejo
+    hostname: homelab
+  sources:
+  - pvc:
+      name: forgejo-backup-staging
+    sourcePathOverride: /stage
+  copyMethod: Direct
+  defaultDeletionPolicy: Delete
+  adoption: Ignore
+  retention:
+    keepLatest: 3
+    keepHourly: 0
+    keepDaily: 14
+    keepWeekly: 8
+    keepMonthly: 6
+    keepAnnual: 0
+  files:
+    ignoreRules:
+    - /.forgejo-staging
+    ignoreCacheDirs: false
+  extraArgs:
+  - --inherit=false
+  - --clear-dot-ignore
+  - --keep-latest=2147483647
+  - --keep-hourly=0
+  - --keep-daily=0
+  - --keep-weekly=0
+  - --keep-monthly=0
+  - --keep-annual=0
+  errorHandling:
+    failFast: true
+  hooks:
+    beforeSnapshot:
+    - runJob:
+        timeout: 25m
+        jobSpec:
+          backoffLimit: 0
+          activeDeadlineSeconds: 1500
+          template:
+            spec:
+              serviceAccountName: forgejo-backup
+              automountServiceAccountToken: true
+              restartPolicy: Never
+              terminationGracePeriodSeconds: 360
+              securityContext:
+                runAsUser: 1000
+                runAsGroup: 1000
+                runAsNonRoot: true
+                fsGroup: 1000
+                fsGroupChangePolicy: OnRootMismatch
+                seccompProfile:
+                  type: RuntimeDefault
+              containers:
+              - name: backup
+                image: docker.io/library/python:3.14.5-slim@sha256:c845af9399020c7e562969a13689e929074a10fd057acd1b1fad06a2fb068e97
+                command:
+                - python3
+                - /scripts/stage-forgejo.py
+                securityContext:
+                  runAsNonRoot: true
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: true
+                  capabilities:
+                    drop:
+                    - ALL
+                resources:
+                  requests:
+                    cpu: 50m
+                    memory: 128Mi
+                  limits:
+                    memory: 1Gi
+                env:
+                - name: HOME
+                  value: /cache
+                - name: PYTHONDONTWRITEBYTECODE
+                  value: '1'
+                volumeMounts:
+                - name: script
+                  mountPath: /scripts
+                  readOnly: true
+                - name: cache
+                  mountPath: /cache
+                - name: temp
+                  mountPath: /tmp
+                - name: local
+                  mountPath: /source/local
+                  readOnly: true
+                - name: nas
+                  mountPath: /source/nas
+                  readOnly: true
+                - name: staging
+                  mountPath: /stage
+                  readOnly: false
+              volumes:
+              - name: script
+                configMap:
+                  name: forgejo-backup-staging-script
+              - name: cache
+                emptyDir:
+                  sizeLimit: 6Gi
+              - name: temp
+                emptyDir:
+                  sizeLimit: 6Gi
+              - name: local
+                persistentVolumeClaim:
+                  claimName: forgejo-local
+                  readOnly: true
+              - name: nas
+                persistentVolumeClaim:
+                  claimName: forgejo-nas
+                  readOnly: true
+              - name: staging
+                persistentVolumeClaim:
+                  claimName: forgejo-backup-staging
+                  readOnly: false
+          ttlSecondsAfterFinished: 3600
+  verification:
+    verifyFilesPercent: 100
+    quick:
+      schedule:
+        cron: 0 9 * * *
+        jitter: 0s
+    successExpr: stats.files > 0 && stats.errors == 0
+---
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotSchedule
+metadata:
+  name: forgejo-backup
+spec:
+  policyRef:
+    name: forgejo-backup
+  schedule:
+    cron: 0 3 * * *
+    timezone: Etc/UTC
+    concurrencyPolicy: Forbid
+    startingDeadlineSeconds: 3600
+  failedJobsHistoryLimit: 2
+  deletion:
+    onScheduleDelete: Retain

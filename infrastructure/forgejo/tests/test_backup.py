@@ -7,7 +7,7 @@ import unittest
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[3]
-SPEC = importlib.util.spec_from_file_location('forgejo_backup', ROOT / 'kubernetes/apps/forgejo/backup/backup.py')
+SPEC = importlib.util.spec_from_file_location('forgejo_backup', ROOT / 'kubernetes/apps/forgejo/backup/stage-forgejo.py')
 backup = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(backup)
 
@@ -31,44 +31,69 @@ class API:
 
 
 class BackupTests(unittest.TestCase):
-    def test_copies_while_stopped_and_uploads_after_available(self):
+    def test_synchronization_checks_contents_and_prunes_only_staging(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source, destination = root / 'source', root / 'destination'
+            source.mkdir()
+            destination.mkdir()
+            (source / 'repository').mkdir()
+            (source / 'repository/data').write_bytes(b'new')
+            (destination / 'repository').mkdir()
+            (destination / 'repository/data').write_bytes(b'old')
+            (destination / 'obsolete').write_text('delete from staging')
+            (root / 'outside').write_text('preserve')
+            (destination / 'link').symlink_to(root / 'outside')
+            (source / 'link').write_text('regular file replaces symlink')
+            backup.synchronize(source, destination)
+            self.assertEqual((destination / 'repository/data').read_bytes(), b'new')
+            self.assertFalse((destination / 'obsolete').exists())
+            self.assertEqual((root / 'outside').read_text(), 'preserve')
+            self.assertFalse((destination / 'link').is_symlink())
+
+    def test_source_symlinks_are_copied_without_following_them(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source, destination = root / 'source', root / 'destination'
+            source.mkdir()
+            (source / 'link').symlink_to('../outside')
+            backup.synchronize(source, destination)
+            self.assertTrue((destination / 'link').is_symlink())
+            self.assertEqual((destination / 'link').readlink(), Path('../outside'))
+
+    def test_copy_and_validation_finish_before_application_resumes(self):
         api, events = API(), []
         def copy():
             self.assertEqual(api.replicas, 0)
             events.append('copy')
-        def upload():
-            self.assertEqual(api.replicas, 1)
-            self.assertIsNone(api.marker)
-            events.append('upload')
-        backup.stage_and_upload(api, copy=copy, validate=lambda: events.append('validate'), upload=upload)
-        self.assertEqual(events, ['copy', 'validate', 'upload'])
+        backup.stage_and_resume(api, copy=copy, validate=lambda: events.append('validate'))
+        self.assertEqual(events, ['copy', 'validate'])
         self.assertEqual(api.changes, [0, 1])
+        self.assertEqual(api.replicas, 1)
+        self.assertIsNone(api.marker)
 
-    def test_copy_or_validation_failure_resumes_without_upload(self):
+    def test_copy_or_validation_failure_resumes_and_fails_the_hook(self):
         for operation in ['copy', 'validate']:
-            api, uploaded = API(), []
+            api = API()
             def fail():
                 raise backup.BackupError('fixture failure')
             with self.assertRaises(backup.BackupError):
-                backup.stage_and_upload(api, copy=fail if operation == 'copy' else lambda: None,
-                    validate=fail if operation == 'validate' else lambda: None,
-                    upload=lambda: uploaded.append(True))
+                backup.stage_and_resume(api, copy=fail if operation == 'copy' else lambda: None,
+                    validate=fail if operation == 'validate' else lambda: None)
             self.assertEqual(api.replicas, 1)
-            self.assertFalse(uploaded)
 
-    def test_restart_during_copy_rejects_snapshot(self):
-        api, uploaded = API(), []
+    def test_restart_during_copy_rejects_staging(self):
+        api = API()
         def copy():
             api.replicas = 1
         with self.assertRaises(backup.BackupError):
-            backup.stage_and_upload(api, copy=copy, upload=lambda: uploaded.append(True))
-        self.assertFalse(uploaded)
+            backup.stage_and_resume(api, copy=copy)
 
     def test_does_not_start_when_already_stopped(self):
         api = API()
         api.replicas = 0
         with self.assertRaises(backup.BackupError):
-            backup.stage_and_upload(api)
+            backup.stage_and_resume(api)
         self.assertFalse(api.changes)
 
     def test_watchdog_only_resumes_expired_owned_pause(self):

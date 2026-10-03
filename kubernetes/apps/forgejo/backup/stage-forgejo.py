@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Stage a stopped Forgejo instance, resume it, then snapshot both stores to S3."""
+"""Stage a stopped Forgejo instance and resume it before Kopiur snapshots the copy."""
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -8,7 +9,6 @@ import signal
 import shutil
 import sqlite3
 import ssl
-import subprocess
 import tempfile
 import time
 import urllib.parse
@@ -102,20 +102,58 @@ def require_layout():
         path.mkdir(parents=True, exist_ok=True)
 
 
-def command(args, timeout=900, allowed=(0,)):
-    result = subprocess.run(args, capture_output=True, timeout=timeout)
-    if result.returncode not in allowed:
-        # Source paths, app configuration, and repository credentials never enter logs.
-        raise BackupError('Backup command failed; sensitive diagnostics withheld.')
-    return result.stdout
+def synchronize(source, destination, live=False):
+    """Synchronize an owned staging tree without following source or destination symlinks."""
+    destination.mkdir(exist_ok=True)
+    entries = {entry.name: entry for entry in source.iterdir()}
+    for entry in destination.iterdir():
+        if entry.name not in entries:
+            if entry.is_dir() and not entry.is_symlink():
+                shutil.rmtree(entry)
+            else:
+                entry.unlink()
+    for name, entry in entries.items():
+        target = destination / name
+        if entry.is_symlink():
+            if target.is_symlink() and os.readlink(entry) == os.readlink(target):
+                continue
+            if target.is_dir() and not target.is_symlink():
+                shutil.rmtree(target)
+            else:
+                target.unlink(missing_ok=True)
+            target.symlink_to(os.readlink(entry))
+        elif entry.is_dir():
+            if target.is_symlink() or (target.exists() and not target.is_dir()):
+                target.unlink()
+            synchronize(entry, target, live)
+            shutil.copystat(entry, target)
+        elif entry.is_file():
+            if target.is_symlink():
+                target.unlink()
+            elif target.is_dir():
+                shutil.rmtree(target)
+            unchanged = target.is_file() and entry.stat().st_size == target.stat().st_size
+            if unchanged:
+                if live:
+                    unchanged = entry.stat().st_mtime_ns == target.stat().st_mtime_ns
+                else:
+                    def digest(path):
+                        with path.open('rb') as stream:
+                            return hashlib.file_digest(stream, 'sha256').digest()
+                    unchanged = digest(entry) == digest(target)
+            if not unchanged:
+                shutil.copy2(entry, target)
+        else:
+            raise BackupError('Unsupported entry in a source store.')
 
 
 def copy_stores(live=False):
     for source, name in [(LOCAL, 'local'), (NAS, 'nas')]:
-        command(['rsync', '-a', '--no-owner', '--no-group', '--delete',
-                 *([] if live else ['--checksum']), str(source) + '/',
-                 str(STAGE / 'current' / name) + '/'],
-                timeout=600, allowed=(0, 24) if live else (0,))
+        try:
+            synchronize(source, STAGE / 'current' / name, live)
+        except FileNotFoundError:
+            if not live:
+                raise
 
 
 def validate_database():
@@ -152,7 +190,7 @@ def recover(api, now=None):
         print('Recovered an expired backup pause.', flush=True)
 
 
-def stage_and_upload(api, copy=copy_stores, validate=validate_database, upload=None):
+def stage_and_resume(api, copy=copy_stores, validate=validate_database):
     current = api.deployment()
     if current['spec'].get('replicas') != 1 or current['metadata'].get('annotations', {}).get(PAUSE):
         raise BackupError('Forgejo is stopped or already paused; refusing another backup.')
@@ -171,66 +209,21 @@ def stage_and_upload(api, copy=copy_stores, validate=validate_database, upload=N
     finally:
         # Resume even when copying or validation fails; upload never extends downtime.
         resume(api, marker)
-    if upload:
-        upload()
 
-
-def kopia(*args):
-    return command(['kopia', '--config-file=' + str(CACHE / 'repository.config'),
-                    '--disable-file-logging', '--no-progress', *args], timeout=5400)
-
-
-def connect(initialize=False):
-    keys = ['KOPIA_BUCKET', 'KOPIA_PREFIX', 'KOPIA_S3_ENDPOINT', 'AWS_REGION',
-            'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'KOPIA_PASSWORD']
-    if any(not os.environ.get(key) for key in keys):
-        raise BackupError('S3 backup credentials are incomplete.')
-    prefix = os.environ['KOPIA_PREFIX']
-    if prefix != 'applications/forgejo/':
-        raise BackupError('Expected the dedicated Forgejo backup prefix.')
-    kopia('repository', 'create' if initialize else 'connect', 's3',
-          '--bucket=' + os.environ['KOPIA_BUCKET'], '--prefix=' + prefix,
-          '--endpoint=' + os.environ['KOPIA_S3_ENDPOINT'], '--region=' + os.environ['AWS_REGION'],
-          '--cache-directory=' + str(CACHE / 'content'),
-          '--content-cache-size-limit-mb=128', '--metadata-cache-size-limit-mb=64',
-          '--no-check-for-updates')
-    kopia('repository', 'set-client', '--username=forgejo', '--hostname=homelab')
-
-
-def upload():
-    kopia('policy', 'set', '--global', '--keep-latest=3', '--keep-daily=14',
-          '--keep-weekly=8', '--keep-monthly=6', '--keep-annual=0', '--keep-hourly=0',
-          '--ignore-file-errors=false', '--ignore-dir-errors=false', '--ignore-cache-dirs=false')
-    snapshot = json.loads(kopia('snapshot', 'create', str(STAGE / 'current'), '--json', '--fail-fast'))
-    if snapshot.get('incomplete') or snapshot.get('incompleteReason') or snapshot.get('rootEntry', {}).get('summ', {}).get('numFailed', 0):
-        raise BackupError('Kopia produced an incomplete snapshot.')
-    kopia('snapshot', 'verify', '--verify-files-percent=0')
-    print('Consistent Forgejo snapshot uploaded to S3 and metadata verified.', flush=True)
 
 
 def main():
     os.umask(0o077)
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--initialize', action='store_true')
-    parser.add_argument('--maintenance', action='store_true')
     parser.add_argument('--recover', action='store_true')
     args = parser.parse_args()
     if args.recover:
         recover(Kubernetes())
         return
     CACHE.mkdir(parents=True, exist_ok=True)
-    connect(args.initialize)
-    if args.initialize:
-        print('Initialized the dedicated Forgejo S3 repository.', flush=True)
-    elif args.maintenance:
-        kopia('maintenance', 'set', '--owner=forgejo@homelab')
-        kopia('maintenance', 'run', '--full')
-        print('Forgejo S3 repository maintenance completed.', flush=True)
-    else:
-        require_layout()
-        # Copy most bytes while online. A checksum pass while stopped catches all changes.
-        copy_stores(live=True)
-        stage_and_upload(Kubernetes(), upload=upload)
+    require_layout()
+    copy_stores(live=True)
+    stage_and_resume(Kubernetes())
 
 
 if __name__ == '__main__':

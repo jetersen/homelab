@@ -2,32 +2,20 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: home-assistant
 resources:
-- home-assistant-source.yaml
-- zigbee2mqtt-source.yaml
 - zigbee-export.yaml
 - home-assistant-secret.sops.yaml
 - home-assistant-nas-secret.sops.yaml
 - zigbee2mqtt-secret.sops.yaml
 - zigbee2mqtt-nas-secret.sops.yaml
-- automation.yaml
 - nas-storage.sops.yaml
+- kopiur.yaml
+- home-assistant-export.yaml
 generatorOptions:
   disableNameSuffixHash: true
 configMapGenerator:
-- name: home-assistant-backup-policy
+- name: home-assistant-backup-export-script
   files:
-  - policy.json=home-assistant-policy.json
-  - check-source.sh
-  literals:
-  - global-policy.json={"retention":{"keepLatest":3,"keepHourly":0,"keepDaily":0,"keepWeekly":0,"keepMonthly":0,"keepAnnual":0}}
-- name: zigbee2mqtt-backup-policy
-  files:
-  - policy.json=zigbee2mqtt-policy.json
-  - check-source.sh
-  literals:
-  - global-policy.json={"retention":{"keepHourly":0,"keepDaily":14,"keepWeekly":8,"keepMonthly":6,"keepYearly":0}}
+  - stage-home-assistant.py
 - name: zigbee-backup-export-script
   files:
   - export-zigbee.cjs
-components:
-- ../../../components/application-backup

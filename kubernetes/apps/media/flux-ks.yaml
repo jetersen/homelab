@@ -110,5 +110,5 @@ spec:
   targetNamespace: media
   path: ./kubernetes/apps/media/backup
   dependsOn:
-    - name: volsync
+    - name: kopiur
     - name: sonarr
