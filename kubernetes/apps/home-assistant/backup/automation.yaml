@@ -62,7 +62,7 @@ spec:
   jobTemplate:
     spec:
       backoffLimit: 0
-      activeDeadlineSeconds: 2400
+      activeDeadlineSeconds: 3600
       template:
         spec:
           serviceAccountName: application-backup
@@ -72,6 +72,7 @@ spec:
             runAsGroup: 65534
             seccompProfile:
               type: RuntimeDefault
+            fsGroup: 65534
           containers:
           - name: backup
             image: ghcr.io/perfectra1n/volsync:0.17.11@sha256:79674d3c48685e21cadaac8e0afd14268130a0a51a10c41a9dd65096c1434a0f
@@ -79,6 +80,7 @@ spec:
             - python3
             - /scripts/run-backup.py
             - home-assistant-backup
+            - --replicate
             securityContext:
               allowPrivilegeEscalation: false
               readOnlyRootFilesystem: true
@@ -90,15 +92,31 @@ spec:
                 cpu: 20m
                 memory: 32Mi
               limits:
-                memory: 128Mi
+                memory: 512Mi
             volumeMounts:
             - name: script
               mountPath: /scripts
               readOnly: true
+            - name: nas-repository
+              mountPath: /mnt/nas-repository
+            - name: cache
+              mountPath: /cache
+            envFrom:
+            - secretRef:
+                name: home-assistant-kopia
+            env:
+            - name: HOME
+              value: /cache
           volumes:
           - name: script
             configMap:
               name: application-backup-runner
+          - name: nas-repository
+            persistentVolumeClaim:
+              claimName: home-assistant-nas-backup
+          - name: cache
+            emptyDir:
+              sizeLimit: 1Gi
 ---
 apiVersion: batch/v1
 kind: CronJob
@@ -130,10 +148,13 @@ spec:
             image: ghcr.io/perfectra1n/volsync:0.17.11@sha256:79674d3c48685e21cadaac8e0afd14268130a0a51a10c41a9dd65096c1434a0f
             command:
             - /bin/bash
-            - /mover-kopia/entry.sh
+            - -c
+            - /mover-kopia/entry.sh && python3 /scripts/replicate.py
             envFrom:
             - secretRef:
                 name: home-assistant-kopia
+            - secretRef:
+                name: home-assistant-kopia-nas
             env:
             - name: DIRECTION
               value: maintenance
@@ -147,6 +168,11 @@ spec:
               value: homelab
             - name: KOPIA_OVERRIDE_MAINTENANCE_USERNAME
               value: home-assistant@homelab
+            - name: KOPIA_S3_REPOSITORY
+              valueFrom:
+                secretKeyRef:
+                  name: home-assistant-kopia
+                  key: KOPIA_REPOSITORY
             securityContext:
               allowPrivilegeEscalation: false
               capabilities:
@@ -161,10 +187,21 @@ spec:
             volumeMounts:
             - name: cache
               mountPath: /cache
+            - name: nas-repository
+              mountPath: /mnt/nas-repository
+            - name: script
+              mountPath: /scripts
+              readOnly: true
           volumes:
           - name: cache
             emptyDir:
               sizeLimit: 1Gi
+          - name: nas-repository
+            persistentVolumeClaim:
+              claimName: home-assistant-nas-backup
+          - name: script
+            configMap:
+              name: application-backup-runner
 ---
 apiVersion: batch/v1
 kind: CronJob
@@ -181,7 +218,7 @@ spec:
   jobTemplate:
     spec:
       backoffLimit: 0
-      activeDeadlineSeconds: 2400
+      activeDeadlineSeconds: 3600
       template:
         spec:
           serviceAccountName: application-backup
@@ -191,6 +228,7 @@ spec:
             runAsGroup: 65534
             seccompProfile:
               type: RuntimeDefault
+            fsGroup: 65534
           containers:
           - name: backup
             image: ghcr.io/perfectra1n/volsync:0.17.11@sha256:79674d3c48685e21cadaac8e0afd14268130a0a51a10c41a9dd65096c1434a0f
@@ -199,6 +237,7 @@ spec:
             - /scripts/run-backup.py
             - zigbee2mqtt-backup
             - zigbee-backup-export
+            - --replicate
             securityContext:
               allowPrivilegeEscalation: false
               readOnlyRootFilesystem: true
@@ -210,15 +249,31 @@ spec:
                 cpu: 20m
                 memory: 32Mi
               limits:
-                memory: 128Mi
+                memory: 512Mi
             volumeMounts:
             - name: script
               mountPath: /scripts
               readOnly: true
+            - name: nas-repository
+              mountPath: /mnt/nas-repository
+            - name: cache
+              mountPath: /cache
+            envFrom:
+            - secretRef:
+                name: zigbee2mqtt-kopia
+            env:
+            - name: HOME
+              value: /cache
           volumes:
           - name: script
             configMap:
               name: application-backup-runner
+          - name: nas-repository
+            persistentVolumeClaim:
+              claimName: zigbee2mqtt-nas-backup
+          - name: cache
+            emptyDir:
+              sizeLimit: 1Gi
 ---
 apiVersion: batch/v1
 kind: CronJob
@@ -250,10 +305,13 @@ spec:
             image: ghcr.io/perfectra1n/volsync:0.17.11@sha256:79674d3c48685e21cadaac8e0afd14268130a0a51a10c41a9dd65096c1434a0f
             command:
             - /bin/bash
-            - /mover-kopia/entry.sh
+            - -c
+            - /mover-kopia/entry.sh && python3 /scripts/replicate.py
             envFrom:
             - secretRef:
                 name: zigbee2mqtt-kopia
+            - secretRef:
+                name: zigbee2mqtt-kopia-nas
             env:
             - name: DIRECTION
               value: maintenance
@@ -267,6 +325,11 @@ spec:
               value: homelab
             - name: KOPIA_OVERRIDE_MAINTENANCE_USERNAME
               value: zigbee2mqtt@homelab
+            - name: KOPIA_S3_REPOSITORY
+              valueFrom:
+                secretKeyRef:
+                  name: zigbee2mqtt-kopia
+                  key: KOPIA_REPOSITORY
             securityContext:
               allowPrivilegeEscalation: false
               capabilities:
@@ -281,7 +344,18 @@ spec:
             volumeMounts:
             - name: cache
               mountPath: /cache
+            - name: nas-repository
+              mountPath: /mnt/nas-repository
+            - name: script
+              mountPath: /scripts
+              readOnly: true
           volumes:
           - name: cache
             emptyDir:
               sizeLimit: 1Gi
+          - name: nas-repository
+            persistentVolumeClaim:
+              claimName: zigbee2mqtt-nas-backup
+          - name: script
+            configMap:
+              name: application-backup-runner

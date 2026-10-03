@@ -6,7 +6,7 @@ spec:
   paused: false
   sourcePVC: home-assistant-pvc
   kopia:
-    repository: home-assistant-kopia
+    repository: home-assistant-kopia-nas
     copyMethod: Direct
     cacheCapacity: 1Gi
     username: home-assistant
@@ -32,3 +32,8 @@ spec:
       monthly: 0
       yearly: 0
       latest: 3
+    moverVolumes:
+    - mountPath: nas-repository
+      volumeSource:
+        persistentVolumeClaim:
+          claimName: home-assistant-nas-backup

@@ -5,7 +5,9 @@ resources:
 - sonarr-source.yaml
 - sonarr-export.yaml
 - sonarr-secret.sops.yaml
+- sonarr-nas-secret.sops.yaml
 - automation.yaml
+- nas-storage.sops.yaml
 generatorOptions:
   disableNameSuffixHash: true
 configMapGenerator:

@@ -1,4 +1,8 @@
 creation_rules:
+  - path_regex: kubernetes/apps/.*/backup/nas-storage\.sops\.yaml
+    encrypted_regex: ^nfs$
+    age: >-
+      age1u0m8ryqg7hfhuykraxe35v4xzw92a03w9jpt75yv3m57g6pvpp0sf24mdy
   # Kubernetes Secret manifests: encrypt only the payload, so kustomize and Flux
   # can still read apiVersion/kind/metadata.
   - path_regex: kubernetes/(apps|cluster)/.*\.sops\.yaml

@@ -59,6 +59,26 @@ class WorkflowTests(unittest.TestCase):
             result = workflow.wait(lambda: next(resources), lambda r: r['trigger'] == 'new', lambda r: False, 30)
         self.assertEqual(result['trigger'], 'new')
 
+    def test_replication_runs_after_successful_primary_backup(self):
+        api = API()
+        called = []
+        def replicate():
+            self.assertNotEqual(api.trigger, 'previous')
+            self.assertEqual(api.calls[-1][0], 'replicationsources')
+            called.append(True)
+        workflow.run(api, 'sonarr-backup', 'sonarr-backup-export', replicate)
+        self.assertEqual(called, [True])
+        called.clear()
+        with self.assertRaises(workflow.BackupError):
+            workflow.run(API(mover_failed=True), 'sonarr-backup', replicate=replicate)
+        self.assertFalse(called)
+
+    def test_nas_failure_fails_the_workflow(self):
+        def failed_replication():
+            raise workflow.BackupError('NAS replica failed.')
+        with self.assertRaises(workflow.BackupError):
+            workflow.run(API(), 'sonarr-backup', replicate=failed_replication)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -6,3 +6,4 @@ configMapGenerator:
 - name: application-backup-runner
   files:
   - run-backup.py
+  - replicate.py

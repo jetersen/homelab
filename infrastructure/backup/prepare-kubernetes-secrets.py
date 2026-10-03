@@ -11,40 +11,49 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--application', choices=['home-assistant', 'zigbee2mqtt', 'sonarr'],
                         action='append', help='Prepare only these new connection manifests')
+    parser.add_argument('--destination', choices=['s3', 'nas'], default='s3')
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[2]
     keys = ['BACKUP_S3_BUCKET', 'BACKUP_S3_REGION', 'BACKUP_S3_ENDPOINT',
             'BACKUP_S3_ACCESS_KEY_ID', 'BACKUP_S3_SECRET_ACCESS_KEY', 'BACKUP_KOPIA_PASSWORD']
+    if args.destination == 'nas':
+        keys = ['BACKUP_KOPIA_PASSWORD']
     if any(not os.environ.get(key) for key in keys):
         raise RuntimeError('Required backup settings are missing; run through Varlock.')
     applications = args.application or ['home-assistant', 'zigbee2mqtt']
     if len(set(applications)) != len(applications):
         raise RuntimeError('Duplicate application selection.')
     namespaces = {app: 'media' if app == 'sonarr' else 'home-assistant' for app in applications}
-    targets = [root / f'kubernetes/apps/{namespaces[app]}/backup/{app}-secret.sops.yaml'
+    suffix = '-nas' if args.destination == 'nas' else ''
+    targets = [root / f'kubernetes/apps/{namespaces[app]}/backup/{app}{suffix}-secret.sops.yaml'
                for app in applications]
     if any(path.exists() for path in targets):
         raise RuntimeError('Connection manifests already exist; review credential changes before regeneration.')
     encrypted = []
     for app, target in zip(applications, targets):
         document = {'apiVersion': 'v1', 'kind': 'Secret',
-                    'metadata': {'name': f'{app}-kopia', 'namespace': namespaces[app]},
+                    'metadata': {'name': f'{app}-kopia{suffix}', 'namespace': namespaces[app]},
                     'type': 'Opaque', 'stringData': {
-                        'KOPIA_REPOSITORY': f's3://{os.environ["BACKUP_S3_BUCKET"]}/pilot/{app}',
                         'KOPIA_PASSWORD': os.environ['BACKUP_KOPIA_PASSWORD'],
-                        'AWS_ACCESS_KEY_ID': os.environ['BACKUP_S3_ACCESS_KEY_ID'],
-                        'AWS_SECRET_ACCESS_KEY': os.environ['BACKUP_S3_SECRET_ACCESS_KEY'],
-                        'AWS_REGION': os.environ['BACKUP_S3_REGION'],
-                        'KOPIA_S3_ENDPOINT': os.environ['BACKUP_S3_ENDPOINT'],
                         'KOPIA_CHECK_FOR_UPDATES': 'false',
                         'KOPIA_FILE_LOG_LEVEL': 'info',
                     }}
+        if args.destination == 'nas':
+            document['stringData']['KOPIA_REPOSITORY'] = 'filesystem:///mnt/nas-repository'
+        else:
+            document['stringData'].update({
+                'KOPIA_REPOSITORY': f's3://{os.environ["BACKUP_S3_BUCKET"]}/pilot/{app}',
+                'AWS_ACCESS_KEY_ID': os.environ['BACKUP_S3_ACCESS_KEY_ID'],
+                'AWS_SECRET_ACCESS_KEY': os.environ['BACKUP_S3_SECRET_ACCESS_KEY'],
+                'AWS_REGION': os.environ['BACKUP_S3_REGION'],
+                'KOPIA_S3_ENDPOINT': os.environ['BACKUP_S3_ENDPOINT']})
         result = subprocess.run(['sops', 'encrypt', '--filename-override', str(target),
                                  '--input-type', 'json', '--output-type', 'yaml'],
                                 input=json.dumps(document), capture_output=True, text=True, cwd=root)
         if result.returncode or 'ENC[AES256_GCM,' not in result.stdout:
             raise RuntimeError('SOPS encryption failed; subprocess output withheld.')
-        if any(os.environ[key] in result.stdout for key in keys[3:]):
+        sensitive = ['BACKUP_KOPIA_PASSWORD'] if args.destination == 'nas' else keys[3:]
+        if any(os.environ[key] in result.stdout for key in sensitive):
             raise RuntimeError('SOPS output failed the plaintext-secret check.')
         encrypted.append(result.stdout)
     for target, content in zip(targets, encrypted):

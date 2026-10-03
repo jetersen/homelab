@@ -69,6 +69,19 @@ class ConnectionTests(unittest.TestCase):
                 self.prepare(root, ['--application', 'sonarr'], returncode=1)
             self.assertFalse(target.exists())
 
+    def test_nas_connection_preserves_s3_recovery_and_has_no_cloud_credentials(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            directory = root / 'kubernetes/apps/media/backup'
+            directory.mkdir(parents=True)
+            cloud = directory / 'sonarr-secret.sops.yaml'
+            cloud.write_text('existing S3 recovery connection')
+            documents = self.prepare(root, ['--destination', 'nas', '--application', 'sonarr'])
+            self.assertEqual(documents[0]['metadata']['name'], 'sonarr-kopia-nas')
+            self.assertEqual(documents[0]['stringData']['KOPIA_REPOSITORY'], 'filesystem:///mnt/nas-repository')
+            self.assertNotIn('AWS_ACCESS_KEY_ID', documents[0]['stringData'])
+            self.assertEqual(cloud.read_text(), 'existing S3 recovery connection')
+
 
 if __name__ == '__main__':
     unittest.main()

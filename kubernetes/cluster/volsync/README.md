@@ -24,6 +24,21 @@ material outside the cluster. The active repository requires online storage;
 review Kopia maintenance before adding object expiry, archive transitions,
 versioning, Object Lock, or replication.
 
+The NAS holds primary repositories. Kopia's `repository sync-to` replicates them
+to S3 after backups and maintenance. Pruning requires matching repository identities
+and a mounted NFS volume. Do not run backups or maintenance on S3 replicas.
+Provision private NAS directories, then generate their encrypted volume locations
+with `infrastructure/backup/prepare-nas-storage.py --server NAS_HOST --base-path NAS_DATASET`.
+Generate NAS connections through Varlock with
+`prepare-kubernetes-secrets.py --destination nas --application APPLICATION`.
+Before switching an existing S3 source, seed an empty NAS directory using
+`repository sync-to filesystem`. New repositories need an initial S3 sync too.
+Scheduled replication refuses uninitialized or unrelated destinations.
+
+For NAS recovery, mount the application's NAS PVC read-only and connect a fresh
+Kopia client with `repository connect filesystem --readonly --path MOUNT_PATH`.
+Use the saved Kopia password, list snapshots, and restore into a separate directory.
+
 ## Backup and recovery
 
 1. Choose a native export or stopped-writer consistency method for each application.

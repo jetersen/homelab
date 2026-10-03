@@ -1,0 +1,85 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+    name: home-assistant-nas-backup
+    annotations:
+        kustomize.toolkit.fluxcd.io/prune: disabled
+spec:
+    capacity:
+        storage: 100Gi
+    accessModes:
+        - ReadWriteMany
+    persistentVolumeReclaimPolicy: Retain
+    storageClassName: ""
+    mountOptions:
+        - nfsvers=4.2
+        - hard
+        - timeo=600
+        - retrans=2
+    claimRef:
+        namespace: home-assistant
+        name: home-assistant-nas-backup
+    nfs:
+        server: ENC[AES256_GCM,data:IzHHz1UMTITEeAtw0kIKYk/zbAL/oCWI,iv:uTVmggmzCpbSKLoojKwV8/bgM/xO2EwZIpFKgiunnOI=,tag:3mo6aY3K8toBb/SU7G5stQ==,type:str]
+        path: ENC[AES256_GCM,data:b7/zMfOMBqCMiAINq0AJ4jGpzUW9btZ56FzlC3L8usic/eeCQjsFWBfe,iv:hPKdj0yihvebSmbs/NIX7TSgCCDfx6pIijUZt7Qy3TI=,tag:OCjEtj7WF12sKLeUIzfR2w==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBTQnIyYXIyWnRKb3lMZ3ho
+            V0pKanhMVXV6YmdUTk1NT1JDUzJLR21ZbHpZCkNZL2NhbDhKcXZWbmMyYWFlZmwr
+            amNFS25hSWM1VzY2N1lWU2dFOEpmaUEKLS0tIDhIWmhveklLeGFJRXlvam5GeHV2
+            VXlQMGdjOUhDbHBVSFRsaUFFaDQ5NFkKShaMT4KC3gTmIFvDQusKxvgU0JVYVLhn
+            JfgCNXsqtxHrFfQ3gSuOs5SmbYIdYh2tGmKiMafOgn9rs9q8g1Jl3g==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1u0m8ryqg7hfhuykraxe35v4xzw92a03w9jpt75yv3m57g6pvpp0sf24mdy
+    encrypted_regex: ^nfs$
+    lastmodified: "2026-10-03T03:52:03Z"
+    mac: ENC[AES256_GCM,data:ZwCcIUbqHf6HXPP8HXyaRGvzFQN5kCO+eFr0mfn62p7O4vyZRNmh5gEFz3nb88bLnTIPXCYzlgKM2CUW/YRPrU9ao3ng2dlaNXov1ynsp64WChXs94yVWhVcJIK7mvtIRYzJlzdLSBgq4moTi7gIIs+lGXauxct45EpIWIQ1MtQ=,iv:pqMKMzbe4V6WzlB3nm2Fw8eaxH8wHA1wOWgASTgdkLA=,tag:CL1Np6gBX6xliPdzZJ00pg==,type:str]
+    version: 3.13.3
+
+---
+{"apiVersion": "v1", "kind": "PersistentVolumeClaim", "metadata": {"name": "home-assistant-nas-backup", "namespace": "home-assistant", "annotations": {"kustomize.toolkit.fluxcd.io/prune": "disabled"}}, "spec": {"accessModes": ["ReadWriteMany"], "storageClassName": "", "volumeName": "home-assistant-nas-backup", "resources": {"requests": {"storage": "100Gi"}}}}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+    name: zigbee2mqtt-nas-backup
+    annotations:
+        kustomize.toolkit.fluxcd.io/prune: disabled
+spec:
+    capacity:
+        storage: 100Gi
+    accessModes:
+        - ReadWriteMany
+    persistentVolumeReclaimPolicy: Retain
+    storageClassName: ""
+    mountOptions:
+        - nfsvers=4.2
+        - hard
+        - timeo=600
+        - retrans=2
+    claimRef:
+        namespace: home-assistant
+        name: zigbee2mqtt-nas-backup
+    nfs:
+        server: ENC[AES256_GCM,data:mD76PHj1uD8A1ALiq1NUZkRQxJCBlHbC,iv:ICKWK0zI5uu1X8hXTmDMidIvA+WO2uM3OLLAqY1HEhc=,tag:gRBZbE63ix0cFl0JCfP5sA==,type:str]
+        path: ENC[AES256_GCM,data:jPq6/n5dYP9r8Qc5JFH2FlQZ9ChTSiUAZh4ewjIK0HYWEfErLORM,iv:/Ix2In5zu2bJcmnJNlzFVWJ6zyFsZ10sSLhIDsmDs70=,tag:3uyqctQzIqO9nip6Nplqtw==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBkbXBveENKWEV0Q1M2a1Ur
+            TmFSNjRMZzEyWmNUZExTYnFGK2Y1em54M25JCmV0ZlNWbGdpN3FOS0krYXBXZjNV
+            RlRmajJQUDVQM2lqZ0xKQVpxb0tOKzQKLS0tIE9ocnU1bGJwNmpqOVJTTG80dWU2
+            L1FONWNpMk1leGlKTG9TckcvbjY1bjgKOo0ZjchwwUF/dnmWSLa7X/IPMebM/nwB
+            3s4tJ8yocOdyARKByr8CcR0Jv5foIV013Zd1CYbWZtWhbVyiXw24pA==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1u0m8ryqg7hfhuykraxe35v4xzw92a03w9jpt75yv3m57g6pvpp0sf24mdy
+    encrypted_regex: ^nfs$
+    lastmodified: "2026-10-03T03:52:03Z"
+    mac: ENC[AES256_GCM,data:u9lkYAKNv2XGANfYHw++TzYoSHGBrnQrkMv23sjQatoERLGsnEbl1e51003317y//PePkcowCNQy/apphifmrEHAmZLLEGOzTLkkdhB4rL3uGAV10HE2E0IYzbSuWMiOCe2mf1wOL9PzYonjw+Q5+LX0rzI16QpKgcO4TvUGOUA=,iv:xhXvtbEX7w1CFiKZLFrnZvKOHm8x7+JMblyBTFaeaRM=,tag:zMT/6vpd+G8XR6ictFZ74g==,type:str]
+    version: 3.13.3
+
+---
+{"apiVersion": "v1", "kind": "PersistentVolumeClaim", "metadata": {"name": "zigbee2mqtt-nas-backup", "namespace": "home-assistant", "annotations": {"kustomize.toolkit.fluxcd.io/prune": "disabled"}}, "spec": {"accessModes": ["ReadWriteMany"], "storageClassName": "", "volumeName": "zigbee2mqtt-nas-backup", "resources": {"requests": {"storage": "100Gi"}}}}

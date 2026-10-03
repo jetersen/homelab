@@ -4,6 +4,8 @@ Use completed Home Assistant native archives and Zigbee2MQTT's native export.
 The Zigbee export includes device and coordinator recovery data, configuration,
 custom extensions, and Kubernetes-injected settings. Logs and firmware are excluded.
 Scheduling, file selection, and Kopia retention are configured in the manifests.
+Each workflow backs up to the NAS, verifies retained files locally, then replicates
+the encrypted repository to S3. Both destinations share the same retention policy.
 
 Keep Home Assistant's emergency kit outside the cluster. Its archive encryption
 key is separate from the Kopia password. Backup archives and recovered settings
@@ -29,7 +31,7 @@ an offsite backup manually:
 kubectl --context homelab -n home-assistant create job home-assistant-backup-UNIQUE_TRIGGER \
   --from=cronjob/home-assistant-backup
 kubectl --context homelab -n home-assistant wait --for=condition=complete \
-  job/home-assistant-backup-UNIQUE_TRIGGER --timeout=2400s
+  job/home-assistant-backup-UNIQUE_TRIGGER --timeout=3600s
 ```
 
 Use `zigbee2mqtt-backup` for Zigbee, which exports before uploading. Pause schedules

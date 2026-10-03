@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Run a native export before requesting and verifying a VolSync backup."""
+import argparse
 import json
 import os
 from pathlib import Path
 import ssl
-import sys
+import runpy
 import time
 import urllib.request
 import uuid
@@ -50,7 +51,7 @@ def wait(read, success, failure, timeout):
     raise BackupError('Backup operation timed out.')
 
 
-def run(api, source, export_cronjob=None):
+def run(api, source, export_cronjob=None, replicate=None):
     current = api.request('replicationsources', source)
     if current['spec'].get('paused'):
         raise BackupError('Backup source is paused.')
@@ -87,12 +88,20 @@ def run(api, source, export_cronjob=None):
          lambda r: r.get('status', {}).get('lastManualSync') == trigger and
                    r.get('status', {}).get('latestMoverStatus', {}).get('result') == 'Successful',
          failed, 1800)
-    print('Offsite backup completed successfully.')
+    print('NAS backup completed successfully.')
+    if replicate:
+        replicate()
 
 
 if __name__ == '__main__':
     try:
-        run(Kubernetes(), *sys.argv[1:])
+        parser = argparse.ArgumentParser(description=__doc__)
+        parser.add_argument('source')
+        parser.add_argument('export_cronjob', nargs='?')
+        parser.add_argument('--replicate', action='store_true')
+        args = parser.parse_args()
+        replicate = runpy.run_path(str(Path(__file__).with_name('replicate.py')))['sync'] if args.replicate else None
+        run(Kubernetes(), args.source, args.export_cronjob, replicate)
     except Exception as error:
         print(str(error) if type(error) is BackupError else
               f'Backup workflow failed ({type(error).__name__}); diagnostic withheld.')

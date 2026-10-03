@@ -6,7 +6,7 @@ spec:
   paused: false
   sourcePVC: zigbee-backup-exports
   kopia:
-    repository: zigbee2mqtt-kopia
+    repository: zigbee2mqtt-kopia-nas
     copyMethod: Direct
     cacheCapacity: 1Gi
     username: zigbee2mqtt
@@ -32,3 +32,8 @@ spec:
       monthly: 6
       yearly: 0
       latest: 1
+    moverVolumes:
+    - mountPath: nas-repository
+      volumeSource:
+        persistentVolumeClaim:
+          claimName: zigbee2mqtt-nas-backup

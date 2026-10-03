@@ -6,8 +6,11 @@ resources:
 - zigbee2mqtt-source.yaml
 - zigbee-export.yaml
 - home-assistant-secret.sops.yaml
+- home-assistant-nas-secret.sops.yaml
 - zigbee2mqtt-secret.sops.yaml
+- zigbee2mqtt-nas-secret.sops.yaml
 - automation.yaml
+- nas-storage.sops.yaml
 generatorOptions:
   disableNameSuffixHash: true
 configMapGenerator:

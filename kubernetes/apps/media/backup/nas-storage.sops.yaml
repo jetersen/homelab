@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+    name: sonarr-nas-backup
+    annotations:
+        kustomize.toolkit.fluxcd.io/prune: disabled
+spec:
+    capacity:
+        storage: 100Gi
+    accessModes:
+        - ReadWriteMany
+    persistentVolumeReclaimPolicy: Retain
+    storageClassName: ""
+    mountOptions:
+        - nfsvers=4.2
+        - hard
+        - timeo=600
+        - retrans=2
+    claimRef:
+        namespace: media
+        name: sonarr-nas-backup
+    nfs:
+        server: ENC[AES256_GCM,data:oMZjYhI04NG0kFrgt5p+KXkmTS/xyMAw,iv:+DKJkuH4XoRE8xwv07IZZWNMeSf4I9y8UfPqJk+OwCY=,tag:ZSF99+47tCyj6ur8JvN/yw==,type:str]
+        path: ENC[AES256_GCM,data:ODGNwWCP8hul9kaZrQa00Z5I+wprkl2byUiUI8jLO3+kUA==,iv:fxcUkUQnJfqFPckt/g7hj0t3nIh5x1AwbNq1bJrlO8E=,tag:WOgtiOkDpIns5PfVRGF+Mw==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSA3STdTRTFVYnZBRGdxcEFr
+            Qms5SnFhcTR5ODI5R05pR2dRVFd0ZFlpWmtJCnBVMG9NQjdCNTZmbXVsYnU1Uy9l
+            aGdBTkhGR3l0dFJHWGdPK3Y2Sm53YUUKLS0tIDM0WFAvTmtLMWtTUG5LRlRWbUQv
+            eUZCRUZBM1F0S3VlU25FNUlCNUJjRXcKPo0C6cRb8nCGWXKNc+IByT8hRrYJBtGG
+            CxzaTkp/wUArLJr3aOVqxsTyvT8zd4p+bElSuPTdSMP7QI3c+VciNA==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1u0m8ryqg7hfhuykraxe35v4xzw92a03w9jpt75yv3m57g6pvpp0sf24mdy
+    encrypted_regex: ^nfs$
+    lastmodified: "2026-10-03T03:52:03Z"
+    mac: ENC[AES256_GCM,data:LRe3Y3C4X28GuykgYb/biqcydWwqDVdVDT35u52E8Zv4L6Yj1+pjKY1Vtw7VRkbSFkXbuHQwp6nTQT4+7ZblZpfmE/t8R6pyS/ZfsHjQEnrkJeGZiTgzbN53kMGfyfet/X0vbaL7VndJ4YyPfg4vBelozhdFz4R0/Rj9L4LHNyI=,iv:TdBNLyL/H3d/0CxOzF7mKaIhnnLHjfHeARYAnUjzpbs=,tag:14c7vIkbfbRZ3KsauebgHg==,type:str]
+    version: 3.13.3
+
+---
+{"apiVersion": "v1", "kind": "PersistentVolumeClaim", "metadata": {"name": "sonarr-nas-backup", "namespace": "media", "annotations": {"kustomize.toolkit.fluxcd.io/prune": "disabled"}}, "spec": {"accessModes": ["ReadWriteMany"], "storageClassName": "", "volumeName": "sonarr-nas-backup", "resources": {"requests": {"storage": "100Gi"}}}}
