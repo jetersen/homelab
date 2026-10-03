@@ -15,7 +15,7 @@ configMapGenerator:
   - policy.json=home-assistant-policy.json
   - check-source.sh
   literals:
-  - global-policy.json={"retention":{"keepHourly":0,"keepDaily":14,"keepWeekly":8,"keepMonthly":6,"keepYearly":0}}
+  - global-policy.json={"retention":{"keepLatest":3,"keepHourly":0,"keepDaily":0,"keepWeekly":0,"keepMonthly":0,"keepAnnual":0}}
 - name: zigbee2mqtt-backup-policy
   files:
   - policy.json=zigbee2mqtt-policy.json

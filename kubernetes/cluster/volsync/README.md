@@ -12,7 +12,7 @@ do not automatically stop another pod's application.
 
 ## Storage setup
 
-Use [the Pulumi project](../../../infrastructure/backup/README.md) to manage the
+Use [the Pulumi project](/infrastructure/backup/README.md) to manage the
 private OVHcloud bucket and scoped S3 access. Region `de` and endpoint
 `s3.de.io.cloud.ovh.net` provide Frankfurt Standard storage. Kopia takes a hostname
 without a protocol or bucket prefix; its repository URL supplies the bucket and
@@ -36,7 +36,9 @@ versioning, Object Lock, or replication.
    data, isolated application recovery, and access from a fresh client.
 5. Verify maintenance, pruning, and alerts before scheduling jobs or expanding coverage.
 
-See [Home Assistant and Zigbee backup procedures](../../apps/home-assistant/backup/README.md).
+See [Home Assistant and Zigbee backup procedures](/kubernetes/apps/home-assistant/backup/README.md).
+See [Sonarr backup procedures](/kubernetes/apps/media/backup/README.md) for native database
+and configuration exports without logs or media.
 Application PVC backups do not recover Talos configuration, SOPS keys, NAS data,
 Pulumi state, or runtime secrets outside those volumes. Give these separate
 recovery procedures. Keep inventory, measurements, and test results private.

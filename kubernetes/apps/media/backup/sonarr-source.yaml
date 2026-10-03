@@ -1,22 +1,22 @@
 apiVersion: volsync.backube/v1alpha1
 kind: ReplicationSource
 metadata:
-  name: home-assistant-backup
+  name: sonarr-backup
 spec:
   paused: true
-  sourcePVC: home-assistant-pvc
+  sourcePVC: sonarr-backup-exports
   trigger:
-    manual: pilot-2
+    manual: pilot-1
   kopia:
-    repository: home-assistant-kopia
+    repository: sonarr-kopia
     copyMethod: Direct
     cacheCapacity: 1Gi
-    username: home-assistant
+    username: sonarr
     hostname: homelab
     policyConfig:
-      configMapName: home-assistant-backup-policy
+      configMapName: sonarr-backup-policy
     actions:
-      beforeSnapshot: bash /kopia-config/check-source.sh home-assistant
+      beforeSnapshot: bash /kopia-config/check-source.sh
     moverSecurityContext:
       runAsUser: 0
       runAsGroup: 0

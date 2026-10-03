@@ -1,45 +1,27 @@
-# Home Assistant and Zigbee backup procedures
+# Home Assistant and Zigbee backups
 
-Flux manages manual Kopia sources for completed Home Assistant native archives
-and validated Zigbee2MQTT exports. Source pause flags, export scheduling, retention,
-repository connections, and image versions are declared in the manifests.
+Use completed Home Assistant native archives and Zigbee2MQTT's native export.
+The Zigbee export includes device and coordinator recovery data, configuration,
+custom extensions, and Kubernetes-injected settings. Logs and firmware are excluded.
+Scheduling, file selection, and Kopia retention are configured in the manifests.
 
-## Backup inputs
+Keep Home Assistant's emergency kit outside the cluster. Its archive encryption
+key is separate from the Kopia password. Backup archives and recovered settings
+contain credentials and must remain private.
 
-Home Assistant selection includes completed `/config/backups/*.tar` archives at
-least five minutes old, excluding temporary files and nested directories. Preserve
-the native emergency kit/encryption key outside the cluster. That key is separate
-from the Kopia password; transporting an encrypted archive does not prove it can
-be decrypted or booted.
+## Home Assistant retention
 
-The Zigbee exporter requests a native MQTT backup to refresh coordinator state.
-It validates configuration, device database, coordinator backup, and state,
-preserves custom converters/extensions, and excludes logs, firmware, and temporary
-files. `deployment-environment.json` captures Kubernetes-injected MQTT/network
-settings and contains secrets. Keep exports and recovered contents private.
+Set native automatic backup retention to three copies without an agent override
+that keeps extra copies. Kopia retains the latest three snapshots. If more than
+three native archives exist, review manual backups before running the source:
+Home Assistant's automatic retention does not remove manual backups.
 
-The staging ZIP is replaced atomically after validation. Movers reject exports
-older than one hour. Staging remains plaintext on the node; Kopia encrypts uploads.
-Wait for export completion before triggering a mover, and avoid overlapping exports
-and copies.
+Kopia snapshot retention does not cap storage bytes. Run repository maintenance
+to reclaim expired data; see [Kopia's maintenance guide](https://kopia.io/docs/advanced/maintenance/).
 
-## File selection
+## Backup
 
-The mover mounts the whole PVC at `/data`; `copyMethod: Direct` does not create
-a filesystem snapshot or force a read-only mount. `sourcePathOverride` changes
-snapshot identity, not file selection. `check-source.sh` imports an ordered policy
-and verifies effective selection and retention, including inherited overrides.
-
-Do not use `policy set --add-ignore` for these inclusion rules: it sorts rules.
-Unexpected `.kopiaignore` files cause the guard to fail. Offline mover tests cover
-selection, retention, and file restoration, but do not prove native application
-or replacement-coordinator recovery.
-
-## Manual backup
-
-Keep manual source activation in Git so parent Flux reconciliation cannot undo
-an imperative child suspend patch. For Zigbee, keep the export CronJob suspended,
-create a uniquely named manual Job, and wait for completion:
+For Zigbee, create a native export and wait for it to finish:
 
 ```bash
 kubectl --context homelab -n home-assistant create job zigbee-backup-export-UNIQUE_TRIGGER \
@@ -48,22 +30,17 @@ kubectl --context homelab -n home-assistant wait --for=condition=complete \
   job/zigbee-backup-export-UNIQUE_TRIGGER --timeout=240s
 ```
 
-Do not proceed on export failure. Commit `paused: false` and a new manual trigger
-for the selected ReplicationSource. Require `status.lastManualSync` to match that
-trigger and `latestMoverStatus.result: Successful`, then inspect repository
-inventory. Timestamps alone do not prove a mover ran. Commit `paused: true` again
-when the manual run finishes. Do not print decrypted secrets, archive contents,
-MQTT responses, or configuration. Keep snapshot IDs, timestamps, inventory,
-and hashes in protected private records.
+After a successful export, set `paused: false` and a new manual trigger in the
+selected source manifest through GitOps. For Home Assistant, first ensure its
+native backup has completed. Check that `status.lastManualSync` matches the trigger
+and `latestMoverStatus.result` is `Successful`, then pause the source again.
 
-## Isolated restore
+Keep exports and uploads sequential. Before enabling schedules, configure
+repository maintenance and failure alerts, and test application recovery.
 
-The helper checks the cluster read-only, requires a successful manual backup,
-and refuses an existing destination PVC or ReplicationDestination. Supply an
-explicit RFC3339 cutoff between backup completion and now. The pinned mover
-selects the newest snapshot at or before the cutoff; it does not select by
-snapshot ID. Confirm the chosen recovery point independently because mover log
-tails may omit its ID.
+## Restore
+
+Restore into a new volume using a cutoff between backup completion and now:
 
 ```bash
 python infrastructure/backup/prepare-pilot-restore.py home-assistant \
@@ -71,24 +48,11 @@ python infrastructure/backup/prepare-pilot-restore.py home-assistant \
 kubectl --context homelab apply -f /tmp/home-assistant-pilot-restore.yaml
 ```
 
-Repeat for `zigbee2mqtt` only after authorizing that restore. Each target is a
-separate 1 GiB PVC, never the live application PVC. If a target exists, review
-its exact contents and cleanup separately; the helper will not overwrite it.
-
-Validate restored archives from a temporary pod with a read-only mount. Compare
-hashes and selected metadata privately, then test native application recovery in
-isolation. Home Assistant needs its saved emergency key. Do not start Zigbee2MQTT
-against the live coordinator; replacement-coordinator recovery is a separate test.
-The export staging PVC has Flux pruning disabled. Test-resource cleanup and
-repository deletion require exact-target checks.
-
-Before automation, verify fresh-client access, application recovery, maintenance,
-pruning, and failed/stale alerts. Couple export success to the Kopia trigger;
-independent schedules can upload stale data.
+Use `zigbee2mqtt` instead for a Zigbee restore. Verify the restored archives before
+following the application's recovery procedure. Home Assistant needs the saved
+emergency key. Keep Zigbee recovery tests disconnected from the live coordinator.
 
 References:
 
-- [Zigbee2MQTT native backup request](https://www.zigbee2mqtt.io/guide/usage/mqtt_topics_and_messages.html#zigbee2mqttbridgerequestbackup)
 - [Home Assistant backups](https://www.home-assistant.io/integrations/backup/)
-- [Kopia ignore rules](https://kopia.io/docs/advanced/kopiaignore/)
-- [Kopia rule ordering issue](https://github.com/kopia/kopia/issues/3814)
+- [Zigbee2MQTT native backup](https://www.zigbee2mqtt.io/guide/usage/mqtt_topics_and_messages.html#zigbee2mqttbridgerequestbackup)

@@ -1,11 +1,11 @@
 {
   "(global)": {
     "retention": {
-      "keepLatest": 1,
+      "keepLatest": 3,
       "keepHourly": 0,
-      "keepDaily": 14,
-      "keepWeekly": 8,
-      "keepMonthly": 6,
+      "keepDaily": 0,
+      "keepWeekly": 0,
+      "keepMonthly": 0,
       "keepAnnual": 0,
       "ignoreIdenticalSnapshots": false
     },

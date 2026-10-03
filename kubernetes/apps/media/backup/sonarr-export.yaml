@@ -1,0 +1,80 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sonarr-backup-exports
+  annotations:
+    kustomize.toolkit.fluxcd.io/prune: disabled
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: sonarr-backup-export
+spec:
+  suspend: true
+  schedule: 0 6 * * *
+  timeZone: Etc/UTC
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 240
+      template:
+        spec:
+          automountServiceAccountToken: false
+          restartPolicy: Never
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+          - name: export
+            image: ghcr.io/perfectra1n/volsync:0.17.11@sha256:79674d3c48685e21cadaac8e0afd14268130a0a51a10c41a9dd65096c1434a0f
+            command: [python3, /scripts/export-sonarr.py]
+            env:
+            - name: PYTHONDONTWRITEBYTECODE
+              value: '1'
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop: [ALL]
+            resources:
+              requests:
+                cpu: 50m
+                memory: 64Mi
+              limits:
+                memory: 512Mi
+            volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+            - name: exports
+              mountPath: /exports
+            - name: script
+              mountPath: /scripts
+              readOnly: true
+            - name: temporary
+              mountPath: /tmp
+          volumes:
+          - name: config
+            persistentVolumeClaim:
+              claimName: sonarr
+          - name: exports
+            persistentVolumeClaim:
+              claimName: sonarr-backup-exports
+          - name: script
+            configMap:
+              name: sonarr-backup-policy
+          - name: temporary
+            emptyDir:
+              medium: Memory
+              sizeLimit: 256Mi

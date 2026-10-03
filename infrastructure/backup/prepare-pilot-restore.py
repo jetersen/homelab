@@ -6,8 +6,8 @@ import json
 import subprocess
 
 
-def kubectl(*args):
-    result = subprocess.run(['kubectl', '--context', 'homelab', '-n', 'home-assistant', *args],
+def kubectl(namespace, *args):
+    result = subprocess.run(['kubectl', '--context', 'homelab', '-n', namespace, *args],
                             capture_output=True, text=True)
     if result.returncode:
         raise RuntimeError('Read-only cluster check failed; kubectl output withheld.')
@@ -16,13 +16,14 @@ def kubectl(*args):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('application', choices=['home-assistant', 'zigbee2mqtt'])
+    parser.add_argument('application', choices=['home-assistant', 'zigbee2mqtt', 'sonarr'])
     parser.add_argument('--as-of', required=True, help='Explicit RFC3339 recovery cutoff after the pilot snapshot')
     args = parser.parse_args()
+    namespace = 'media' if args.application == 'sonarr' else 'home-assistant'
     cutoff = datetime.datetime.fromisoformat(args.as_of.replace('Z', '+00:00'))
     if cutoff.utcoffset() is None:
         raise RuntimeError('Recovery cutoff must have an explicit timezone.')
-    source = json.loads(kubectl('get', 'replicationsource', f'{args.application}-backup', '-o', 'json'))
+    source = json.loads(kubectl(namespace, 'get', 'replicationsource', f'{args.application}-backup', '-o', 'json'))
     status = source.get('status', {})
     manual = source['spec'].get('trigger', {}).get('manual')
     if (not manual or status.get('lastManualSync') != manual or not status.get('lastSyncTime')
@@ -33,14 +34,14 @@ def main():
         raise RuntimeError('Cutoff must be between pilot completion and the current time.')
     name = f'{args.application}-kopia-pilot-restore'
     for kind in ['pvc', 'replicationdestination']:
-        if kubectl('get', kind, name, '--ignore-not-found', '-o', 'name').strip():
+        if kubectl(namespace, 'get', kind, name, '--ignore-not-found', '-o', 'name').strip():
             raise RuntimeError('Restore target already exists; choose a separate recovery procedure.')
     pvc = {'apiVersion': 'v1', 'kind': 'PersistentVolumeClaim',
-           'metadata': {'name': name, 'namespace': 'home-assistant'},
+           'metadata': {'name': name, 'namespace': namespace},
            'spec': {'accessModes': ['ReadWriteOnce'], 'storageClassName': 'local-path',
                     'resources': {'requests': {'storage': '1Gi'}}}}
     destination = {'apiVersion': 'volsync.backube/v1alpha1', 'kind': 'ReplicationDestination',
-                   'metadata': {'name': name, 'namespace': 'home-assistant'},
+                   'metadata': {'name': name, 'namespace': namespace},
                    'spec': {'trigger': {'manual': 'pilot-restore-1'}, 'kopia': {
                        'repository': f'{args.application}-kopia', 'copyMethod': 'Direct',
                        'destinationPVC': name, 'cacheCapacity': '1Gi', 'restoreAsOf': args.as_of,

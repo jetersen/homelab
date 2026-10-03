@@ -96,3 +96,19 @@ spec:
     - name: media-storage
     - name: app-template
     - name: technitium
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: media-backup
+  namespace: flux-system
+  labels:
+    homelab.jetersen.dev/flux-defaults: enabled
+    homelab.jetersen.dev/flux-homelab-source: enabled
+    homelab.jetersen.dev/flux-wait: disabled
+spec:
+  targetNamespace: media
+  path: ./kubernetes/apps/media/backup
+  dependsOn:
+    - name: volsync
+    - name: sonarr

@@ -23,7 +23,7 @@ class RestoreTests(unittest.TestCase):
 
     def render(self, application, existing=False):
         def read(*args):
-            if args[1] == 'replicationsource':
+            if args[2] == 'replicationsource':
                 return json.dumps(self.source)
             return 'persistentvolumeclaim/existing' if existing else ''
         with patch.object(restore, 'kubectl', side_effect=read), \
@@ -33,10 +33,11 @@ class RestoreTests(unittest.TestCase):
         return [json.loads(part) for part in output.getvalue().split('\n---\n')]
 
     def test_restore_targets_new_pvcs_with_matching_snapshot_identity_and_explicit_cutoff(self):
-        for application in ['home-assistant', 'zigbee2mqtt']:
+        for application in ['home-assistant', 'zigbee2mqtt', 'sonarr']:
             pvc, destination = self.render(application)
             target = f'{application}-kopia-pilot-restore'
             self.assertEqual(pvc['metadata']['name'], target)
+            self.assertEqual(pvc['metadata']['namespace'], 'media' if application == 'sonarr' else 'home-assistant')
             self.assertEqual(destination['spec']['kopia']['destinationPVC'], target)
             self.assertEqual(destination['spec']['kopia']['username'], application)
             self.assertEqual(destination['spec']['kopia']['restoreAsOf'], self.cutoff)

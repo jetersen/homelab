@@ -20,6 +20,8 @@ case "$1" in
     shopt -s nullglob
     files=(/data/backups/*.tar)
     ((${#files[@]} > 0))
+    # Native retention must bound the input too. Never delete manual archives here.
+    ((${#files[@]} <= 3))
     for file in "${files[@]}"; do
       test -f "$file" && test ! -L "$file" && test -s "$file"
       # Avoid archives still being produced. Never copy the live recorder database.
