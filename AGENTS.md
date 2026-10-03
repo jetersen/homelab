@@ -15,8 +15,12 @@
 
 ## Talos
 
+- Keep operational audits, credential-rotation records, recovery artifacts, and live diagnostic results in protected private local storage. Do not add live inventory, backup locations, or security incident details to public documentation, including this file.
 - Machine configurations contain bootstrap tokens, CA private keys, service-account signing keys, and the encryption secret. Capture raw configuration and diff output privately; never print them in agent output.
 - `talosctl get machineconfig` can return its `spec` as serialized multi-document YAML. Decode that value, assert the expected mapping types, and print only explicitly selected non-secret fields. Never stringify an unknown structure or convert it to a list for debugging.
+- `talosctl rotate-ca` can print newly generated private keys, including during dry-run. Capture its entire output privately and report only verified non-secret results.
+- Rotate credentials using focused patches and supported trust transitions. Do not apply a full regenerated configuration as part of rotation. Synchronize the encrypted generator secrets and local client configurations afterward.
+- Before retiring an encryption key, retain decryption overlap, rewrite the affected resources, and verify the stored ciphertext uses the replacement key. Keep encrypted recovery copies needed by older backups.
 - Keep interactive enrollment URLs out of terminal output and repository files.
 
 ## TrueNAS
