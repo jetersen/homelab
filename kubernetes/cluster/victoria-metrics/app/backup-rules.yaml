@@ -10,13 +10,13 @@ spec:
       expr: "(max by (namespace, cronjob) (\n  label_replace(\n    kube_job_status_start_time\n\
         \    * on (namespace, job_name) (kube_job_failed{condition=\"true\"} == 1)\n\
         \    * on (namespace, job_name) group_left (owner_name) kube_job_owner{owner_kind=\"\
-        CronJob\",owner_name=~\"home-assistant-backup|zigbee2mqtt-backup|sonarr-backup|.*-backup-maintenance\"\
+        CronJob\",owner_name=~\"home-assistant-backup|zigbee2mqtt-backup|sonarr-backup|forgejo-backup|forgejo-backup-recovery|.*-backup-maintenance\"\
         },\n    \"cronjob\", \"$1\", \"owner_name\", \"(.*)\"\n  )\n) > on (namespace,\
         \ cronjob) kube_cronjob_status_last_successful_time)\nor\n(max by (namespace,\
         \ cronjob) (\n  label_replace(\n    kube_job_status_start_time\n    * on (namespace,\
         \ job_name) (kube_job_failed{condition=\"true\"} == 1)\n    * on (namespace,\
         \ job_name) group_left (owner_name) kube_job_owner{owner_kind=\"CronJob\"\
-        ,owner_name=~\"home-assistant-backup|zigbee2mqtt-backup|sonarr-backup|.*-backup-maintenance\"\
+        ,owner_name=~\"home-assistant-backup|zigbee2mqtt-backup|sonarr-backup|forgejo-backup|forgejo-backup-recovery|.*-backup-maintenance\"\
         },\n    \"cronjob\", \"$1\", \"owner_name\", \"(.*)\"\n  )\n) unless on (namespace,\
         \ cronjob) kube_cronjob_status_last_successful_time)"
       for: 1m
@@ -29,9 +29,9 @@ spec:
           or maintenance run.
     - alert: ApplicationBackupStale
       expr: "(\n  time() - kube_cronjob_status_last_successful_time{namespace=~\"\
-        home-assistant|media\",cronjob=~\"home-assistant-backup|zigbee2mqtt-backup|sonarr-backup\"\
-        } > 108000\n  or\n  ((time() - kube_cronjob_created{namespace=~\"home-assistant|media\"\
-        ,cronjob=~\"home-assistant-backup|zigbee2mqtt-backup|sonarr-backup\"} > 108000)\n\
+        home-assistant|media|forgejo\",cronjob=~\"home-assistant-backup|zigbee2mqtt-backup|sonarr-backup|forgejo-backup\"\
+        } > 108000\n  or\n  ((time() - kube_cronjob_created{namespace=~\"home-assistant|media|forgejo\"\
+        ,cronjob=~\"home-assistant-backup|zigbee2mqtt-backup|sonarr-backup|forgejo-backup\"} > 108000)\n\
         \   unless on (namespace, cronjob) kube_cronjob_status_last_successful_time)\n\
         )\nand on (namespace, cronjob) (kube_cronjob_spec_suspend == 0)"
       for: 5m
@@ -43,8 +43,8 @@ spec:
           on recovery.
     - alert: BackupMaintenanceStale
       expr: "(\n  time() - kube_cronjob_status_last_successful_time{namespace=~\"\
-        home-assistant|media\",cronjob=~\".*-backup-maintenance\"} > 172800\n  or\n\
-        \  ((time() - kube_cronjob_created{namespace=~\"home-assistant|media\",cronjob=~\"\
+        home-assistant|media|forgejo\",cronjob=~\".*-backup-maintenance\"} > 172800\n  or\n\
+        \  ((time() - kube_cronjob_created{namespace=~\"home-assistant|media|forgejo\",cronjob=~\"\
         .*-backup-maintenance\"} > 172800)\n   unless on (namespace, cronjob) kube_cronjob_status_last_successful_time)\n\
         )\nand on (namespace, cronjob) (kube_cronjob_spec_suspend == 0)"
       for: 5m
@@ -63,7 +63,11 @@ spec:
 
         or
 
-        absent(kube_cronjob_info{namespace="media",cronjob="sonarr-backup"})'
+        absent(kube_cronjob_info{namespace="media",cronjob="sonarr-backup"})
+
+        or
+
+        absent(kube_cronjob_info{namespace="forgejo",cronjob="forgejo-backup"})'
       for: 10m
       labels:
         severity: warning

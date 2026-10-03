@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+    name: forgejo-backup-staging
+    annotations:
+        kustomize.toolkit.fluxcd.io/prune: disabled
+spec:
+    capacity:
+        storage: 120Gi
+    accessModes:
+        - ReadWriteMany
+    persistentVolumeReclaimPolicy: Retain
+    storageClassName: ""
+    mountOptions:
+        - nfsvers=4.2
+        - hard
+        - timeo=600
+        - retrans=2
+    claimRef:
+        namespace: forgejo
+        name: forgejo-backup-staging
+    nfs:
+        server: ENC[AES256_GCM,data:mCiZgbkoA4ZHdSGRIQlbeQA60v2ageOP,iv:eMqBOoXP6RP4ovwzlvl+DNKDzz+ON2LB6paI/Il7d+Q=,tag:kzlA6vZEVOWo7clJDn12rA==,type:str]
+        path: ENC[AES256_GCM,data:C3CIKXaXw6GsEMJq6zlmDSdHNdfSEuwQIqtIe/l7RhM=,iv:MFWh1jnM9X3cM2qPXOmfr94ygDVEgwiVe/Wm9tgMf3A=,tag:342b1teAtajsJCsSqI/RaA==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBsQXFObFJOUHFpekw2RElT
+            NG5TYk95K2RlQTR6UkZubG5Qcys0L0FhdkhvCkJWeWhHM1QwbmtUMzduSzZiNkhs
+            YnNid0hsaG5HZ0xNR0tFWHdQMnRSZVkKLS0tIFNLOVpGeFFzUkd2ZytiMjVjcnAy
+            OVljK2dwelZOMmZYYTlvOWtYVFVKelkKMXhcDA7a5to509UPCfDVxw7Q7jfFXMs2
+            t+3ra7cbAhzHQtj8AgvGRzlNxitZrSy77citxfdV13JrkOo5rgD1Dw==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1u0m8ryqg7hfhuykraxe35v4xzw92a03w9jpt75yv3m57g6pvpp0sf24mdy
+    encrypted_regex: ^nfs$
+    lastmodified: "2026-10-03T11:43:33Z"
+    mac: ENC[AES256_GCM,data:8OeMjRdYcbVuY2lziTZROsjQZss5StpgU9x81fdxyWqwVvfEs49Byf+JBcOs05lQzCrRFxdGEu4lb2FiU5L3dr/FjPgoNtJWpTVGKGkGGqS/LiAP4U5JYvVO0D1uZMPm0nd364KaAP0kWlxHuyQGZT5lNsPYSpReiWgGqfcZRw8=,iv:NLZobdu0wnSDk13wEFbaKKWgxnDviTkJhZmzgJXt9DI=,tag:WWn23HXSZ+O8siSQIaDR5Q==,type:str]
+    version: 3.13.3
+
+---
+{"apiVersion": "v1", "kind": "PersistentVolumeClaim", "metadata": {"name": "forgejo-backup-staging", "namespace": "forgejo", "annotations": {"kustomize.toolkit.fluxcd.io/prune": "disabled"}}, "spec": {"accessModes": ["ReadWriteMany"], "storageClassName": "", "volumeName": "forgejo-backup-staging", "resources": {"requests": {"storage": "120Gi"}}}}

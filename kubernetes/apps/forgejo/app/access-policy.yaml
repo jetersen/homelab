@@ -1,0 +1,22 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: forgejo-internal
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: forgejo
+    - group: gateway.networking.k8s.io
+      kind: TCPRoute
+      name: forgejo-ssh
+  authorization:
+    defaultAction: Deny
+    rules:
+      - action: Allow
+        principal:
+          clientCIDRs:
+            - 192.168.1.0/24
+            - 100.64.0.0/10
+            # Cluster workloads use the gateway without leaving the private network.
+            - 172.22.0.0/16

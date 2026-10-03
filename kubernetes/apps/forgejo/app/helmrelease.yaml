@@ -1,0 +1,121 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: forgejo
+spec:
+  releaseName: forgejo
+  chartRef:
+    kind: OCIRepository
+    name: forgejo
+  values:
+    replicaCount: 1
+    strategy:
+      type: Recreate
+    image:
+      registry: code.forgejo.org
+      repository: forgejo/forgejo
+      tag: 15.0.9-rootless
+      rootless: true
+    podSecurityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      runAsNonRoot: true
+      fsGroup: 1000
+      fsGroupChangePolicy: OnRootMismatch
+      seccompProfile:
+        type: RuntimeDefault
+    containerSecurityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop: [ALL]
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        memory: 2Gi
+    persistence:
+      enabled: true
+      create: false
+      claimName: forgejo-local
+    extraVolumes:
+      - name: nas
+        persistentVolumeClaim:
+          claimName: forgejo-nas
+    extraVolumeMounts:
+      - name: nas
+        mountPath: /mnt/nas
+    httpRoute:
+      enabled: true
+      annotations:
+        public.external-dns.alpha.kubernetes.io/enabled: "false"
+      hostnames: [forgejo.jetersen.dev]
+      parentRefs:
+        - name: envoy-proxy
+          namespace: kube-system
+          sectionName: https
+      matches:
+        timeouts:
+          request: 0s
+          backendRequest: 0s
+    service:
+      ssh:
+        port: 22
+    tcpRoute:
+      enabled: true
+      parentRefs:
+        - name: envoy-proxy
+          namespace: kube-system
+          sectionName: forgejo-ssh
+    gitea:
+      admin:
+        existingSecret: forgejo-admin
+        email: me@jetersen.dev
+        passwordMode: initialOnlyRequireReset
+      config:
+        APP_NAME: Forgejo
+        RUN_MODE: prod
+        server:
+          DOMAIN: forgejo.jetersen.dev
+          ROOT_URL: https://forgejo.jetersen.dev/
+          APP_DATA_PATH: /data/gitea
+          SSH_DOMAIN: forgejo.jetersen.dev
+          SSH_PORT: 22
+          SSH_LISTEN_PORT: 2222
+          LFS_START_SERVER: true
+          OFFLINE_MODE: true
+        database:
+          DB_TYPE: sqlite3
+          PATH: /data/gitea/forgejo.db
+          SQLITE_JOURNAL_MODE: WAL
+        cache:
+          ADAPTER: twoqueue
+          HOST: '{"size":100,"recent_ratio":0.25,"ghost_ratio":0.5}'
+        session:
+          PROVIDER: db
+          COOKIE_SECURE: true
+        queue:
+          TYPE: level
+          DATADIR: /data/gitea/queues
+        indexer:
+          ISSUE_INDEXER_PATH: /data/gitea/indexers/issues.bleve
+          REPO_INDEXER_PATH: /data/gitea/indexers/repos.bleve
+        repository:
+          ROOT: /mnt/nas/repositories
+          DEFAULT_BRANCH: main
+        repository.signing:
+          DEFAULT_TRUST_MODEL: committer
+        storage:
+          STORAGE_TYPE: local
+          PATH: /mnt/nas
+        security:
+          INSTALL_LOCK: true
+          LOGIN_REMEMBER_DAYS: 365
+        service:
+          DISABLE_REGISTRATION: true
+          REQUIRE_SIGNIN_VIEW: true
+        log:
+          MODE: console

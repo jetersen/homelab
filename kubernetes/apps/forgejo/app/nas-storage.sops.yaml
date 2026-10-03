@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+    name: forgejo-nas
+    annotations:
+        kustomize.toolkit.fluxcd.io/prune: disabled
+spec:
+    capacity:
+        storage: 100Gi
+    accessModes:
+        - ReadWriteMany
+    persistentVolumeReclaimPolicy: Retain
+    storageClassName: ""
+    mountOptions:
+        - nfsvers=4.2
+        - hard
+        - timeo=600
+        - retrans=2
+    claimRef:
+        namespace: forgejo
+        name: forgejo-nas
+    nfs:
+        server: ENC[AES256_GCM,data:v8CUXcSY5GuMZ9UxNzFNAaPbV1uv6hsb,iv:VhcZpbp299Ik/ixcIAnHkXtSkUguK/ncwo3On+1f3n4=,tag:VQFHl7vxosjNroEyZD0Ogw==,type:str]
+        path: ENC[AES256_GCM,data:+IFIRpEDcwBx70j0FgCRdBo=,iv:qiUwub4MloQF6xIcq0nnoEVjWUU0JS86se3fbkxr4lY=,tag:vd104gnDDs6HXmmChcjDkA==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBZemE0QmNsOW1oLzNNWGV6
+            THpSVzVvL0MyMmNzVmNMYXl0d1BNOEhPMTJjCndqaWNzNDVNMDgrY08vRDA1TlZC
+            Nlo0dkxSUEY3NHFsUHNBVW04ZXlOc0EKLS0tIGdPNm5JcnQ1SVVOaVZJZ05Reno0
+            OWFDNXF1ZFYrWkJWaGxVeGdyQmdUVG8KNu3ah1IzCcmOBpzWll0BpjziyuXnIUdn
+            r9lxSQDXfYiqdFgPrkoBq5UD5nczuQKmmgcpQklaP0z6YsCRwl3ebQ==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1u0m8ryqg7hfhuykraxe35v4xzw92a03w9jpt75yv3m57g6pvpp0sf24mdy
+    encrypted_regex: ^nfs$
+    lastmodified: "2026-10-03T11:43:33Z"
+    mac: ENC[AES256_GCM,data:oYydwQruccX5Yv9DH1CoNy3BJxnkk3eAPiTjT+NM7G9yGb+/jSfqrjb1ueGWtBwC+qyg75wibM/5EvSfwrpoKIygcFKaeo8YvVENtZn1T/3ilAFdDgUAm4OVxnXGCBoVBsrztAWv86QFoehaXii8KxPLfCJQlAal+G8PMIaMOgw=,iv:I6sgfI0a0PsBiNK+PPUIgML1CuscrJ53Z0HEqBpfCF0=,tag:adRbqcgnMB1lJgx/DUUDcA==,type:str]
+    version: 3.13.3
+
+---
+{"apiVersion": "v1", "kind": "PersistentVolumeClaim", "metadata": {"name": "forgejo-nas", "namespace": "forgejo", "annotations": {"kustomize.toolkit.fluxcd.io/prune": "disabled"}}, "spec": {"accessModes": ["ReadWriteMany"], "storageClassName": "", "volumeName": "forgejo-nas", "resources": {"requests": {"storage": "100Gi"}}}}

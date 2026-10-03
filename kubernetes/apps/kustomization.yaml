@@ -3,6 +3,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
+  - forgejo/flux-ks.yaml
   - home-assistant/flux-ks.yaml
   - homepage/flux-ks.yaml
   - konflate/flux-ks.yaml

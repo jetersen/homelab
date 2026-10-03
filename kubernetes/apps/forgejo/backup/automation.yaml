@@ -1,0 +1,277 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: forgejo-backup
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: forgejo-backup
+rules:
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  resourceNames:
+  - forgejo
+  verbs:
+  - get
+  - patch
+- apiGroups:
+  - ''
+  resources:
+  - pods
+  verbs:
+  - list
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: forgejo-backup
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: forgejo-backup
+subjects:
+- kind: ServiceAccount
+  name: forgejo-backup
+  namespace: forgejo
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: forgejo-backup
+spec:
+  schedule: 0 3 * * *
+  timeZone: Etc/UTC
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 7200
+      template:
+        spec:
+          serviceAccountName: forgejo-backup
+          automountServiceAccountToken: true
+          restartPolicy: Never
+          terminationGracePeriodSeconds: 360
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            fsGroup: 1000
+            fsGroupChangePolicy: OnRootMismatch
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+          - name: backup
+            image: ghcr.io/perfectra1n/volsync:0.17.11@sha256:79674d3c48685e21cadaac8e0afd14268130a0a51a10c41a9dd65096c1434a0f
+            command:
+            - python3
+            - /scripts/backup.py
+            securityContext:
+              runAsNonRoot: true
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop:
+                - ALL
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+              limits:
+                memory: 1Gi
+            env:
+            - name: HOME
+              value: /cache
+            volumeMounts:
+            - name: script
+              mountPath: /scripts
+              readOnly: true
+            - name: cache
+              mountPath: /cache
+            - name: temp
+              mountPath: /tmp
+            - name: local
+              mountPath: /source/local
+              readOnly: true
+            - name: nas
+              mountPath: /source/nas
+              readOnly: true
+            - name: staging
+              mountPath: /stage
+              readOnly: false
+            envFrom:
+            - secretRef:
+                name: forgejo-kopia
+          volumes:
+          - name: script
+            configMap:
+              name: forgejo-backup-runner
+          - name: cache
+            emptyDir:
+              sizeLimit: 6Gi
+          - name: temp
+            emptyDir:
+              sizeLimit: 6Gi
+          - name: local
+            persistentVolumeClaim:
+              claimName: forgejo-local
+              readOnly: true
+          - name: nas
+            persistentVolumeClaim:
+              claimName: forgejo-nas
+              readOnly: true
+          - name: staging
+            persistentVolumeClaim:
+              claimName: forgejo-backup-staging
+              readOnly: false
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: forgejo-backup-maintenance
+spec:
+  schedule: 0 10 * * *
+  timeZone: Etc/UTC
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 7200
+      template:
+        spec:
+          serviceAccountName: forgejo-backup
+          automountServiceAccountToken: false
+          restartPolicy: Never
+          terminationGracePeriodSeconds: 360
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            fsGroup: 1000
+            fsGroupChangePolicy: OnRootMismatch
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+          - name: backup
+            image: ghcr.io/perfectra1n/volsync:0.17.11@sha256:79674d3c48685e21cadaac8e0afd14268130a0a51a10c41a9dd65096c1434a0f
+            command:
+            - python3
+            - /scripts/backup.py
+            - --maintenance
+            securityContext:
+              runAsNonRoot: true
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop:
+                - ALL
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+              limits:
+                memory: 1Gi
+            env:
+            - name: HOME
+              value: /cache
+            volumeMounts:
+            - name: script
+              mountPath: /scripts
+              readOnly: true
+            - name: cache
+              mountPath: /cache
+            - name: temp
+              mountPath: /tmp
+            envFrom:
+            - secretRef:
+                name: forgejo-kopia
+          volumes:
+          - name: script
+            configMap:
+              name: forgejo-backup-runner
+          - name: cache
+            emptyDir:
+              sizeLimit: 6Gi
+          - name: temp
+            emptyDir:
+              sizeLimit: 6Gi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: forgejo-backup-recovery
+spec:
+  schedule: '*/5 * * * *'
+  timeZone: Etc/UTC
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 420
+      template:
+        spec:
+          serviceAccountName: forgejo-backup
+          automountServiceAccountToken: true
+          restartPolicy: Never
+          terminationGracePeriodSeconds: 360
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            fsGroup: 1000
+            fsGroupChangePolicy: OnRootMismatch
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+          - name: backup
+            image: ghcr.io/perfectra1n/volsync:0.17.11@sha256:79674d3c48685e21cadaac8e0afd14268130a0a51a10c41a9dd65096c1434a0f
+            command:
+            - python3
+            - /scripts/backup.py
+            - --recover
+            securityContext:
+              runAsNonRoot: true
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop:
+                - ALL
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+              limits:
+                memory: 1Gi
+            env:
+            - name: HOME
+              value: /cache
+            volumeMounts:
+            - name: script
+              mountPath: /scripts
+              readOnly: true
+            - name: cache
+              mountPath: /cache
+            - name: temp
+              mountPath: /tmp
+          volumes:
+          - name: script
+            configMap:
+              name: forgejo-backup-runner
+          - name: cache
+            emptyDir:
+              sizeLimit: 6Gi
+          - name: temp
+            emptyDir:
+              sizeLimit: 6Gi

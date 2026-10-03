@@ -43,6 +43,12 @@
       namespace: media
       app: qbittorrent
 - Infrastructure:
+  - Forgejo:
+      href: https://forgejo.jetersen.dev
+      description: Git hosting
+      icon: forgejo.png
+      namespace: forgejo
+      app: forgejo
   - Grafana:
       href: https://grafana.jetersen.dev
       description: Metrics and logs
