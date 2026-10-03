@@ -21,22 +21,19 @@ to reclaim expired data; see [Kopia's maintenance guide](https://kopia.io/docs/a
 
 ## Backup
 
-For Zigbee, create a native export and wait for it to finish:
+Schedules are defined in `automation.yaml`. Home Assistant creates its native
+backup first; the offsite workflow requires a recent completed archive. To run
+an offsite backup manually:
 
 ```bash
-kubectl --context homelab -n home-assistant create job zigbee-backup-export-UNIQUE_TRIGGER \
-  --from=cronjob/zigbee-backup-export
+kubectl --context homelab -n home-assistant create job home-assistant-backup-UNIQUE_TRIGGER \
+  --from=cronjob/home-assistant-backup
 kubectl --context homelab -n home-assistant wait --for=condition=complete \
-  job/zigbee-backup-export-UNIQUE_TRIGGER --timeout=240s
+  job/home-assistant-backup-UNIQUE_TRIGGER --timeout=2400s
 ```
 
-After a successful export, set `paused: false` and a new manual trigger in the
-selected source manifest through GitOps. For Home Assistant, first ensure its
-native backup has completed. Check that `status.lastManualSync` matches the trigger
-and `latestMoverStatus.result` is `Successful`, then pause the source again.
-
-Keep exports and uploads sequential. Before enabling schedules, configure
-repository maintenance and failure alerts, and test application recovery.
+Use `zigbee2mqtt-backup` for Zigbee, which exports before uploading. Pause schedules
+through GitOps by setting the workflow CronJob's `spec.suspend` to `true`.
 
 ## Restore
 

@@ -5,15 +5,8 @@ set -euo pipefail
 test ! -e /data/.kopiaignore
 test ! -e /data/backups/.kopiaignore
 
-# Import retains ignore-rule order. policy set --add-ignore sorts it and breaks inclusion rules.
 config="${KOPIA_CACHE_DIR}/kopia.config"
 policy="${KOPIA_CONFIG_PATH}/policy.json"
-kopia --config-file="$config" --disable-file-logging policy import --global --from-file="$policy" >/dev/null
-kopia --config-file="$config" --disable-file-logging policy show /data --json |
-  jq -e --slurpfile expected "$policy" '
-    .files == $expected[0]["(global)"].files and
-    .retention == $expected[0]["(global)"].retention and
-    .errorHandling == $expected[0]["(global)"].errorHandling' >/dev/null
 
 case "$1" in
   home-assistant)
@@ -22,12 +15,20 @@ case "$1" in
     ((${#files[@]} > 0))
     # Native retention must bound the input too. Never delete manual archives here.
     ((${#files[@]} <= 3))
+    latest="${files[0]}"
     for file in "${files[@]}"; do
       test -f "$file" && test ! -L "$file" && test -s "$file"
       # Avoid archives still being produced. Never copy the live recorder database.
       test "$(( $(date +%s) - $(stat -c %Y "$file") ))" -ge 300
       tar -tf "$file" >/dev/null
+      if [[ "$file" -nt "$latest" ]]; then latest="$file"; fi
     done
+    test "$(( $(date +%s) - $(stat -c %Y "$latest") ))" -le 108000
+    name="$(basename "$latest")"
+    [[ "$name" =~ ^[a-zA-Z0-9_-]+\.tar$ ]]
+    effective="${KOPIA_CACHE_DIR}/effective-policy.json"
+    jq --arg archive "/backups/$name" '."(global)".files.ignore[-1] = ("!" + $archive)' "$policy" >"$effective"
+    policy="$effective"
     ;;
   zigbee2mqtt)
     test -f /data/backups/zigbee2mqtt.zip
@@ -38,3 +39,10 @@ case "$1" in
     ;;
   *) exit 1 ;;
 esac
+# Import retains ignore-rule order. CLI ignore flags sort these rules.
+kopia --config-file="$config" --disable-file-logging policy import --global --from-file="$policy" >/dev/null
+kopia --config-file="$config" --disable-file-logging policy show /data --json |
+  jq -e --slurpfile expected "$policy" '
+    .files == $expected[0]["(global)"].files and
+    .retention == $expected[0]["(global)"].retention and
+    .errorHandling == $expected[0]["(global)"].errorHandling' >/dev/null

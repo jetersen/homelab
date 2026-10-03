@@ -5,8 +5,6 @@ metadata:
 spec:
   paused: false
   sourcePVC: home-assistant-pvc
-  trigger:
-    manual: pilot-3
   kopia:
     repository: home-assistant-kopia
     copyMethod: Direct

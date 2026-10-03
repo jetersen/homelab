@@ -7,6 +7,7 @@ resources:
 - zigbee-export.yaml
 - home-assistant-secret.sops.yaml
 - zigbee2mqtt-secret.sops.yaml
+- automation.yaml
 generatorOptions:
   disableNameSuffixHash: true
 configMapGenerator:
@@ -25,3 +26,5 @@ configMapGenerator:
 - name: zigbee-backup-export-script
   files:
   - export-zigbee.cjs
+components:
+- ../../../components/application-backup

@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 import tarfile
 import tempfile
+import time
 import unittest
 import zipfile
 import yaml
@@ -28,7 +29,12 @@ class FileSelectionTests(unittest.TestCase):
                 member = tarfile.TarInfo('backup.json')
                 member.size = len(payload)
                 output.addfile(member, io.BytesIO(payload))
-            os.utime(archive, (revision, revision))
+            modified = time.time() - 600 + revision
+            os.utime(archive, (modified, modified))
+            for name in ['older-1.tar', 'older-2.tar']:
+                older = archive.parent / name
+                older.write_bytes(archive.read_bytes())
+                os.utime(older, (0, 0))
         elif application == 'sonarr':
             archive = data / 'backups/sonarr.zip'
             archive.write_bytes(native_archive(folder))
@@ -105,6 +111,14 @@ kopia --config-file=/cache/kopia.config --disable-file-logging snapshot restore 
                 self.assertEqual(files, [expected])
                 self.assertEqual((restored / expected).read_bytes(), archive.read_bytes())
                 self.assertEqual(snapshots[-1]['rootEntry']['summ']['numFailed'], 0)
+                maintenance = environment + f'''
+export DIRECTION=maintenance KOPIA_OVERRIDE_MAINTENANCE_USERNAME={application}@homelab
+export KOPIA_GLOBAL_POLICY_FILE=/no-policy-file
+/mover-kopia/entry.sh >/cache/maintenance.log 2>&1
+'''
+                result = self.container(folder, application, maintenance)
+                self.assertEqual(result.returncode, 0, result.stderr[-1000:])
+                self.assertIn('OPERATION_RESULT: SUCCESS', (folder / 'cache/maintenance.log').read_text())
 
     def test_accumulating_home_assistant_archives_and_stale_sonarr_are_rejected(self):
         for application in ['home-assistant', 'sonarr']:

@@ -5,6 +5,7 @@ resources:
 - sonarr-source.yaml
 - sonarr-export.yaml
 - sonarr-secret.sops.yaml
+- automation.yaml
 generatorOptions:
   disableNameSuffixHash: true
 configMapGenerator:
@@ -15,3 +16,5 @@ configMapGenerator:
   - export-sonarr.py
   literals:
   - global-policy.json={"retention":{"keepLatest":3,"keepHourly":0,"keepDaily":0,"keepWeekly":0,"keepMonthly":0,"keepAnnual":0}}
+components:
+- ../../../components/application-backup

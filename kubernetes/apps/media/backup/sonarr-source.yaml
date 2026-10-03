@@ -5,8 +5,6 @@ metadata:
 spec:
   paused: false
   sourcePVC: sonarr-backup-exports
-  trigger:
-    manual: pilot-1
   kopia:
     repository: sonarr-kopia
     copyMethod: Direct

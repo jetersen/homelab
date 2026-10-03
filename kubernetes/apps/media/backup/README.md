@@ -19,22 +19,17 @@ contain credentials and must remain private.
 
 ## Backup
 
-Create a native export and wait for it to finish:
+Schedules are defined in `automation.yaml`. To run a backup manually:
 
 ```bash
-kubectl --context homelab -n media create job sonarr-backup-export-UNIQUE_TRIGGER \
-  --from=cronjob/sonarr-backup-export
+kubectl --context homelab -n media create job sonarr-backup-UNIQUE_TRIGGER \
+  --from=cronjob/sonarr-backup
 kubectl --context homelab -n media wait --for=condition=complete \
-  job/sonarr-backup-export-UNIQUE_TRIGGER --timeout=240s
+  job/sonarr-backup-UNIQUE_TRIGGER --timeout=2400s
 ```
 
-After a successful export, set `paused: false` and a new manual trigger in
-`sonarr-source.yaml` through GitOps. Check that `status.lastManualSync` matches the
-trigger and `latestMoverStatus.result` is `Successful`, then pause the source again.
-
-Keep exports and uploads sequential. Before enabling a schedule, configure cleanup
-of Sonarr's manual native backups, repository maintenance, and failure alerts.
-Sonarr's automatic retention does not remove manual backups.
+Pause schedules through GitOps by setting the workflow CronJob's `spec.suspend`
+to `true`. Maintenance schedules and backup alerts are managed separately.
 
 ## Restore
 

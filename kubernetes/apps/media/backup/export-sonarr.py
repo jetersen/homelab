@@ -55,15 +55,16 @@ def export(config_path=Path('/config/config.xml'), output=Path('/exports/backups
 
     client = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
 
-    def request(path, payload=None):
+    def request(path, payload=None, method=None):
         req = urllib.request.Request(base_url + path,
+            method=method,
             data=json.dumps(payload).encode() if payload is not None else None,
             headers={'X-Api-Key': key, 'Content-Type': 'application/json'})
         with client.open(req, timeout=30) as response:
             body = response.read(64 * 1024 * 1024 + 1)
         if len(body) > 64 * 1024 * 1024:
             raise ExportError('Native backup response exceeds the size limit.')
-        return json.loads(body)
+        return json.loads(body) if body else None
 
     previous = {backup['id'] for backup in request('/api/v3/system/backup')}
     command = request('/api/v3/command', {'name': 'Backup'})
@@ -108,6 +109,9 @@ def export(config_path=Path('/config/config.xml'), output=Path('/exports/backups
             os.replace(temporary, output)
         finally:
             temporary.unlink(missing_ok=True)
+    # This archive was created by this export, and its validated copy is staged.
+    # Remove only that temporary native copy, never existing manual backups.
+    request(f'/api/v3/system/backup/{fresh[0]["id"]}', method='DELETE')
     print('Validated native Sonarr configuration and database; staging archive replaced atomically.')
 
 

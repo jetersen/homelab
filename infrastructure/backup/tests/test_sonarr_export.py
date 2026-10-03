@@ -62,6 +62,9 @@ class ExportTests(unittest.TestCase):
                 body = {'status': status}
             elif request.full_url.endswith('/api/v3/config/host'):
                 body = {'backupFolder': 'Backups'}
+            elif request.full_url.endswith('/api/v3/system/backup/2'):
+                self.assertEqual(request.method, 'DELETE')
+                return io.BytesIO(b'')
             else:
                 return io.BytesIO(archive)
             return io.BytesIO(json.dumps(body).encode())
@@ -79,7 +82,7 @@ class ExportTests(unittest.TestCase):
             self.assertEqual(target.read_bytes(), archive)
             self.assertEqual(target.stat().st_mode & 0o777, 0o600)
             self.assertEqual(list(target.parent.glob('*.tmp')), [])
-            self.assertEqual(len(requests), 5)
+            self.assertEqual(len(requests), 6)
 
     def test_invalid_archive_preserves_previous_export(self):
         for kwargs in [{'extra': True}, {'corrupt': True}]:
