@@ -19,6 +19,10 @@ use the static WAN parameters from the customer portal rather than relying on
 the requested DHCPv6 delegation size. See the
 [ISP's IPv6 guide](https://netnoerden.dk/faq/22).
 
+TrueNAS also needs a persistent route for the public Pod subnet through the
+node's LAN ULA address. This keeps Pod-to-NAS traffic symmetric instead of
+sending replies through the gateway, which can break TCP DNS.
+
 When migrating an existing IPv4-only cluster, configure Talos's dual-stack
 ranges and give every Node an IPv6 Pod CIDR before enabling Cilium IPv6.
 Kubernetes does not allow changing an allocated Node's Pod CIDRs; recreating
