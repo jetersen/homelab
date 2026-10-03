@@ -9,6 +9,10 @@
 - Prefer updating manifests in this repo.
 - Flux-managed Kubernetes resources live under `kubernetes/`.
 
+## ExternalDNS
+
+- Do not assume `--dry-run` suppresses writes through webhook providers. Never simulate changed or empty desired record sets against a live webhook unless write suppression is independently verified. Use saved records and offline comparisons for ownership audits.
+
 ## Git
 
 - Use conventional commits.
