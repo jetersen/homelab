@@ -65,11 +65,19 @@ jobs:
           RENOVATE_CONFIG_FILE_NAMES: '[".forgejo/renovate.json"]'
           RENOVATE_ONBOARDING: 'false'
           RENOVATE_GIT_AUTHOR: 'Renovate <renovate@jetersen.dev>'
-          RENOVATE_DRY_RUN: ${{ inputs.dry_run && 'full' || 'none' }}
+          DRY_RUN: ${{ inputs.dry_run }}
           REGISTRY_USERNAME: ${{ forgejo.repository_owner }}
           REGISTRY_TOKEN: ${{ steps.packages.outputs.token }}
         run: |
           set -euo pipefail
+          # Renovate has no "none" dry-run mode; normal runs must leave it unset.
+          unset RENOVATE_DRY_RUN
+          if [ "$DRY_RUN" = true ]; then
+            export RENOVATE_DRY_RUN=full
+            echo 'Renovate mode: dry run'
+          else
+            echo 'Renovate mode: normal'
+          fi
           RENOVATE_HOST_RULES=$(jq -cn '[{
             hostType: "docker",
             matchHost: "forgejo.jetersen.dev",
