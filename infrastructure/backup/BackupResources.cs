@@ -7,7 +7,7 @@ namespace Homelab.Backup;
 
 public static class BackupResources
 {
-    public static Dictionary<string, object?> Create(string projectId, string bucketName, Ovh.Provider provider)
+    public static Dictionary<string, object?> Create(string projectId, string bucketName, string stateBucketName, Ovh.Provider provider)
     {
         // The Kopia user must not inherit the bucket owner's FULL_CONTROL ACL.
         var owner = new Ovh.CloudProject.User("bucket-owner", new()
@@ -51,7 +51,7 @@ public static class BackupResources
             UserId = kopia.Id,
         }, credentialOptions);
 
-        return new Dictionary<string, object?>
+        var exports = new Dictionary<string, object?>
         {
             ["projectId"] = projectId,
             ["bucketName"] = bucket.Name,
@@ -61,6 +61,9 @@ public static class BackupResources
             ["accessKeyId"] = Output.CreateSecret(credential.AccessKeyId),
             ["secretAccessKey"] = Output.CreateSecret(credential.SecretAccessKey),
         };
+        foreach (var (key, value) in StateResources.Create(projectId, stateBucketName, owner, provider))
+            exports.Add(key, value);
+        return exports;
     }
 
     private static CustomResourceOptions Protected(Ovh.Provider provider) => new()

@@ -68,6 +68,48 @@ class SecretTransferTests(unittest.TestCase):
                 helper.capture(["pass-cli"], label="Create Kopia login")
         self.assertNotIn("secret-value", str(error.exception))
 
+    def test_state_transfer_uses_dedicated_outputs_and_stdin(self):
+        created = []
+        commands = []
+
+        def capture(command, payload=None, label=None):
+            commands.append(command)
+            if command[:3] == ["pass-cli", "item", "list"]:
+                return json.dumps({"items": []})
+            if command[0] == "pulumi":
+                return json.dumps({
+                    "projectId": "8f573109804548c5acd72a72af919479",
+                    "stateBucketName": "jetersen-homelab-pulumi",
+                    "stateAccessKeyId": "state-access", "stateSecretAccessKey": "state-secret",
+                    "accessKeyId": "kopia-access", "secretAccessKey": "kopia-secret",
+                })
+            if command[:3] == ["pass-cli", "item", "create"]:
+                created.append(json.loads(payload))
+                return ""
+            raise AssertionError("State transfer must not generate a Kopia password")
+
+        output = io.StringIO()
+        with patch.object(helper, "capture", side_effect=capture), \
+                patch("sys.argv", ["helper", "--pulumi-state", "--store"]), \
+                patch.dict("os.environ", {"PULUMI_CONFIG_PASSPHRASE": "test-passphrase"}, clear=True), \
+                contextlib.redirect_stdout(output):
+            helper.main()
+        self.assertEqual(len(created), 1)
+        self.assertEqual(created[0]["title"], "OVHcloud Homelab Pulumi S3")
+        self.assertEqual(created[0]["username"], "state-access")
+        self.assertEqual(created[0]["password"], "state-secret")
+        for secret in ["state-access", "state-secret", "kopia-access", "kopia-secret"]:
+            self.assertNotIn(secret, output.getvalue())
+            self.assertTrue(all(secret not in arg for command in commands for arg in command))
+
+    def test_existing_state_login_is_preserved(self):
+        with patch.object(helper, "capture", return_value=json.dumps({"items": [
+            {"title": "OVHcloud Homelab Pulumi S3", "item_type": "login"},
+        ]})) as capture, patch("sys.argv", ["helper", "--pulumi-state", "--store"]), \
+                contextlib.redirect_stdout(io.StringIO()):
+            helper.main()
+        self.assertEqual(capture.call_count, 1)
+
 
 if __name__ == "__main__":
     unittest.main()

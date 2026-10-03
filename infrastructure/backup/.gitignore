@@ -1,5 +1,6 @@
 .pulumi-state/
 Pulumi.*.yaml
+Pulumi.*.yaml.bak.*
 bin/
 obj/
 tests/bin/

@@ -1,4 +1,4 @@
-"""Run in the user's terminal to store backup credentials in Proton Pass."""
+"""Run in the user's terminal to store backup or Pulumi S3 credentials in Proton Pass."""
 
 import argparse
 import json
@@ -19,8 +19,9 @@ def capture(command, payload=None, label="CLI operation"):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--store", action="store_true", help="Create missing Proton Pass items")
+    parser.add_argument("--pulumi-state", action="store_true", help="Store only the dedicated Pulumi state S3 login")
     args = parser.parse_args()
-    titles = ["OVHcloud Homelab S3", "Homelab Kopia"]
+    titles = ["OVHcloud Homelab Pulumi S3"] if args.pulumi_state else ["OVHcloud Homelab S3", "Homelab Kopia"]
     items = json.loads(capture([
         "pass-cli", "item", "list", "--vault-name", "Personal", "--filter-state", "active", "--output", "json",
     ], label="Read vault metadata"))["items"]
@@ -32,7 +33,7 @@ def main():
         if not matches:
             missing.append(title)
     if not missing:
-        print("Both Proton Pass items already exist; nothing changed.")
+        print("Requested Proton Pass items already exist; nothing changed.")
         return
     if not args.store:
         print("Ready to create: " + ", ".join("Personal/" + title for title in missing))
@@ -47,20 +48,26 @@ def main():
             "pulumi", "-C", directory, "stack", "output", "--stack", "homelab",
             "--json", "--show-secrets", "--non-interactive",
         ], label="Read encrypted Pulumi outputs"))
-        if outputs.get("projectId") != "8f573109804548c5acd72a72af919479" or outputs.get("bucketName") != "jetersen-homelab-kopia":
+        bucket_key = "stateBucketName" if args.pulumi_state else "bucketName"
+        bucket_name = "jetersen-homelab-pulumi" if args.pulumi_state else "jetersen-homelab-kopia"
+        access_key = "stateAccessKeyId" if args.pulumi_state else "accessKeyId"
+        secret_key = "stateSecretAccessKey" if args.pulumi_state else "secretAccessKey"
+        if outputs.get("projectId") != "8f573109804548c5acd72a72af919479" or outputs.get(bucket_key) != bucket_name:
             raise RuntimeError("Unexpected project or bucket; no items created")
-        if not all(isinstance(outputs.get(key), str) and outputs[key] for key in ["accessKeyId", "secretAccessKey"]):
+        if not all(isinstance(outputs.get(key), str) and outputs[key] for key in [access_key, secret_key]):
             raise RuntimeError("S3 credentials are missing; no items created")
         capture([
             "pass-cli", "item", "create", "login", "--vault-name", "Personal",
             "--from-template", "-",
         ], json.dumps({
-            "title": titles[0], "username": outputs["accessKeyId"],
-            "password": outputs["secretAccessKey"], "urls": ["https://s3.de.io.cloud.ovh.net"],
+            "title": titles[0], "username": outputs[access_key],
+            "password": outputs[secret_key], "urls": ["https://s3.de.io.cloud.ovh.net"],
         }), label="Create S3 login")
-        print("Stored Personal/OVHcloud Homelab S3.")
+        print("Stored Personal/" + titles[0] + ".")
     else:
-        print("Kept existing Personal/OVHcloud Homelab S3.")
+        print("Kept existing Personal/" + titles[0] + ".")
+    if args.pulumi_state:
+        return
     if titles[1] in missing:
         password = json.loads(capture([
             "pass-cli", "password", "generate", "random", "--length", "64",

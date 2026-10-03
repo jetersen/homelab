@@ -14,7 +14,7 @@ return await Deployment.RunAsync(() =>
     });
 
     return BackupResources.Create(
-        config.Require("projectId"), config.Require("bucketName"), provider);
+        config.Require("projectId"), config.Require("bucketName"), config.Require("stateBucketName"), provider);
 });
 
 static Output<string> SecretEnvironment(string name)
