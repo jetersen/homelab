@@ -31,22 +31,6 @@ runs:
           -t "$image:sha-$revision" .
         docker run --rm --network none --read-only --user 1000:1000 \
           --cap-drop ALL --security-opt no-new-privileges "$image:sha-$revision" --help
-    - name: Build and test the staging image
-      shell: bash
-      env:
-        REGISTRY: ${{ inputs.registry }}
-        REPOSITORY: ${{ inputs.repository }}
-      run: |
-        set -euo pipefail
-        revision=$(git rev-parse HEAD)
-        image="$REGISTRY/${REPOSITORY,,}/forgejo-staging"
-        docker build -f infrastructure/forgejo/Dockerfile \
-          --build-arg REVISION="$revision" \
-          --build-arg SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" \
-          --build-arg SOURCE_URL=https://github.com/jetersen/homelab \
-          -t "$image:sha-$revision" .
-        docker run --rm --network none --read-only --user 1000:1000 \
-          --cap-drop ALL --security-opt no-new-privileges "$image:sha-$revision" --help
     - name: Build and test the runner job image
       shell: bash
       env:
@@ -95,7 +79,6 @@ runs:
         revision=$(git rev-parse HEAD)
         package="$REGISTRY/${REPOSITORY,,}"
         docker push "$package/backup-helper:sha-$revision"
-        docker push "$package/forgejo-staging:sha-$revision"
         docker push "$package/runner-job:sha-$revision"
         flux push artifact "oci://$package/flux:sha-$revision" \
           --path="$OCI_DIRECTORY" \
@@ -112,8 +95,6 @@ runs:
         fi
         docker tag "$package/backup-helper:sha-$revision" "$package/backup-helper:main"
         docker push "$package/backup-helper:main"
-        docker tag "$package/forgejo-staging:sha-$revision" "$package/forgejo-staging:main"
-        docker push "$package/forgejo-staging:main"
         docker tag "$package/runner-job:sha-$revision" "$package/runner-job:main"
         docker push "$package/runner-job:main"
         flux tag artifact "oci://$package/flux:sha-$revision" --tag=main

@@ -7,9 +7,3 @@ resources:
 - sonarr-nas-secret.sops.yaml
 - nas-storage.sops.yaml
 - kopiur.yaml
-generatorOptions:
-  disableNameSuffixHash: true
-configMapGenerator:
-- name: sonarr-backup-export-script
-  files:
-  - export-sonarr.py
