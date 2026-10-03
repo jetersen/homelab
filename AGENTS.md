@@ -20,7 +20,9 @@
 - `talosctl get machineconfig` can return its `spec` as serialized multi-document YAML. Decode that value, assert the expected mapping types, and print only explicitly selected non-secret fields. Never stringify an unknown structure or convert it to a list for debugging.
 - `talosctl rotate-ca` can print newly generated private keys, including during dry-run. Capture its entire output privately and report only verified non-secret results.
 - Rotate credentials using focused patches and supported trust transitions. Do not apply a full regenerated configuration as part of rotation. Synchronize the encrypted generator secrets and local client configurations afterward.
+- After Kubernetes CA rotation, prune retired certificates from both CA bundles in `kube-system/extension-apiserver-authentication` and verify they stay absent. Kubernetes merges existing, nonexpired certificates into published authentication trust.
 - Before retiring an encryption key, retain decryption overlap, rewrite the affected resources, and verify the stored ciphertext uses the replacement key. Keep encrypted recovery copies needed by older backups.
+- Encryption rewrites must force storage updates; identical resource replacements can be skipped. Remove temporary metadata after verifying the replacement ciphertext.
 - Keep interactive enrollment URLs out of terminal output and repository files.
 
 ## TrueNAS
