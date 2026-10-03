@@ -18,6 +18,7 @@ kind: EnvoyProxy
 metadata:
   name: envoy-proxy
 spec:
+  ipFamily: DualStack
   logging:
     level:
       default: info
@@ -34,7 +35,8 @@ spec:
             limits:
               memory: 1Gi
       envoyService:
-        externalTrafficPolicy: Local
+        # Cilium L2 announcements require Cluster traffic policy.
+        externalTrafficPolicy: Cluster
   shutdown:
     drainTimeout: 180s
 ---
