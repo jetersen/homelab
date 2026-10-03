@@ -20,8 +20,10 @@ Forgejo protects `main` with the required `Konflate` status check and permits
 direct pushes only from the owner. Renovate can merge PRs after that check passes.
 
 The secrets repository remains private on both services and has no OCI publisher.
-Flux reads it independently through a read-only SSH deploy key. Application
-Secret manifests may live in the public repository when their payloads are
+Flux reads it independently through a read-only SSH deploy key.
+Push events reconcile that source through an internal signed Flux webhook;
+the receiver uses Forgejo's GitHub-compatible headers.
+Application Secret manifests may live in the public repository when their payloads are
 SOPS-encrypted. Keep decryption keys, bootstrap credentials, recovery material,
 and sensitive inventory in the private repository or protected local storage.
 Moving an encrypted file into a public repository also publishes its metadata
