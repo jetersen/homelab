@@ -40,7 +40,7 @@ spec:
       secretsNamespace:
         create: false
         name: kube-system
-    ipv4NativeRoutingCIDR: 100.64.0.0/16
+    ipv4NativeRoutingCIDR: 172.22.0.0/16
     kubeProxyReplacement: true
     kubeProxyReplacementHealthzBindAddr: 0.0.0.0:10256
     l2announcements:
