@@ -1,3 +1,12 @@
+# Kubernetes upgrades
+
+Renovate limits Kubernetes and kubelet updates in
+[versioning.json5](../../.renovate/versioning.json5). Before raising the limit,
+check the Kubernetes compatibility matrices for the Cilium and Envoy Gateway
+release lines selected in their OCIRepository manifests. Use the supported
+range common to both releases; development releases do not establish support
+for the deployed versions.
+
 # Native Tailscale
 
 The Talos image includes `siderolabs/tailscale`.
