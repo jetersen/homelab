@@ -5,3 +5,5 @@ resources:
   - deployment.yaml
   - httproute.yaml
   - service.yaml
+components:
+  - ../../../components/dns-defaults

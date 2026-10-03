@@ -3,6 +3,8 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: flux-instance
+  labels:
+    homelab.jetersen.dev/dns-profile: flux-instance
 spec:
   chartRef:
     kind: OCIRepository
@@ -31,15 +33,6 @@ spec:
         interval: 24h
       kustomize:
         patches:
-          - target:
-              kind: Deployment
-            patch: |
-              - op: add
-                path: /spec/template/spec/dnsConfig
-                value:
-                  options:
-                    - name: ndots
-                      value: "1"
           - target:
               kind: Service
               name: webhook-receiver

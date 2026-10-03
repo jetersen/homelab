@@ -30,3 +30,5 @@ patches:
           remediation:
             remediateLastFailure: true
             retries: 2
+components:
+  - ../dns-defaults
