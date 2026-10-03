@@ -121,7 +121,7 @@ spec:
                   type: RuntimeDefault
               containers:
               - name: backup
-                image: forgejo.jetersen.dev/jetersen/homelab/backup-helper:main@sha256:30df8dc8a9f973a72fe3ea927a684cf557e6ab1c9883f33fef858ed63938234d
+                image: ghcr.io/jetersen/homelab/backup-helper:main@sha256:0b2ee03aa9a4922904a64be9f500900f42b6fa2e44c7dfe18a50ccc3892c7245
                 args:
                 - forgejo
                 securityContext:
@@ -170,8 +170,6 @@ spec:
                 persistentVolumeClaim:
                   claimName: forgejo-backup-staging
                   readOnly: false
-              imagePullSecrets:
-              - name: homelab-oci-auth
           ttlSecondsAfterFinished: 3600
   verification:
     verifyFilesPercent: 100
