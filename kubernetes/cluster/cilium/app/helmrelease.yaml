@@ -28,7 +28,7 @@ spec:
     ipam:
       mode: kubernetes
     egressGateway:
-      enabled: true
+      enabled: false
     gatewayAPI:
       enabled: true
       gatewayClass:
