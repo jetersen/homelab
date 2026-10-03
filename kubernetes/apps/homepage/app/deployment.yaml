@@ -3,6 +3,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: homepage
+  labels:
+    homelab.jetersen.dev/dns-profile: pod
 spec:
   replicas: 1
   revisionHistoryLimit: 2
@@ -15,11 +17,6 @@ spec:
         app.kubernetes.io/name: homepage
     spec:
       serviceAccountName: homepage
-      dnsConfig:
-        options:
-          # Try service hostnames before appending Kubernetes search domains.
-          - name: ndots
-            value: "1"
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000

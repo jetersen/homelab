@@ -4,6 +4,8 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: victoria-metrics-k8s-stack
+  labels:
+    homelab.jetersen.dev/dns-profile: victoria-metrics
 spec:
   releaseName: vm
   chartRef:
@@ -18,10 +20,6 @@ spec:
     vmsingle:
       enabled: true
       spec:
-        dnsConfig:
-          options:
-            - name: ndots
-              value: "1"
         retentionPeriod: 30d
         storage:
           accessModes:
@@ -70,18 +68,8 @@ spec:
     vmagent:
       enabled: true
       spec:
-        dnsConfig:
-          options:
-            - name: ndots
-              value: "1"
         selectAllByDefault: true
         scrapeInterval: 20s
-    vmalert:
-      spec:
-        dnsConfig:
-          options:
-            - name: ndots
-              value: "1"
     victoria-metrics-operator:
       enabled: true
     kube-state-metrics:

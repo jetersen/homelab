@@ -20,7 +20,8 @@ Include that address as a single-host entry in Technitium's cluster-wide
 restricted by the catalog ACL and TSIG key.
 
 Keep Talos's host resolvers independent of workloads on the same node: use NAS
-Technitium and UniFi. Dotted names in application pods use `ndots:1`, which tries
-the requested name before search suffixes while retaining short service lookup.
+Technitium and UniFi. The [DNS defaults component](../../components/dns-defaults/README.md)
+sets `ndots:1` for opted-in workloads, trying dotted names before search suffixes
+while retaining short service lookup.
 Media pods with explicit DNS settings use both Technitium instances. DNS probes
 check the cluster service, NAS, and UniFi independently.
