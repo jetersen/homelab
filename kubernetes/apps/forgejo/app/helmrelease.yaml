@@ -119,6 +119,9 @@ spec:
         repository:
           ROOT: /mnt/nas/repositories
           DEFAULT_BRANCH: main
+        repository.pull-request:
+          DEFAULT_MERGE_STYLE: rebase
+          DEFAULT_UPDATE_STYLE: rebase
         repository.signing:
           DEFAULT_TRUST_MODEL: committer
         storage:
