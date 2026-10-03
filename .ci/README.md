@@ -27,7 +27,7 @@ not automatically become public because their source repository is public.
 For Forgejo v16:
 
 1. Enable Actions on the canonical `jetersen/homelab` repository and register an
-   isolated Linux amd64 runner with the `ubuntu-24.04` label. Provide Node.js 24,
+   isolated Linux amd64 runner with the `oci-build` label. Provide Node.js 24,
    Bash, Git, Docker with BuildKit, kubectl, curl, jq, and tar. The runner needs
    registry access and permission to build and run containers.
 2. Create a Forgejo Actions (Local) Authorized Integration on the package owner's
@@ -39,6 +39,11 @@ For Forgejo v16:
    short-lived credential and logs in with `--password-stdin`.
 4. Push-mirror Forgejo `main` to GitHub so both workflows build the same commit.
    Keep GitHub read-only for source changes after establishing the mirror.
+
+Multiple runners can advertise `oci-build` to share the available work. Keep the
+label independent of Ubuntu release names so dependency updates cannot change
+which self-hosted runners qualify. Each runner needs its own registration and
+build environment. Publisher runs remain serialized by their concurrency group.
 
 GHCR provides an independent bootstrap and recovery source when Forgejo is down.
 Use Forgejo Packages for normal reconciliation once it is restored. Flux has one
