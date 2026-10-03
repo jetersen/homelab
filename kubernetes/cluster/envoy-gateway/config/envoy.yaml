@@ -64,11 +64,8 @@ kind: ClientTrafficPolicy
 metadata:
   name: envoy-proxy
 spec:
-  clientIPDetection:
-    xForwardedFor:
-      # Towonel supplies the peer address with PROXY v2 before TLS. HTTP clients
-      # must not override that address through an untrusted forwarded header.
-      numTrustedHops: 0
+  # Use the connection peer, including Towonel PROXY v2. Do not enable HTTP
+  # forwarded-header detection: even a zero-hop XFF detector trusts a client header.
   connection:
     bufferLimit: 8Mi
     maxAcceptPerSocketEvent: 0
