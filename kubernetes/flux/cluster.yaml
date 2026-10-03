@@ -9,7 +9,7 @@ spec:
   interval: 24h
   path: "./kubernetes/apps"
   sourceRef:
-    kind: GitRepository
+    kind: OCIRepository
     name: homelab
   decryption:
     provider: sops
@@ -27,7 +27,7 @@ spec:
   interval: 24h
   path: "./kubernetes/cluster"
   sourceRef:
-    kind: GitRepository
+    kind: OCIRepository
     name: homelab
   decryption:
     provider: sops

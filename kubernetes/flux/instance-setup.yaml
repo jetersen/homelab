@@ -22,11 +22,11 @@ spec:
     - notification-controller
   sync:
     name: homelab
-    kind: GitRepository
-    url: https://github.com/jetersen/homelab
-    ref: refs/heads/main
+    kind: OCIRepository
+    url: oci://ghcr.io/jetersen/homelab/flux
+    ref: main
     path: kubernetes/flux
-    interval: 24h
+    interval: 1m
   cluster:
     type: kubernetes
     size: medium
