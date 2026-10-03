@@ -24,7 +24,6 @@ jobs:
       - name: Check the backup helper
         run: docker build --target check -f infrastructure/backup/image/Dockerfile .
   publish:
-    needs: check
     if: forgejo.ref == 'refs/heads/main'
     runs-on: ${{ inputs.runner || 'oci-build' }}
     timeout-minutes: 20
