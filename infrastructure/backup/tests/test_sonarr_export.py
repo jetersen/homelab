@@ -41,6 +41,9 @@ class ExportTests(unittest.TestCase):
                   'path': '/backup/manual/sonarr_backup_old.zip'}
         fresh = {'id': 2, 'type': 'manual', 'name': 'sonarr_backup_new.zip',
                  'path': download_path or '/backup/manual/sonarr_backup_new.zip'}
+        native = folder / 'Backups/manual/sonarr_backup_new.zip'
+        native.parent.mkdir(parents=True)
+        native.write_bytes(archive)
         inventory_calls = 0
         requests = []
 
@@ -57,6 +60,8 @@ class ExportTests(unittest.TestCase):
                 body = {'id': 42}
             elif request.full_url.endswith('/api/v3/command/42'):
                 body = {'status': status}
+            elif request.full_url.endswith('/api/v3/config/host'):
+                body = {'backupFolder': 'Backups'}
             else:
                 return io.BytesIO(archive)
             return io.BytesIO(json.dumps(body).encode())

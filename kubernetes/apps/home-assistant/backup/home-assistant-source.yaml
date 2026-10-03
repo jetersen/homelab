@@ -3,10 +3,10 @@ kind: ReplicationSource
 metadata:
   name: home-assistant-backup
 spec:
-  paused: true
+  paused: false
   sourcePVC: home-assistant-pvc
   trigger:
-    manual: pilot-2
+    manual: pilot-3
   kopia:
     repository: home-assistant-kopia
     copyMethod: Direct

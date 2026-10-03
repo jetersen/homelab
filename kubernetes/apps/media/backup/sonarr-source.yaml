@@ -3,7 +3,7 @@ kind: ReplicationSource
 metadata:
   name: sonarr-backup
 spec:
-  paused: true
+  paused: false
   sourcePVC: sonarr-backup-exports
   trigger:
     manual: pilot-1

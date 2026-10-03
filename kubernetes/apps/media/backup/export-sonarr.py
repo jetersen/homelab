@@ -8,6 +8,7 @@ import sqlite3
 import tempfile
 import time
 import urllib.request
+import urllib.error
 import xml.etree.ElementTree as ET
 import zipfile
 
@@ -54,7 +55,7 @@ def export(config_path=Path('/config/config.xml'), output=Path('/exports/backups
 
     client = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
 
-    def request(path, payload=None, binary=False):
+    def request(path, payload=None):
         req = urllib.request.Request(base_url + path,
             data=json.dumps(payload).encode() if payload is not None else None,
             headers={'X-Api-Key': key, 'Content-Type': 'application/json'})
@@ -62,7 +63,7 @@ def export(config_path=Path('/config/config.xml'), output=Path('/exports/backups
             body = response.read(64 * 1024 * 1024 + 1)
         if len(body) > 64 * 1024 * 1024:
             raise ExportError('Native backup response exceeds the size limit.')
-        return body if binary else json.loads(body)
+        return json.loads(body)
 
     previous = {backup['id'] for backup in request('/api/v3/system/backup')}
     command = request('/api/v3/command', {'name': 'Backup'})
@@ -87,12 +88,20 @@ def export(config_path=Path('/config/config.xml'), output=Path('/exports/backups
     if (not name.startswith('sonarr_backup_') or not name.endswith('.zip')
             or '/' in name or '\\' in name or path != f'/backup/manual/{name}'):
         raise ExportError('Native backup download path is unexpected.')
+    folder = Path(request('/api/v3/config/host')['backupFolder'])
+    if not folder.is_absolute():
+        folder = config_path.parent / folder
+    native = folder / 'manual' / name
+    if (not native.resolve().is_relative_to(config_path.parent.resolve())
+            or native.is_symlink() or not native.is_file()
+            or not 0 < native.stat().st_size <= 64 * 1024 * 1024):
+        raise ExportError('Completed native archive is unavailable on the config volume.')
     output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(dir=output.parent, suffix='.tmp', delete=False) as staging:
         temporary = Path(staging.name)
         os.chmod(temporary, 0o600)
         try:
-            staging.write(request(path, binary=True))
+            staging.write(native.read_bytes())
             staging.flush()
             os.fsync(staging.fileno())
             validate_archive(temporary)
@@ -107,5 +116,10 @@ if __name__ == '__main__':
         export()
     except Exception as error:
         # URLs, HTTP responses, XML and SQLite errors may contain private data.
-        print(str(error) if type(error) is ExportError else 'Sonarr export failed; diagnostic withheld.')
+        if type(error) is ExportError:
+            print(str(error))
+        elif isinstance(error, urllib.error.HTTPError):
+            print(f'Sonarr API request failed with HTTP {error.code}.')
+        else:
+            print(f'Sonarr export failed ({type(error).__name__}); diagnostic withheld.')
         raise SystemExit(1)
