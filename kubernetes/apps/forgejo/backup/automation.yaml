@@ -68,11 +68,9 @@ spec:
               type: RuntimeDefault
           containers:
           - name: backup
-            image: docker.io/library/python:3.14.8-slim@sha256:89fb7d3da20043c370643435258bdd7ab755d326d359001d02988ed15ae5219e
-            command:
-            - python3
-            - /scripts/stage-forgejo.py
-            - --recover
+            image: forgejo.jetersen.dev/jetersen/homelab/backup-helper:main@sha256:30df8dc8a9f973a72fe3ea927a684cf557e6ab1c9883f33fef858ed63938234d
+            args:
+            - forgejo-recover
             securityContext:
               runAsNonRoot: true
               allowPrivilegeEscalation: false
@@ -86,26 +84,5 @@ spec:
                 memory: 128Mi
               limits:
                 memory: 1Gi
-            env:
-            - name: HOME
-              value: /cache
-            - name: PYTHONDONTWRITEBYTECODE
-              value: '1'
-            volumeMounts:
-            - name: script
-              mountPath: /scripts
-              readOnly: true
-            - name: cache
-              mountPath: /cache
-            - name: temp
-              mountPath: /tmp
-          volumes:
-          - name: script
-            configMap:
-              name: forgejo-backup-staging-script
-          - name: cache
-            emptyDir:
-              sizeLimit: 6Gi
-          - name: temp
-            emptyDir:
-              sizeLimit: 6Gi
+          imagePullSecrets:
+          - name: homelab-oci-auth

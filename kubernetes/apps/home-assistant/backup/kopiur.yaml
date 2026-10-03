@@ -158,13 +158,9 @@ spec:
                   type: RuntimeDefault
               containers:
               - name: export
-                image: docker.io/library/python:3.14.8-slim@sha256:89fb7d3da20043c370643435258bdd7ab755d326d359001d02988ed15ae5219e
-                command:
-                - python3
-                - /scripts/stage-home-assistant.py
-                env:
-                - name: PYTHONDONTWRITEBYTECODE
-                  value: '1'
+                image: forgejo.jetersen.dev/jetersen/homelab/backup-helper:main@sha256:30df8dc8a9f973a72fe3ea927a684cf557e6ab1c9883f33fef858ed63938234d
+                args:
+                - home-assistant
                 securityContext:
                   allowPrivilegeEscalation: false
                   readOnlyRootFilesystem: true
@@ -183,9 +179,6 @@ spec:
                   readOnly: true
                 - name: exports
                   mountPath: /exports
-                - name: script
-                  mountPath: /scripts
-                  readOnly: true
                 - name: temporary
                   mountPath: /tmp
               volumes:
@@ -195,13 +188,12 @@ spec:
               - name: exports
                 persistentVolumeClaim:
                   claimName: home-assistant-backup-exports
-              - name: script
-                configMap:
-                  name: home-assistant-backup-export-script
               - name: temporary
                 emptyDir:
                   medium: Memory
                   sizeLimit: 256Mi
+              imagePullSecrets:
+              - name: homelab-oci-auth
           ttlSecondsAfterFinished: 3600
   verification:
     verifyFilesPercent: 100
@@ -414,15 +406,12 @@ spec:
                   type: RuntimeDefault
               containers:
               - name: export
-                image: docker.io/koenkk/zigbee2mqtt:2.14.2@sha256:addbfb08fcef2e4477de1535636118241e10d13e898fbe4d9faba8a4d7396311
-                command:
-                - node
-                - /scripts/export-zigbee.cjs
+                image: forgejo.jetersen.dev/jetersen/homelab/backup-helper:main@sha256:30df8dc8a9f973a72fe3ea927a684cf557e6ab1c9883f33fef858ed63938234d
+                args:
+                - zigbee
                 env:
                 - name: MQTT_SERVER
                   value: mqtt://mosquitto:1883
-                - name: NODE_PATH
-                  value: /app/node_modules
                 - name: ZIGBEE2MQTT_CONFIG_MQTT_SERVER
                   value: mqtt://mosquitto:1883
                 - name: ZIGBEE2MQTT_CONFIG_MQTT_CLIENT_ID
@@ -483,16 +472,12 @@ spec:
                 volumeMounts:
                 - name: exports
                   mountPath: /exports
-                - name: script
-                  mountPath: /scripts
-                  readOnly: true
               volumes:
               - name: exports
                 persistentVolumeClaim:
                   claimName: zigbee-backup-exports
-              - name: script
-                configMap:
-                  name: zigbee-backup-export-script
+              imagePullSecrets:
+              - name: homelab-oci-auth
           ttlSecondsAfterFinished: 3600
   verification:
     verifyFilesPercent: 100

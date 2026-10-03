@@ -158,13 +158,9 @@ spec:
                   type: RuntimeDefault
               containers:
               - name: export
-                image: docker.io/library/python:3.14.8-slim@sha256:89fb7d3da20043c370643435258bdd7ab755d326d359001d02988ed15ae5219e
-                command:
-                - python3
-                - /scripts/export-sonarr.py
-                env:
-                - name: PYTHONDONTWRITEBYTECODE
-                  value: '1'
+                image: forgejo.jetersen.dev/jetersen/homelab/backup-helper:main@sha256:30df8dc8a9f973a72fe3ea927a684cf557e6ab1c9883f33fef858ed63938234d
+                args:
+                - sonarr
                 securityContext:
                   allowPrivilegeEscalation: false
                   readOnlyRootFilesystem: true
@@ -183,9 +179,6 @@ spec:
                   readOnly: true
                 - name: exports
                   mountPath: /exports
-                - name: script
-                  mountPath: /scripts
-                  readOnly: true
                 - name: temporary
                   mountPath: /tmp
               volumes:
@@ -195,13 +188,12 @@ spec:
               - name: exports
                 persistentVolumeClaim:
                   claimName: sonarr-backup-exports
-              - name: script
-                configMap:
-                  name: sonarr-backup-export-script
               - name: temporary
                 emptyDir:
                   medium: Memory
                   sizeLimit: 256Mi
+              imagePullSecrets:
+              - name: homelab-oci-auth
           ttlSecondsAfterFinished: 3600
   verification:
     verifyFilesPercent: 100
