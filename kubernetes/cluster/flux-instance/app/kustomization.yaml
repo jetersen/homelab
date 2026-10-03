@@ -10,6 +10,7 @@ resources:
   - webhook-httproute.yaml
   - webhook-test-filter.yaml
   - receiver.yaml
+  - forgejo-receiver.yaml
   - source.yaml
 components:
   - ../../../components/helmrelease-defaults
