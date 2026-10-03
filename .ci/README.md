@@ -8,6 +8,7 @@ publish these packages to their own registry:
 | --- | --- | --- |
 | Flux configuration | `forgejo.jetersen.dev/jetersen/homelab/flux` | `ghcr.io/jetersen/homelab/flux` |
 | Forgejo staging image | `forgejo.jetersen.dev/jetersen/homelab/forgejo-staging` | `ghcr.io/jetersen/homelab/forgejo-staging` |
+| Runner job tools | `forgejo.jetersen.dev/jetersen/homelab/runner-job` | `ghcr.io/jetersen/homelab/runner-job` |
 
 Each package gets a `sha-COMMIT_SHA` tag. The workflows advance `main` after the
 image tests, runtime smoke test, Kustomize builds, and artifact upload/download
@@ -35,7 +36,7 @@ For Forgejo v16:
    `refs/heads/main`, and the `push` and `workflow_dispatch` events. Grant package
    read/write access. The automatic workflow token does not grant this access.
 3. Put the integration's non-secret audience in repository variable
-   `FORGEJO_PACKAGES_AUDIENCE`. The workflow exchanges its OIDC identity for a
+   `OCI_PACKAGES_AUDIENCE`. The workflow exchanges its OIDC identity for a
    short-lived credential and logs in with `--password-stdin`.
 4. Push-mirror Forgejo `main` to GitHub so both workflows build the same commit.
    Keep GitHub read-only for source changes after establishing the mirror.

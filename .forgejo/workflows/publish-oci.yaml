@@ -3,6 +3,12 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      runner:
+        description: Runner label
+        type: choice
+        default: oci-build
+        options: [oci-build, runner-kubernetes, runner-rocket]
 enable-openid-connect: true
 concurrency:
   group: publish-oci
@@ -10,7 +16,7 @@ concurrency:
 jobs:
   publish:
     if: forgejo.ref == 'refs/heads/main'
-    runs-on: oci-build
+    runs-on: ${{ inputs.runner || 'oci-build' }}
     timeout-minutes: 20
     steps:
       - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -21,10 +27,10 @@ jobs:
         id: auth
         shell: bash
         env:
-          AUDIENCE: ${{ vars.FORGEJO_PACKAGES_AUDIENCE }}
+          AUDIENCE: ${{ vars.OCI_PACKAGES_AUDIENCE }}
         run: |
           set -euo pipefail
-          : "${AUDIENCE:?Configure FORGEJO_PACKAGES_AUDIENCE for the Authorized Integration}"
+          : "${AUDIENCE:?Configure OCI_PACKAGES_AUDIENCE for the Authorized Integration}"
           token=$(printf 'Authorization: bearer %s\n' "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
             | curl --fail --silent --show-error --header @- \
             "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$AUDIENCE" | jq -er '.value')
