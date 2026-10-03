@@ -4,7 +4,8 @@ metadata:
   name: forgejo-receiver
   namespace: flux-system
 spec:
-  type: gitea
+  # Forgejo v16 includes GitHub-compatible event and HMAC signature headers.
+  type: github
   events: [push]
   secretRef:
     name: webhook-token
