@@ -1,0 +1,23 @@
+name: Go checks
+on:
+  push:
+    branches: [main]
+    paths:
+      - infrastructure/backup/image/**
+      - .github/workflows/check-go.yaml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: check-go
+  cancel-in-progress: false
+jobs:
+  check:
+    name: Go tests and vet
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check the backup helper
+        run: docker build --target check -f infrastructure/backup/image/Dockerfile .

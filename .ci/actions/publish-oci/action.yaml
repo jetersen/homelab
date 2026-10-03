@@ -1,5 +1,5 @@
-name: Publish homelab OCI
-description: Build workload images and publish the committed Flux configuration
+name: Publish Flux OCI
+description: Validate and publish the committed Flux configuration
 inputs:
   registry:
     description: Container registry hostname
@@ -16,37 +16,6 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Build and smoke test the backup helper image
-      shell: bash
-      env:
-        REGISTRY: ${{ inputs.registry }}
-        REPOSITORY: ${{ inputs.repository }}
-      run: |
-        set -euo pipefail
-        revision=$(git rev-parse HEAD)
-        image="$REGISTRY/${REPOSITORY,,}/backup-helper"
-        docker build -f infrastructure/backup/image/Dockerfile \
-          --build-arg REVISION="$revision" \
-          --build-arg SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" \
-          -t "$image:sha-$revision" .
-        docker run --rm --network none --read-only --user 1000:1000 \
-          --cap-drop ALL --security-opt no-new-privileges "$image:sha-$revision" --help
-    - name: Build and test the runner job image
-      shell: bash
-      env:
-        REGISTRY: ${{ inputs.registry }}
-        REPOSITORY: ${{ inputs.repository }}
-      run: |
-        set -euo pipefail
-        revision=$(git rev-parse HEAD)
-        image="$REGISTRY/${REPOSITORY,,}/runner-job"
-        docker build -f infrastructure/forgejo/runner/Dockerfile \
-          --build-arg REVISION="$revision" \
-          --build-arg SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" \
-          -t "$image:sha-$revision" .
-        docker run --rm --network none --read-only --cap-drop ALL \
-          --security-opt no-new-privileges "$image:sha-$revision" \
-          bash -euc 'node --version; git --version; docker --version; docker buildx version; kubectl version --client; curl --version; jq --version'
     - name: Package the committed manifests
       shell: bash
       run: |
@@ -78,8 +47,6 @@ runs:
         set -euo pipefail
         revision=$(git rev-parse HEAD)
         package="$REGISTRY/${REPOSITORY,,}"
-        docker push "$package/backup-helper:sha-$revision"
-        docker push "$package/runner-job:sha-$revision"
         flux push artifact "oci://$package/flux:sha-$revision" \
           --path="$OCI_DIRECTORY" \
           --source=https://github.com/jetersen/homelab \
@@ -93,10 +60,6 @@ runs:
           echo 'A newer commit exists; keeping revision tags without advancing main.'
           exit 0
         fi
-        docker tag "$package/backup-helper:sha-$revision" "$package/backup-helper:main"
-        docker push "$package/backup-helper:main"
-        docker tag "$package/runner-job:sha-$revision" "$package/runner-job:main"
-        docker push "$package/runner-job:main"
         flux tag artifact "oci://$package/flux:sha-$revision" --tag=main
     - name: Remove registry credentials
       if: always()
