@@ -71,6 +71,11 @@ spec:
           namespace: kube-system
           sectionName: forgejo-ssh
     gitea:
+      oauth:
+        - name: GitHub
+          provider: github
+          existingSecret: forgejo-github-oauth
+          scopes: user:email
       admin:
         existingSecret: forgejo-admin
         email: me@jetersen.dev
@@ -97,6 +102,12 @@ spec:
         session:
           PROVIDER: db
           COOKIE_SECURE: true
+        oauth2_client:
+          ENABLE_AUTO_REGISTRATION: false
+          ACCOUNT_LINKING: login
+        openid:
+          ENABLE_OPENID_SIGNIN: false
+          ENABLE_OPENID_SIGNUP: false
         queue:
           TYPE: level
           DATADIR: /data/gitea/queues

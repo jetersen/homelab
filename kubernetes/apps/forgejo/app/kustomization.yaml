@@ -7,6 +7,7 @@ resources:
   - storage.yaml
   - nas-storage.sops.yaml
   - admin-secret.sops.yaml
+  - github-oauth.sops.yaml
   - access-policy.yaml
 components:
   - ../../../components/oci-source-defaults

@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: forgejo-github-oauth
+    namespace: forgejo
+type: Opaque
+stringData:
+    key: ENC[AES256_GCM,data:MrAZNip3BkPCm29yTOlQfvT97Pw=,iv:sL0njdmQLi7uAfS3NPgS8mi5V9NTmcahCLUOlUEdulQ=,tag:Xw1mLtkwEOv2Pyaa8S00ng==,type:str]
+    secret: ENC[AES256_GCM,data:H+3Sygj9FS+SAViWDmJr8/cg+JTkUH7eqsoQYgI0pfqsIV4OVBhoZw==,iv:cpKP8znd9W/LamnENH3DovzTTYEPWnt4Wl9E/fMNv7g=,tag:IDS7Gd99zhGpqnnE+4R95Q==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBPdWZiRThDUlpxRUZaSmli
+            YVNFVzdtNnRkS3UzbjRQM3o1OG1mRGF0S2ljClVMdXhOL1E5eUw5cmk0ZFRtbFdh
+            bVNKZHIxdXVPYldUUFkxZEFhVG9YbkUKLS0tIHVNT0VKNXlHelJJWWJKVDlWZmVT
+            bFhQTVhEU05qRzNjM1l6Z2xrbUowQlEK9dLYUA3gRCdZzhHS2+YzM/xZ5oi/ucdv
+            KFPBpIyURcC7AT29HAr2X0vIjBi9u9kwxpHmw3nU3PfRTEjDAhqtSA==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1u0m8ryqg7hfhuykraxe35v4xzw92a03w9jpt75yv3m57g6pvpp0sf24mdy
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-10-03T12:09:48Z"
+    mac: ENC[AES256_GCM,data:wZ2ShtKxzTCCMi9+/rIxc6NqEwZcJI2LZqXvre+WOXiamr9mzoMI2qVEk/+wgztBJwhzT8VJg1cDapCFDdCAPy31hSLikXjVsKr3b2BwHiN5Ff54DQZiupe6KDWZo/5KUy8gimR+wA1x3uHOnecYG+ojTvTokJ8YKzHwBwePugQ=,iv:qNBIIwhJDyYNGWmtT1EZSPPUAwvF2qLD6fOTg97blEU=,tag:9rqij5jhPY41mu1oU6ZyWg==,type:str]
+    version: 3.13.3

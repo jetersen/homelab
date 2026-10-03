@@ -17,9 +17,17 @@ Registration and anonymous browsing are disabled. The bootstrap administrator
 is `jetersen`; its initial password is the `password` key in the
 `forgejo-admin` Kubernetes Secret. Change it at first login. The chart creates
 the administrator only once and does not reset its password during upgrades.
+GitHub OAuth is configured for browser login, using a separate OAuth app owned
+by `jetersen-cloud`. Its callback is
+`https://forgejo.jetersen.dev/user/oauth2/GitHub/callback`. Client credentials
+are SOPS-encrypted in `forgejo-github-oauth`; it requests only `user:email`.
+Automatic registration is disabled. Existing users link their GitHub identity
+by authenticating their Forgejo account once; account linking is not automatic.
+Keep the local administrator login available for recovery.
+
 Enable TOTP or WebAuthn security keys in account settings. Git over HTTPS can
-use a scoped access token; store it in a credential manager. External browser
-login can be added through Forgejo's OAuth/OIDC authentication sources.
+use a scoped access token; store it in a credential manager. Git SSH keys and
+HTTPS tokens remain managed by Forgejo regardless of browser login provider.
 
 ## Storage
 
