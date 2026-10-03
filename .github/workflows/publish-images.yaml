@@ -7,11 +7,13 @@ on:
       - infrastructure/forgejo/runner/Dockerfile
       - infrastructure/forgejo/runner/Dockerfile.dockerignore
       - .ci/actions/publish-images/**
+      - .ci/backup-helper-cliff.toml
+      - .ci/backup-helper-release.sh
       - .forgejo/workflows/publish-images.yaml
       - .github/workflows/publish-images.yaml
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
   packages: write
 concurrency:
   group: publish-images
@@ -23,6 +25,14 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Mirror the backup helper release
+        shell: bash
+        env:
+          RELEASE_AUTHORITY: github
+          FORGEJO_RELEASE_TOKEN: ${{ secrets.FORGEJO_RELEASE_TOKEN }}
+        run: bash .ci/backup-helper-release.sh
       - uses: ./.ci/actions/publish-images
         with:
           registry: ghcr.io

@@ -32,6 +32,33 @@ The default Dockerfile target builds the runtime image without running tests or
 vet. Go module and compiler caches persist in BuildKit on each runner; separate
 runners do not share those caches.
 
+## Backup helper releases
+
+The backup helper stays in this repository and publishes independent SemVer
+image tags to Forgejo and GHCR. Kubernetes references use `version@sha256:digest`;
+Renovate tracks newer versions. The `main` tag remains available for development.
+
+Forgejo uses `git-cliff` with `.ci/backup-helper-cliff.toml` to calculate releases
+from conventional commits affecting the helper's runtime inputs. `feat` bumps
+minor; `feat!`, `feat(scope)!`, and `BREAKING CHANGE` footers bump major. Other
+runtime changes, including dependency updates, bump patch. Test-only and
+unrelated homelab changes do not create releases. The first release is `0.1.0`.
+
+Forgejo reserves a `backup-helper/vX.Y.Z` Git tag before building. Reruns reuse
+that tag and preserve an already published image's digest. The helper's revision,
+version, and source timestamp come from its component commit, so unrelated
+commits do not change release metadata or invalidate compilation.
+
+GitHub mirrors Forgejo's release tag before publishing to GHCR. Its
+`FORGEJO_RELEASE_TOKEN` secret needs only `read:repository` for this repository.
+This keeps both registries on the same version when jobs are delayed or retried.
+
+The Forgejo image workflow also uses a repository-scoped Authorized Integration
+with `write:repository` for release tags, referenced by `IMAGE_RELEASE_AUDIENCE`.
+Restrict it to `publish-images.yaml`, this repository, `refs/heads/main`, and
+`push`/`workflow_dispatch`. GitHub uses its workflow token with `contents: write`
+to mirror the tag.
+
 ## Renovate registry authentication
 
 Forgejo Renovate uses its bot integration for repository updates and a separate
