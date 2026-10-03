@@ -27,7 +27,12 @@ spec:
               DNS_SERVER_WEB_SERVICE_HTTPS_PORT: "53443"
               DNS_SERVER_WEB_SERVICE_ENABLE_HTTPS: "false"
               DNS_SERVER_WEB_SERVICE_HTTP_TO_TLS_REDIRECT: "false"
-              DNS_SERVER_RECURSION: AllowOnlyForPrivateNetworks
+              DNS_SERVER_RECURSION: UseSpecifiedNetworkACL
+              # Include the delegated LAN IPv6 prefix; private-only recursion rejects it.
+              # Update this prefix together with UniFi IPv6 DNS after ISP renumbering.
+              DNS_SERVER_RECURSION_NETWORK_ACL: >-
+                10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 100.64.0.0/10,
+                169.254.0.0/16, fc00::/7, fe80::/10, 2a13:e747:b7be:9100::/64
               DNS_SERVER_FORWARDERS: tls://security.cloudflare-dns.com (1.1.1.2), tls://security.cloudflare-dns.com (1.0.0.2)
               DNS_SERVER_FORWARDER_PROTOCOL: Tls
               DNS_SERVER_ENABLE_BLOCKING: "true"
@@ -65,7 +70,7 @@ spec:
       dns:
         controller: technitium
         type: LoadBalancer
-        externalTrafficPolicy: Local
+        externalTrafficPolicy: Cluster
         annotations:
           lbipam.cilium.io/ips: 192.168.1.21
         ports:
