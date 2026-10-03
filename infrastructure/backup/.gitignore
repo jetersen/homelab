@@ -1,0 +1,8 @@
+.pulumi-state/
+Pulumi.*.yaml
+bin/
+obj/
+tests/bin/
+tests/obj/
+__pycache__/
+*.pyc

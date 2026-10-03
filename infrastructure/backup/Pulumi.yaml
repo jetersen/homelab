@@ -1,0 +1,11 @@
+name: homelab-backup
+description: OVHcloud Frankfurt object storage for Kopia backups
+runtime: dotnet
+backend:
+  url: file://./.pulumi-state
+config:
+  projectId:
+    type: string
+  bucketName:
+    type: string
+    default: jetersen-homelab-kopia

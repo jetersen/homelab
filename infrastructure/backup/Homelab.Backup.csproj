@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Pulumi" Version="3.114.1" />
+    <PackageReference Include="Pulumi.Ovh" Version="2.21.0" />
+    <!-- Override vulnerable telemetry versions inherited from the Pulumi SDK. -->
+    <PackageReference Include="OpenTelemetry.Api" Version="1.19.1" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.19.1" />
+    <Compile Remove="tests/**/*.cs" />
+  </ItemGroup>
+</Project>

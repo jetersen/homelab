@@ -1,0 +1,29 @@
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: home-assistant-backup
+spec:
+  paused: true
+  sourcePVC: home-assistant-pvc
+  trigger:
+    manual: pilot-1
+  kopia:
+    repository: home-assistant-kopia
+    copyMethod: Direct
+    cacheCapacity: 1Gi
+    username: home-assistant
+    hostname: homelab
+    policyConfig:
+      configMapName: home-assistant-backup-policy
+    actions:
+      beforeSnapshot: bash /kopia-config/check-source.sh home-assistant
+    moverSecurityContext:
+      runAsUser: 0
+      runAsGroup: 0
+      fsGroup: 0
+    moverResources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        memory: 1Gi
