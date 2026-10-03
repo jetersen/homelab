@@ -1,19 +1,26 @@
 # Talos upgrade and native Tailscale
 
 Talos was upgraded on 2026-10-03 on the single control-plane/workload node
-`talos01`, `192.168.1.10`, Kubernetes context `homelab`. Kubernetes was not
-upgraded and no full regenerated machine configuration was applied.
+`talos01`, `192.168.1.10`, Kubernetes context `homelab`. Kubernetes was subsequently
+upgraded to 1.36.5. No full regenerated machine configuration was applied.
 
 | Component | Running | Prepared target |
 | --- | --- | --- |
 | Talos | 1.14.2 | 1.14.2, applied |
-| Kubernetes | 1.36.1 | 1.36.5 |
+| Kubernetes | 1.36.5 | 1.36.5, applied |
 
 Kubernetes 1.36.5 is the latest patch in the installed minor. Installed Cilium
 1.20.2, Envoy Gateway 1.9.2, and Flux 2.9 published compatibility matrices stop
 at Kubernetes 1.36. Talos 1.14 supports 1.37, but the add-on matrices should be
-reviewed before selecting that minor. The 1.37.1 dry-run on the current Talos
-node rejects the version; the 1.36.5 dry-run passes without applying updates.
+reviewed before selecting that minor. The 1.37.1 dry-run on the previous Talos
+1.13.4 node rejected that version. The 1.36.5 dry-run passed on both Talos versions,
+and the approved upgrade completed on Talos 1.14.2 without an OS reboot.
+
+The Kubernetes upgrade updated the API server, controller-manager, scheduler,
+and kubelet to 1.36.5 and CoreDNS to 1.14.7. All workloads, storage, and Flux
+resources recovered, with 55/55 scrape targets and 18/18 availability probes
+passing. One API 5xx was measured in the five-minute recovery window. NAS DNS
+and Rocket's uncached public/local queries stayed available during the API restart.
 
 ## Configuration migration
 
@@ -23,6 +30,12 @@ controller-manager metrics bindings into `KubeSchedulerConfig` and
 This avoids conflicts with Talos 1.14's generated component documents. Etcd's
 metrics-only listener remains in the supported legacy etcd configuration.
 `patches/control-plane-metrics.yaml` remains the original Talos 1.13 patch.
+
+`patches/etcd-lan.yaml` pins etcd address selection to `192.168.1.0/24` and is
+included in generated configurations. Without this selection, etcd chose the
+new native Tailscale address after enrollment while Kubernetes kept its LAN IP.
+The focused patch passed its no-reboot dry-run; live application requires approval
+because etcd restarts and briefly interrupts the sole Kubernetes API.
 
 Talhelper 3.1.17 still emits a Talos 1.14.2 compatibility warning. Generated
 normal and Tailscale image configurations passed the actual Talos 1.14.2 CLI's
@@ -111,11 +124,22 @@ the upgrade and again after the etcd data upgrade. These are not restore tests.
    image version. A dry-run logs image pre-pull planning and skipped updates;
    it is not an upgrade.
 
-## Later native Tailscale evaluation
+## Native Tailscale
 
-The installed image includes Tailscale so later enrollment does not need another
-image upgrade or reboot. `patches/tailscale-service.example.yaml` remains a
-candidate and is not included by `talconfig.yaml`.
+`patches/tailscale-service.yaml` is applied without reboot and included by
+`talconfig.yaml`. The node was enrolled interactively in `jetersen.github`:
+
+- IPv4: `100.99.149.66`
+- IPv6: `fd7a:115c:a1e0::a237:d228`
+- DNS: `talos01.rockhopper-bleak.ts.net`
+- Tag: `tag:k8s-subnet-router`
+- Approved routes: `192.168.1.10/32` and `192.168.1.20/32`
+
+Restarting only `ext-tailscale` retained its identity and reconnected without
+another login. Talos management and Kubernetes API readiness passed over both
+tailnet address families. Talos uses its normal client configuration; Kubernetes
+uses the existing cluster CA and `--tls-server-name=talos01.lan.jetersen.dev` when
+connecting to a tailnet IP. Do not bypass TLS verification.
 
 An extension without service configuration blocks Talos's `startAllServices`
 boot task. During this upgrade, `ext-tailscale` was stopped through the supported
@@ -126,23 +150,27 @@ talosctl --talosconfig kubernetes/talos/clusterconfig/talosconfig \
   --endpoints 192.168.1.10 --nodes 192.168.1.10 service ext-tailscale stop
 ```
 
-The service is `Finished` and the node has not joined the tailnet. This stop is
-not persistent across reboot. Configure and enroll the extension before the
-next reboot; otherwise repeat the stop to release the boot wait. There is no
-`enabled` flag in `ExtensionServiceConfig`. An empty configuration is insufficient
-to leave containerboot dormant: it attempts initial login and eventually exits
-when its boot timeout expires. After applying the reviewed service configuration
-without reboot, start `ext-tailscale` and complete its interactive enrollment.
+The temporary stop was not persistent across reboot. Service configuration and
+enrollment are now complete, resolving that boot wait. There is no `enabled`
+flag in `ExtensionServiceConfig`; leaving the extension installed without its
+service configuration would recreate the wait on a future boot.
 
-The extension uses kernel TUN and persistent `/var/lib/tailscale` state. Keep
-node DNS independent of Tailscale with `TS_ACCEPT_DNS=false`, retain the LAN
-node-IP restriction, and verify Cilium device/MTU selection after `tailscale0`
-appears. Keep the UDP GRO workaround for QUIC until repeated tests pass.
+The extension uses kernel TUN and persistent `/var/lib/tailscale` state. Node DNS
+stays independent with `TS_ACCEPT_DNS=false`, and the LAN node-IP restriction is
+retained. `tailscale0` uses MTU 1280; Cilium still selects physical `enp1s0` for
+kube-proxy replacement and masquerading, with no degraded modules or controllers.
+The UDP GRO workaround is retained for QUIC.
 
-Advertise only the Envoy VIP `192.168.1.20/32` and node/API address
-`192.168.1.10/32`. Enrollment, tag authorization, route approval/client route
-acceptance, and administrator TCP 6443/50000 grants still need verification.
-UDP 443 to the Envoy VIP was added separately in the ACL repository.
+Only the Envoy VIP and node/API address are advertised. Enrollment, the tag,
+and automatic route approval are verified. UDP 443 to the VIP and TCP 6443 to
+the node are present in the ACL repository. Routed TCP 50000 and off-LAN client
+route acceptance still need review before replacing the management route.
+
+Native Envoy routing remains unverified: Rocket has `RouteAll=false`, so normal
+VIP requests use Ethernet. Forced `curl --interface tailscale0` requests timed
+out because disabling route acceptance also excludes subnet prefixes from the
+Tailscale data plane; interface binding does not override it. Use a client that
+accepts subnet routes to validate the native VIP path before removing the proxy.
 
 Keep the existing operator and subnet router until the native paths pass
 management, DNS, HTTPS, and HTTP/3 checks. After validation, remove Envoy's

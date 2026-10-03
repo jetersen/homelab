@@ -1,6 +1,6 @@
-# Candidate only. Not included by talconfig.yaml and not applied to talos01.
+# Applied to talos01 without reboot and included in generated machine configs.
 # Requires a Talos image containing siderolabs/tailscale.
-# Initial interactive enrollment must be completed through Tailscale's login URL.
+# Enrollment uses an interactive login; credentials persist under /var/lib/tailscale.
 apiVersion: v1alpha1
 kind: ExtensionServiceConfig
 name: tailscale
