@@ -7,6 +7,8 @@ on:
       - infrastructure/forgejo/runner/Dockerfile
       - infrastructure/forgejo/runner/Dockerfile.dockerignore
       - .ci/actions/publish-images/**
+      - .ci/backup-helper-cliff.toml
+      - .ci/backup-helper-release.sh
       - .forgejo/workflows/publish-images.yaml
       - .github/workflows/publish-images.yaml
   workflow_dispatch:
@@ -26,7 +28,39 @@ jobs:
     runs-on: ${{ inputs.runner || 'oci-build' }}
     timeout-minutes: 20
     steps:
+      - name: Authenticate release tags
+        id: release
+        shell: bash
+        env:
+          AUDIENCE: ${{ vars.IMAGE_RELEASE_AUDIENCE }}
+        run: |
+          set -euo pipefail
+          : "${AUDIENCE:?Configure IMAGE_RELEASE_AUDIENCE for the repository integration}"
+          token=$(printf 'Authorization: bearer %s\n' "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            | curl --fail --silent --show-error --header @- \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$AUDIENCE" | jq -er '.value')
+          echo "::add-mask::$token"
+          echo "token=$token" >> "$GITHUB_OUTPUT"
       - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          token: ${{ steps.release.outputs.token }}
+      - name: Install git-cliff
+        shell: bash
+        run: |
+          set -euo pipefail
+          directory=$(mktemp -d "$RUNNER_TEMP/git-cliff.XXXXXX")
+          archive=git-cliff-2.14.2-x86_64-unknown-linux-gnu.tar.gz
+          curl --fail --silent --show-error --location \
+            "https://github.com/orhun/git-cliff/releases/download/v2.14.2/$archive" -o "$directory/$archive"
+          echo "26d1f7c8ea2400f2ccb0b2e7f321635f600b583bf4cd1f7afaa5e8c24068ad1088a2504e0a4d9f4333d4bb20a80329327d9462634343ee3af91e1a7fbdc6f18a  $directory/$archive" | sha512sum --check
+          tar -xzf "$directory/$archive" -C "$directory"
+          echo "$directory/git-cliff-2.14.2" >> "$GITHUB_PATH"
+      - name: Allocate the backup helper release
+        shell: bash
+        env:
+          RELEASE_AUTHORITY: forgejo
+        run: bash .ci/backup-helper-release.sh
       - name: Authenticate with the package integration
         id: auth
         shell: bash

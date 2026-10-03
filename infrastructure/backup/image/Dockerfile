@@ -22,9 +22,11 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 FROM gcr.io/distroless/static-debian13:nonroot@sha256:e2e927ec666bae08560abb3c55d0659eceabb657f56b6782ab500a9fc7f555e3
 ARG SOURCE_URL=https://github.com/jetersen/homelab
 ARG REVISION
+ARG VERSION
 LABEL org.opencontainers.image.title="Application backup helpers" \
       org.opencontainers.image.source=$SOURCE_URL \
-      org.opencontainers.image.revision=$REVISION
+      org.opencontainers.image.revision=$REVISION \
+      org.opencontainers.image.version=$VERSION
 COPY --from=build --chmod=0555 /backup-helper /backup-helper
 USER 1000:1000
 ENTRYPOINT ["/backup-helper"]
