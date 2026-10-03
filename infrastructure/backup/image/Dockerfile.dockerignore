@@ -1,0 +1,8 @@
+**
+!infrastructure/
+!infrastructure/backup/
+!infrastructure/backup/image/
+!infrastructure/backup/image/*.go
+!infrastructure/backup/image/go.mod
+!infrastructure/backup/image/go.sum
+!infrastructure/backup/image/Dockerfile

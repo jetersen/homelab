@@ -1,4 +1,6 @@
-# Kubernetes upgrades
+# Talos
+
+## Kubernetes upgrades
 
 Renovate limits Kubernetes and kubelet updates in
 [versioning.json5](../../.renovate/versioning.json5). Before raising the limit,
@@ -7,7 +9,7 @@ release lines selected in their OCIRepository manifests. Use the supported
 range common to both releases; development releases do not establish support
 for the deployed versions.
 
-# Native Tailscale
+## Native Tailscale
 
 The Talos image includes `siderolabs/tailscale`.
 [The service patch](patches/tailscale-service.yaml) enables kernel networking and
@@ -26,29 +28,17 @@ interface after changing native Tailscale networking.
 
 ## DNS and access
 
-Internal ExternalDNS providers publish the Gateway's LAN VIP. Both LAN and
-tailnet clients use that address; Technitium must not translate it to an
-operator proxy address. Public DNS continues to use the separate Towonel target.
+LAN and tailnet clients use the Gateway's LAN VIP; Technitium must not translate
+it to an operator proxy address.
 
 Tailnet global nameservers include TrueNAS's direct tailnet resolver and the
 cluster DNS VIP. The NAS provides DNS independently of Kubernetes. Apply
 Technitium configuration through the primary API so it replicates to the NAS.
 
 Linux clients need `tailscale set --accept-routes=true` to reach advertised VIPs.
-The tailnet policy permits TCP 80/443 and UDP 443 to Envoy, TCP/UDP 53 to cluster
-DNS, and authenticated Kubernetes and Talos management to the node route.
 Talos management also works through the node's direct tailnet address. Use
 `talosctl` endpoint/node overrides for that path; keep TLS verification enabled.
 
-## Verification
-
-Use Kubernetes context `homelab`. Confirm the VIP routes select `tailscale0` and
-`tailscale ping VIP` identifies the Talos node, then check UDP/TCP DNS, HTTPS, and
-repeated HTTP/3 requests with certificate verification. Test Kubernetes `/readyz`
-and authenticated Talos access. Check LAN access separately with subnet-route
-acceptance temporarily disabled on a LAN client.
-
-Before removing an operator, remove its Service exposure annotations and
-Connectors while it is still running. Wait for its finalizers to remove proxy
-workloads, state Secrets, and tailnet devices, then uninstall the Helm release.
-Remove unused CRDs only after checking every instance is gone.
+Verify that VIP routes select `tailscale0` and `tailscale ping VIP` identifies the
+Talos node. Check LAN access separately with subnet-route acceptance temporarily
+disabled on a LAN client.

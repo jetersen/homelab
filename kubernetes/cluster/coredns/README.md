@@ -3,10 +3,8 @@
 Talos bootstraps CoreDNS's Deployment, Service, and RBAC. Flux manages its
 Corefile; Talos leaves existing bootstrap resources intact during upgrades.
 
-CoreDNS resolves Kubernetes service names locally, then forwards other queries
-to cluster Technitium, NAS Technitium, and UniFi in that order. It retries another
-upstream on connection failure, `SERVFAIL`, or `REFUSED`. Negative answers remain
-authoritative and do not trigger fallback.
+CoreDNS retries another upstream on connection failure, `SERVFAIL`, or `REFUSED`.
+Negative answers remain authoritative and do not trigger fallback.
 
 Technitium hosts `lan.jetersen.dev` as a Primary zone in the cluster catalog.
 The NAS subscribes to the catalog and serves its replicated Secondary zone.
@@ -23,5 +21,3 @@ Keep Talos's host resolvers independent of workloads on the same node: use NAS
 Technitium and UniFi. The [DNS defaults component](../../components/dns-defaults/README.md)
 sets `ndots:1` for opted-in workloads, trying dotted names before search suffixes
 while retaining short service lookup.
-Media pods with explicit DNS settings use both Technitium instances. DNS probes
-check the cluster service, NAS, and UniFi independently.
