@@ -1,0 +1,29 @@
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: zigbee2mqtt-backup
+spec:
+  paused: true
+  sourcePVC: zigbee-backup-exports
+  trigger:
+    manual: pilot-1
+  kopia:
+    repository: zigbee2mqtt-kopia
+    copyMethod: Direct
+    cacheCapacity: 1Gi
+    username: zigbee2mqtt
+    hostname: homelab
+    policyConfig:
+      configMapName: zigbee2mqtt-backup-policy
+    actions:
+      beforeSnapshot: bash /kopia-config/check-source.sh zigbee2mqtt
+    moverSecurityContext:
+      runAsUser: 0
+      runAsGroup: 0
+      fsGroup: 0
+    moverResources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        memory: 1Gi

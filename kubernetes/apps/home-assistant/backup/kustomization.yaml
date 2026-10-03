@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: home-assistant
+resources:
+- home-assistant-source.yaml
+- zigbee2mqtt-source.yaml
+- zigbee-export.yaml
+- home-assistant-secret.sops.yaml
+- zigbee2mqtt-secret.sops.yaml
+generatorOptions:
+  disableNameSuffixHash: true
+configMapGenerator:
+- name: home-assistant-backup-policy
+  files:
+  - policy.json=home-assistant-policy.json
+  - check-source.sh
+  literals:
+  - global-policy.json={}
+- name: zigbee2mqtt-backup-policy
+  files:
+  - policy.json=zigbee2mqtt-policy.json
+  - check-source.sh
+  literals:
+  - global-policy.json={}
+- name: zigbee-backup-export-script
+  files:
+  - export-zigbee.cjs

@@ -1,0 +1,29 @@
+{
+  "(global)": {
+    "retention": {
+      "keepLatest": 1,
+      "keepHourly": 0,
+      "keepDaily": 14,
+      "keepWeekly": 8,
+      "keepMonthly": 6,
+      "keepAnnual": 0,
+      "ignoreIdenticalSnapshots": false
+    },
+    "files": {
+      "ignore": [
+        "/*",
+        "!/backups",
+        "/backups/*",
+        "!/backups/*.zip"
+      ],
+      "ignoreDotFiles": [
+        ".kopiaignore"
+      ]
+    },
+    "errorHandling": {
+      "ignoreFileErrors": false,
+      "ignoreDirectoryErrors": false,
+      "ignoreUnknownTypes": false
+    }
+  }
+}
