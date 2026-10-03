@@ -1,0 +1,16 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: coredns-config
+  namespace: flux-system
+  labels:
+    homelab.jetersen.dev/flux-homelab-source: enabled
+    homelab.jetersen.dev/flux-wait: disabled
+spec:
+  interval: 24h
+  timeout: 5m
+  deletionPolicy: Orphan
+  targetNamespace: kube-system
+  path: ./kubernetes/cluster/coredns/app
+  prune: false
+  wait: false

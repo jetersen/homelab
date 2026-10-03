@@ -32,6 +32,15 @@ spec:
       kustomize:
         patches:
           - target:
+              kind: Deployment
+            patch: |
+              - op: add
+                path: /spec/template/spec/dnsConfig
+                value:
+                  options:
+                    - name: ndots
+                      value: "1"
+          - target:
               kind: Service
               name: webhook-receiver
             patch: |

@@ -6,6 +6,7 @@ resources:
   - app-template/flux-ks.yaml
   - cert-manager/flux-ks.yaml
   - cilium/flux-ks.yaml
+  - coredns/flux-ks.yaml
   - envoy-gateway/flux-ks.yaml
   - external-dns/flux-ks.yaml
   - flux-instance/flux-ks.yaml

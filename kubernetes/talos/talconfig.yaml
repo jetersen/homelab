@@ -79,6 +79,8 @@ nodes:
     nodeAnnotations:
       installerUrl: '{{ .MachineConfig.MachineInstall.InstallImage }}'
     nameservers:
+      # Keep node bootstrap independent of DNS hosted by this cluster.
+      - 192.168.1.2
       - 192.168.1.1
     networkInterfaces:
       - interface: enp1s0
