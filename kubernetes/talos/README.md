@@ -9,6 +9,10 @@ range. Pods use a dedicated public subnet from the ISP's fixed allocation.
 Cilium uses Kubernetes IPAM and native routing with IPv6 masquerading disabled;
 IPv4 masquerading remains enabled.
 
+For this single-node cluster, UniFi routes `172.22.0.0/16` through
+`192.168.1.10` and `2a13:e747:b7be:2200::/56` through the node's LAN ULA.
+The IPv4 route also permits direct LAN access to Pod addresses.
+
 Keep Cilium's egress gateway disabled while no policies require it. It enables
 tunnel MTU overhead even with native routing; subtracting that overhead from
 Tailscale's 1280-byte MTU puts Pod routes below IPv6's minimum MTU.
@@ -26,10 +30,14 @@ the requested DHCPv6 delegation size. See the
 TrueNAS also needs a persistent route for the public Pod subnet through the
 node's LAN ULA address. This keeps Pod-to-NAS traffic symmetric instead of
 sending replies through the gateway, which can break TCP DNS.
+Other LAN clients need the same symmetric routing for direct IPv6 Pod access;
+use the existing ingress addresses until that path is configured and tested.
 
 Include the public Pod subnet in source-IP restrictions for outbound API
 credentials, including the Cloudflare token shared by cert-manager and
 external-dns. IPv6 requests retain the Pod's public source address.
+Also add that subnet to Technitium's recursion ACL on the primary DNS server
+and verify replication to the NAS.
 
 When migrating an existing IPv4-only cluster, configure Talos's dual-stack
 ranges and give every Node an IPv6 Pod CIDR before enabling Cilium IPv6.
