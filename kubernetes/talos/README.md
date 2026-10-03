@@ -34,8 +34,12 @@ metrics-only listener remains in the supported legacy etcd configuration.
 `patches/etcd-lan.yaml` pins etcd address selection to `192.168.1.0/24` and is
 included in generated configurations. Without this selection, etcd chose the
 new native Tailscale address after enrollment while Kubernetes kept its LAN IP.
-The focused patch passed its no-reboot dry-run; live application requires approval
-because etcd restarts and briefly interrupts the sole Kubernetes API.
+The focused patch passed its no-reboot dry-run and was applied after approval.
+Etcd's peer URL returned to `https://192.168.1.10:2380`, and the full Talos health
+check through the LAN passed. Etcd retained its running process and no API outage
+was observed during this address update. Listener subnet selection is persisted
+for future service starts; the current process was not restarted merely to change
+its listeners.
 
 Talhelper 3.1.17 still emits a Talos 1.14.2 compatibility warning. Generated
 normal and Tailscale image configurations passed the actual Talos 1.14.2 CLI's
