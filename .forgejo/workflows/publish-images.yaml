@@ -1,7 +1,14 @@
-name: Publish Flux OCI
+name: Publish container images
 on:
   push:
     branches: [main]
+    paths:
+      - infrastructure/backup/image/**
+      - infrastructure/forgejo/runner/Dockerfile
+      - infrastructure/forgejo/runner/Dockerfile.dockerignore
+      - .ci/actions/publish-images/**
+      - .forgejo/workflows/publish-images.yaml
+      - .github/workflows/publish-images.yaml
   workflow_dispatch:
     inputs:
       runner:
@@ -11,7 +18,7 @@ on:
         options: [oci-build, runner-kubernetes, runner-rocket]
 enable-openid-connect: true
 concurrency:
-  group: publish-oci
+  group: publish-images
   cancel-in-progress: false
 jobs:
   publish:
@@ -20,9 +27,6 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: https://github.com/fluxcd/flux2/action@dd233c4fadef306a62b7893204f8e3817fecc2b2 # v2.9.5
-        with:
-          version: 2.9.5
       - name: Authenticate with the package integration
         id: auth
         shell: bash
@@ -36,7 +40,7 @@ jobs:
             "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$AUDIENCE" | jq -er '.value')
           echo "::add-mask::$token"
           echo "token=$token" >> "$GITHUB_OUTPUT"
-      - uses: ./.ci/actions/publish-oci
+      - uses: ./.ci/actions/publish-images
         with:
           registry: forgejo.jetersen.dev
           username: ${{ forgejo.repository_owner }}

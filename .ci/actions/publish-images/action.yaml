@@ -1,0 +1,98 @@
+name: Publish homelab images
+description: Build, smoke test, and publish workload images
+inputs:
+  registry:
+    description: Container registry hostname
+    required: true
+  repository:
+    description: Owner and repository name
+    required: true
+  username:
+    description: Registry login user
+    required: true
+  token:
+    description: Short-lived registry credential
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Build and smoke test the backup helper image
+      shell: bash
+      env:
+        REGISTRY: ${{ inputs.registry }}
+        REPOSITORY: ${{ inputs.repository }}
+      run: |
+        set -euo pipefail
+        revision=$(git rev-parse HEAD)
+        image="$REGISTRY/${REPOSITORY,,}/backup-helper"
+        docker build -f infrastructure/backup/image/Dockerfile \
+          --build-arg REVISION="$revision" \
+          --build-arg SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" \
+          -t "$image:sha-$revision" .
+        docker run --rm --network none --read-only --user 1000:1000 \
+          --cap-drop ALL --security-opt no-new-privileges "$image:sha-$revision" --help
+    - name: Build and test the runner job image
+      shell: bash
+      env:
+        REGISTRY: ${{ inputs.registry }}
+        REPOSITORY: ${{ inputs.repository }}
+      run: |
+        set -euo pipefail
+        revision=$(git rev-parse HEAD)
+        image="$REGISTRY/${REPOSITORY,,}/runner-job"
+        docker build -f infrastructure/forgejo/runner/Dockerfile \
+          --build-arg REVISION="$revision" \
+          --build-arg SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" \
+          -t "$image:sha-$revision" .
+        docker run --rm --network none --read-only --cap-drop ALL \
+          --security-opt no-new-privileges "$image:sha-$revision" \
+          bash -euc 'node --version; git --version; docker --version; docker buildx version; kubectl version --client; curl --version; jq --version'
+    - name: Prepare registry credentials
+      shell: bash
+      run: echo "DOCKER_CONFIG=$(mktemp -d "$RUNNER_TEMP/homelab-auth.XXXXXX")" >> "$GITHUB_ENV"
+    - name: Log in to the registry
+      shell: bash
+      env:
+        REGISTRY: ${{ inputs.registry }}
+        USERNAME: ${{ inputs.username }}
+        TOKEN: ${{ inputs.token }}
+      run: |
+        set -euo pipefail
+        printf '%s' "$TOKEN" | docker login "$REGISTRY" --username "$USERNAME" --password-stdin
+    - name: Publish the image revisions
+      shell: bash
+      env:
+        REGISTRY: ${{ inputs.registry }}
+        REPOSITORY: ${{ inputs.repository }}
+      run: |
+        set -euo pipefail
+        revision=$(git rev-parse HEAD)
+        package="$REGISTRY/${REPOSITORY,,}"
+        docker push "$package/backup-helper:sha-$revision"
+        docker push "$package/runner-job:sha-$revision"
+        git fetch --no-tags --depth=1 origin refs/heads/main
+        input_changes=$(git diff --name-only "$revision" FETCH_HEAD -- \
+          infrastructure/backup/image \
+          infrastructure/forgejo/runner/Dockerfile \
+          infrastructure/forgejo/runner/Dockerfile.dockerignore \
+          .ci/actions/publish-images \
+          .forgejo/workflows/publish-images.yaml \
+          .github/workflows/publish-images.yaml)
+        if [ -n "$input_changes" ]; then
+          echo 'Newer image inputs exist; keeping revision tags without advancing main.'
+          exit 0
+        fi
+        docker tag "$package/backup-helper:sha-$revision" "$package/backup-helper:main"
+        docker push "$package/backup-helper:main"
+        docker tag "$package/runner-job:sha-$revision" "$package/runner-job:main"
+        docker push "$package/runner-job:main"
+    - name: Remove registry credentials
+      if: always()
+      shell: bash
+      env:
+        REGISTRY: ${{ inputs.registry }}
+      run: |
+        if [ -n "${DOCKER_CONFIG:-}" ]; then
+          docker logout "$REGISTRY"
+          rm -rf -- "$DOCKER_CONFIG"
+        fi

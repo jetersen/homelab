@@ -1,0 +1,27 @@
+name: Go checks
+on:
+  push:
+    branches: [main]
+    paths:
+      - infrastructure/backup/image/**
+      - .forgejo/workflows/check-go.yaml
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: Runner label
+        type: choice
+        default: oci-build
+        options: [oci-build, runner-kubernetes, runner-rocket]
+concurrency:
+  group: check-go
+  cancel-in-progress: false
+jobs:
+  check:
+    name: Go tests and vet
+    if: forgejo.ref == 'refs/heads/main'
+    runs-on: ${{ inputs.runner || 'oci-build' }}
+    timeout-minutes: 10
+    steps:
+      - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Check the backup helper
+        run: docker build --target check -f infrastructure/backup/image/Dockerfile .
