@@ -1,0 +1,10 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: forgejo-runner
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: forgejo-runner
+  policyTypes: [Ingress]
+  ingress: []

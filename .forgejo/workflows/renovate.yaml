@@ -1,0 +1,56 @@
+name: Renovate
+on:
+  schedule:
+    - cron: '17 */3 * * *'
+  workflow_dispatch:
+enable-openid-connect: true
+concurrency:
+  group: renovate
+  cancel-in-progress: false
+jobs:
+  renovate:
+    if: forgejo.ref == 'refs/heads/main'
+    runs-on: oci-build
+    timeout-minutes: 45
+    steps:
+      - name: Authenticate with the Renovate integration
+        id: auth
+        shell: bash
+        env:
+          AUDIENCE: ${{ vars.RENOVATE_AUDIENCE }}
+        run: |
+          set -euo pipefail
+          : "${AUDIENCE:?Configure RENOVATE_AUDIENCE for the Authorized Integration}"
+          token=$(printf 'Authorization: bearer %s\n' "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            | curl --fail --silent --show-error --header @- \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$AUDIENCE" | jq -er '.value')
+          echo "::add-mask::$token"
+          echo "token=$token" >> "$GITHUB_OUTPUT"
+      - name: Authenticate GitHub dependency lookups
+        id: github
+        uses: https://github.com/actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.GH_READ_APP_CLIENT_ID }}
+          private-key: ${{ secrets.GH_READ_APP_PRIVATE_KEY }}
+          owner: jetersen
+          repositories: homelab
+          permission-contents: read
+          github-api-url: https://api.github.com
+      - name: Update Forgejo dependencies
+        shell: bash
+        env:
+          RENOVATE_TOKEN: ${{ steps.auth.outputs.token }}
+          RENOVATE_GITHUB_COM_TOKEN: ${{ steps.github.outputs.token }}
+          RENOVATE_PLATFORM: forgejo
+          RENOVATE_ENDPOINT: https://forgejo.jetersen.dev/api/v1
+          RENOVATE_REPOSITORIES: '["jetersen/homelab"]'
+          RENOVATE_CONFIG_FILE_NAMES: '[".forgejo/renovate.json"]'
+          RENOVATE_ONBOARDING: 'false'
+          RENOVATE_GIT_AUTHOR: 'Renovate <renovate@jetersen.dev>'
+        run: |
+          set -euo pipefail
+          docker run --rm --pull always \
+            -e RENOVATE_TOKEN -e RENOVATE_GITHUB_COM_TOKEN \
+            -e RENOVATE_PLATFORM -e RENOVATE_ENDPOINT -e RENOVATE_REPOSITORIES \
+            -e RENOVATE_CONFIG_FILE_NAMES -e RENOVATE_ONBOARDING -e RENOVATE_GIT_AUTHOR \
+            ghcr.io/renovatebot/renovate:44.132.2@sha256:0191afbc3937e5316263426fc0ce1450f5c143d42e3f91da8c6f771e317fae51

@@ -1,0 +1,19 @@
+log:
+  level: info
+runner:
+  capacity: 1
+  timeout: 45m
+  shutdown_timeout: 10m
+  envs:
+    DOCKER_HOST: tcp://docker:2375
+  labels:
+    - oci-build:docker://ghcr.io/jetersen/homelab/runner-job@sha256:97c775083f9d3d395e5cd20165a7ad79d94cc7cd2d84ebcf6f62255153a701b6
+    - runner-kubernetes:docker://ghcr.io/jetersen/homelab/runner-job@sha256:97c775083f9d3d395e5cd20165a7ad79d94cc7cd2d84ebcf6f62255153a701b6
+cache:
+  enabled: false
+container:
+  docker_host: tcp://docker:2375
+  options: --add-host=docker:host-gateway
+  privileged: false
+  valid_volumes: []
+  force_pull: true

@@ -1,0 +1,38 @@
+name: homelab-forgejo-runner
+services:
+  docker:
+    image: docker.io/library/docker:29.8.2-dind@sha256:7dcdfc4a20246236f558175182ccace1eb15a41bd3eb119dd2284f393498b7c1
+    privileged: true
+    restart: unless-stopped
+    environment:
+      DOCKER_TLS_CERTDIR: ''
+    command: [--tls=false, --storage-driver=overlay2]
+    volumes:
+      - docker-cache:/var/lib/docker
+    healthcheck:
+      test: [CMD, docker, info]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    mem_limit: 8g
+    cpus: 4
+  runner:
+    image: data.forgejo.org/forgejo/runner:13@sha256:ca3d5eea46004789a175d1369eec6829d3ea9bfbe2011a06625b4bdaa55f7552
+    restart: unless-stopped
+    depends_on:
+      docker:
+        condition: service_healthy
+    user: '1000:1000'
+    working_dir: /data
+    entrypoint: [/bin/sh, -ec]
+    command:
+      - exec forgejo-runner --config /config/runner.yaml daemon --url https://forgejo.jetersen.dev --uuid "$$(cat /registration/uuid)" --token-url file:/registration/token
+    volumes:
+      - ./rocket.yaml:/config/runner.yaml:ro
+      - ${RUNNER_REGISTRATION_DIR:?Set a private runner registration directory}:/registration:ro
+      - runner-data:/data
+    mem_limit: 512m
+    cpus: 1
+volumes:
+  docker-cache:
+  runner-data:

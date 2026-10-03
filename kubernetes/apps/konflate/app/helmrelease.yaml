@@ -13,7 +13,7 @@ spec:
     deploymentAnnotations:
       reloader.stakater.com/auto: "true"
     config:
-      repo: github://jetersen/homelab
+      repo: forgejo://forgejo.jetersen.dev/jetersen/homelab
       statusChecks: true
       prComments: true
       publicUrl: https://konflate.jetersen.dev
