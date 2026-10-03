@@ -5,7 +5,6 @@ kind: Kustomization
 resources:
   - helmrelease.yaml
   - source.yaml
-  - connector.yaml
 components:
   - ../../../components/helmrelease-defaults
   - ../../../components/oci-source-defaults

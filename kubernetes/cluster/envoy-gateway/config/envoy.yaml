@@ -34,12 +34,6 @@ spec:
             limits:
               memory: 1Gi
       envoyService:
-        # Expose TCP and UDP directly to the tailnet while retaining the LAN VIP.
-        annotations:
-          tailscale.com/expose: "true"
-          tailscale.com/hostname: envoy
-          tailscale.com/tags: tag:k8s
-          tailscale.com/proxy-class: envoy-ingress
         externalTrafficPolicy: Local
   shutdown:
     drainTimeout: 180s
