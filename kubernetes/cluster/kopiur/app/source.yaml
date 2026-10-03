@@ -1,0 +1,8 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: OCIRepository
+metadata:
+  name: kopiur
+spec:
+  ref:
+    tag: 0.10.12
+  url: oci://ghcr.io/home-operations/charts/kopiur

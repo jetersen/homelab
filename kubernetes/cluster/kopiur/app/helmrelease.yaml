@@ -1,0 +1,14 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: kopiur
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: kopiur
+  values:
+    fullnameOverride: kopiur
+    maxConcurrentJobs: 2
+    webhook:
+      tls:
+        mode: cert-manager

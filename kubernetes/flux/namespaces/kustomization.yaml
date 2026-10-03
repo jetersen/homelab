@@ -8,6 +8,7 @@ resources:
   - home-assistant.yaml
   - homepage.yaml
   - konflate.yaml
+  - kopiur-system.yaml
   - media.yaml
   - monitoring.yaml
   - openspeedtest.yaml
