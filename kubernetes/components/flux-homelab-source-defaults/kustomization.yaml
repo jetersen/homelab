@@ -15,6 +15,6 @@ patches:
         name: not-used
       spec:
         sourceRef:
-          kind: GitRepository
+          kind: OCIRepository
           name: homelab
           namespace: flux-system

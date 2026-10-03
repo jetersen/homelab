@@ -26,11 +26,12 @@ spec:
         - notification-controller
       sync:
         name: homelab
-        kind: GitRepository
-        url: https://github.com/jetersen/homelab
-        ref: refs/heads/main
+        kind: OCIRepository
+        url: oci://forgejo.jetersen.dev/jetersen/homelab/flux
+        ref: main
+        pullSecret: homelab-oci-auth
         path: kubernetes/flux
-        interval: 24h
+        interval: 1m
       kustomize:
         patches:
           - target:
