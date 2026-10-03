@@ -14,6 +14,9 @@ once. Keep the local administrator login available for recovery.
 Application and chart major upgrades require Renovate dashboard approval and
 manual merge because upgrades can change the database schema.
 
+Pull requests default to rebase for merging and updating an outdated branch.
+Existing repositories with explicit settings retain their own defaults.
+
 ## Storage
 
 SQLite and its WAL stay on the local PVC. Repositories, LFS objects, attachments,
