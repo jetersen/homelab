@@ -3,6 +3,11 @@ on:
   schedule:
     - cron: '17 */3 * * *'
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Inspect dependencies without writing branches or pull requests
+        type: boolean
+        default: false
 enable-openid-connect: true
 concurrency:
   group: renovate
@@ -47,10 +52,11 @@ jobs:
           RENOVATE_CONFIG_FILE_NAMES: '[".forgejo/renovate.json"]'
           RENOVATE_ONBOARDING: 'false'
           RENOVATE_GIT_AUTHOR: 'Renovate <renovate@jetersen.dev>'
+          RENOVATE_DRY_RUN: ${{ inputs.dry_run && 'full' || 'none' }}
         run: |
           set -euo pipefail
           docker run --rm --pull always \
             -e RENOVATE_TOKEN -e RENOVATE_GITHUB_COM_TOKEN \
             -e RENOVATE_PLATFORM -e RENOVATE_ENDPOINT -e RENOVATE_REPOSITORIES \
-            -e RENOVATE_CONFIG_FILE_NAMES -e RENOVATE_ONBOARDING -e RENOVATE_GIT_AUTHOR \
+            -e RENOVATE_CONFIG_FILE_NAMES -e RENOVATE_ONBOARDING -e RENOVATE_GIT_AUTHOR -e RENOVATE_DRY_RUN \
             ghcr.io/renovatebot/renovate:44.132.2@sha256:0191afbc3937e5316263426fc0ce1450f5c143d42e3f91da8c6f771e317fae51
