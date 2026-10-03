@@ -184,17 +184,21 @@ on clients that should use the native subnet route. Interface binding alone
 does not override disabled route acceptance. The CloudConnexa CGNAT firewall
 exception and Rocket's DNS preferences were retained.
 
-The live Talos Tailscale daemon also has a persisted Funnel/Serve configuration:
-HTTPS on `talos01.rockhopper-bleak.ts.net:443` proxies to the Flux webhook receiver
-at `http://172.23.196.164:80`. No current Talos manifest configures this listener.
-The existing Flux HTTPRoute already exposes `/flux/hook` through
-`webhook.jetersen.dev`. The native daemon is tagged `tag:k8s-subnet-router` and
-reports no Funnel capability; the live policy grants Funnel to
-`autogroup:member` only. Public resolver queries returned no A or AAAA record
-for the Talos hostname. The persisted configuration explains the console badge,
-but working public ingress was not established. Review this duplicate webhook
-listener separately from native Envoy routing; no Funnel configuration was
-changed during these checks.
+The 2026-10-03 audit found a persisted Funnel/Serve configuration on the native
+daemon: HTTPS on `talos01.rockhopper-bleak.ts.net:443` proxied to the Flux webhook
+receiver at `http://172.23.196.164:80`. No current Talos manifest configured it.
+The existing Flux HTTPRoute already exposes `/flux/hook` through Towonel at
+`webhook.jetersen.dev`, so the duplicate listener was removed as requested using
+`tailscale serve --https=443 off` against the native daemon's socket. This command
+removes that listener and its Funnel entry without resetting other services.
+
+The daemon now reports zero Funnel entries and no TCP or web listeners; the
+console's Funnel badge disappeared. No Talos reboot or extension restart was
+needed. The existing public webhook `/test` endpoint returned 200 when resolved
+through public DNS and pinned to its public address; native Kubernetes API
+readiness still passed. The live policy grants Funnel to `autogroup:member`
+only, and this tagged native daemon reports no Funnel capability. A private
+copy of the previous Serve configuration was saved before cleanup.
 
 Keep the existing operator and subnet router until the native paths pass
 management, DNS, HTTPS, and HTTP/3 checks. After validation, remove Envoy's
