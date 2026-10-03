@@ -49,15 +49,17 @@ that tag and preserve an already published image's digest. The helper's revision
 version, and source timestamp come from its component commit, so unrelated
 commits do not change release metadata or invalidate compilation.
 
-GitHub mirrors Forgejo's release tag before publishing to GHCR. Its
-`FORGEJO_RELEASE_TOKEN` secret needs only `read:repository` for this repository.
-This keeps both registries on the same version when jobs are delayed or retried.
+Forgejo mirrors release tags to GitHub using the repository deploy key stored in
+its `GH_RELEASE_DEPLOY_KEY` Actions secret. Tag pushes trigger GHCR publication;
+GitHub main builds wait for the corresponding tag. Hosted runners never need
+access to the internal Forgejo hostname. Both registries use the same version
+when jobs are delayed or retried.
 
 The Forgejo image workflow also uses a repository-scoped Authorized Integration
 with `write:repository` for release tags, referenced by `IMAGE_RELEASE_AUDIENCE`.
 Restrict it to `publish-images.yaml`, this repository, `refs/heads/main`, and
-`push`/`workflow_dispatch`. GitHub uses its workflow token with `contents: write`
-to mirror the tag.
+`push`/`workflow_dispatch`. The GitHub deploy key has write access only to this
+repository; its publisher needs `contents: read` and `packages: write`.
 
 ## Renovate registry authentication
 

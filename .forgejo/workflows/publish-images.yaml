@@ -61,6 +61,20 @@ jobs:
         env:
           RELEASE_AUTHORITY: forgejo
         run: bash .ci/backup-helper-release.sh
+      - name: Mirror the release tag to GitHub
+        shell: bash
+        env:
+          DEPLOY_KEY: ${{ secrets.GH_RELEASE_DEPLOY_KEY }}
+        run: |
+          set -euo pipefail
+          directory=$(mktemp -d "$RUNNER_TEMP/release-key.XXXXXX")
+          trap 'rm -rf -- "$directory"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$directory/key"
+          chmod 600 "$directory/key"
+          curl --fail --silent --show-error https://api.github.com/meta \
+            | jq -r '.ssh_keys[] | "github.com " + .' > "$directory/known_hosts"
+          export GIT_SSH_COMMAND="ssh -i $directory/key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$directory/known_hosts"
+          git push git@github.com:jetersen/homelab.git "refs/tags/$BACKUP_HELPER_TAG"
       - name: Authenticate with the package integration
         id: auth
         shell: bash
