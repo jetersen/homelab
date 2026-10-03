@@ -28,6 +28,9 @@ spec:
       - jetersen.dev
     extraArgs:
       - --annotation-prefix=internal.external-dns.alpha.kubernetes.io/
+      # UniFi already owns this name through the NAS client's local DNS entry.
+      # A duplicate DNS policy is rejected and stops the remaining record sync.
+      - --exclude-domains=truenas.lan.jetersen.dev
     sources:
       - crd
       - gateway-httproute
