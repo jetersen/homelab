@@ -15,4 +15,3 @@ resources:
   - reflector.yaml
   - technitium.yaml
   - towonel-system.yaml
-  - volsync-system.yaml

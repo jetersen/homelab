@@ -13,6 +13,7 @@ spec:
   endpoints:
   - port: metrics
     path: /metrics
+    honorLabels: true
 ---
 apiVersion: operator.victoriametrics.com/v1beta1
 kind: VMServiceScrape
