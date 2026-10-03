@@ -44,4 +44,5 @@ repository variable `RENOVATE_PACKAGES_AUDIENCE`. Restrict its claims to
 The workflow supplies this short-lived token through a Docker `hostRules` entry
 for `forgejo.jetersen.dev`. Forgejo API authentication alone does not authenticate
 Docker lookups. Use the workflow's `dry_run` input to verify dependency lookups
-without creating branches or pull requests.
+without creating branches or pull requests. Scheduled runs and manual runs with
+`dry_run` disabled leave `RENOVATE_DRY_RUN` unset so Renovate can apply updates.
