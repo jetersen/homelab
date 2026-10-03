@@ -64,7 +64,7 @@ jobs:
           RENOVATE_REPOSITORIES: '["jetersen/homelab"]'
           RENOVATE_CONFIG_FILE_NAMES: '[".forgejo/renovate.json"]'
           RENOVATE_ONBOARDING: 'false'
-          RENOVATE_GIT_AUTHOR: 'Renovate <renovate@jetersen.dev>'
+          RENOVATE_GIT_AUTHOR: 'renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>'
           DRY_RUN: ${{ inputs.dry_run }}
           REGISTRY_USERNAME: ${{ forgejo.repository_owner }}
           REGISTRY_TOKEN: ${{ steps.packages.outputs.token }}
