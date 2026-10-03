@@ -1,0 +1,38 @@
+name: Publish OCI
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+enable-openid-connect: true
+concurrency:
+  group: publish-oci
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: forgejo.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: https://github.com/actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: https://github.com/fluxcd/flux2/action@adf590e1525503fd26b0f07e78c89483e6ed751b # v2.9.5
+        with:
+          version: 2.9.5
+      - name: Authenticate with the package integration
+        id: auth
+        shell: bash
+        env:
+          AUDIENCE: ${{ vars.FORGEJO_PACKAGES_AUDIENCE }}
+        run: |
+          set -euo pipefail
+          : "${AUDIENCE:?Configure FORGEJO_PACKAGES_AUDIENCE for the Authorized Integration}"
+          token=$(printf 'Authorization: bearer %s\n' "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            | curl --fail --silent --show-error --header @- \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$AUDIENCE" | jq -er '.value')
+          echo "::add-mask::$token"
+          echo "token=$token" >> "$GITHUB_OUTPUT"
+      - uses: ./.ci/actions/publish-oci
+        with:
+          registry: forgejo.jetersen.dev
+          username: ${{ forgejo.repository_owner }}
+          token: ${{ steps.auth.outputs.token }}
+          repository: ${{ forgejo.repository }}

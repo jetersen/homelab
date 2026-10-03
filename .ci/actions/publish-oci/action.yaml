@@ -1,0 +1,92 @@
+name: Publish homelab OCI
+description: Build the Forgejo staging image and publish the committed Flux configuration
+inputs:
+  registry:
+    description: Container registry hostname
+    required: true
+  repository:
+    description: Owner and repository name
+    required: true
+  username:
+    description: Registry login user
+    required: true
+  token:
+    description: Short-lived registry credential
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Build and test the staging image
+      shell: bash
+      env:
+        REGISTRY: ${{ inputs.registry }}
+        REPOSITORY: ${{ inputs.repository }}
+      run: |
+        set -euo pipefail
+        revision=$(git rev-parse HEAD)
+        image="$REGISTRY/${REPOSITORY,,}/forgejo-staging"
+        docker build -f infrastructure/forgejo/Dockerfile \
+          --build-arg REVISION="$revision" \
+          --build-arg SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" \
+          --build-arg SOURCE_URL=https://github.com/jetersen/homelab \
+          -t "$image:sha-$revision" .
+        docker run --rm --network none --read-only --user 1000:1000 \
+          --cap-drop ALL --security-opt no-new-privileges "$image:sha-$revision" --help
+    - name: Package the committed manifests
+      shell: bash
+      run: |
+        set -euo pipefail
+        directory=$(mktemp -d "$RUNNER_TEMP/homelab-oci.XXXXXX")
+        git archive HEAD kubernetes/apps kubernetes/cluster kubernetes/components kubernetes/flux \
+          | tar -x -C "$directory"
+        while IFS= read -r file; do
+          kubectl kustomize "$(dirname "$file")" > /dev/null
+        done < <(find "$directory/kubernetes/apps" "$directory/kubernetes/cluster" \
+          "$directory/kubernetes/flux" -name kustomization.yaml | sort)
+        echo "OCI_DIRECTORY=$directory" >> "$GITHUB_ENV"
+        echo "DOCKER_CONFIG=$(mktemp -d "$RUNNER_TEMP/homelab-auth.XXXXXX")" >> "$GITHUB_ENV"
+    - name: Log in to the registry
+      shell: bash
+      env:
+        REGISTRY: ${{ inputs.registry }}
+        USERNAME: ${{ inputs.username }}
+        TOKEN: ${{ inputs.token }}
+      run: |
+        set -euo pipefail
+        printf '%s' "$TOKEN" | docker login "$REGISTRY" --username "$USERNAME" --password-stdin
+    - name: Publish and verify the revision
+      shell: bash
+      env:
+        REGISTRY: ${{ inputs.registry }}
+        REPOSITORY: ${{ inputs.repository }}
+      run: |
+        set -euo pipefail
+        revision=$(git rev-parse HEAD)
+        package="$REGISTRY/${REPOSITORY,,}"
+        docker push "$package/forgejo-staging:sha-$revision"
+        flux push artifact "oci://$package/flux:sha-$revision" \
+          --path="$OCI_DIRECTORY" \
+          --source=https://github.com/jetersen/homelab \
+          --revision="main@sha1:$revision" --reproducible
+        verification=$(mktemp -d "$RUNNER_TEMP/homelab-verify.XXXXXX")
+        flux pull artifact "oci://$package/flux:sha-$revision" --output="$verification"
+        diff -qr "$OCI_DIRECTORY/kubernetes" "$verification/kubernetes"
+        test "$(find "$verification" -mindepth 1 -maxdepth 1 -printf '%f\n')" = kubernetes
+        remote_revision=$(git ls-remote origin refs/heads/main | cut -f1)
+        if [ "$remote_revision" != "$revision" ]; then
+          echo 'A newer commit exists; keeping revision tags without advancing main.'
+          exit 0
+        fi
+        docker tag "$package/forgejo-staging:sha-$revision" "$package/forgejo-staging:main"
+        docker push "$package/forgejo-staging:main"
+        flux tag artifact "oci://$package/flux:sha-$revision" --tag=main
+    - name: Remove registry credentials
+      if: always()
+      shell: bash
+      env:
+        REGISTRY: ${{ inputs.registry }}
+      run: |
+        if [ -n "${DOCKER_CONFIG:-}" ]; then
+          docker logout "$REGISTRY"
+          rm -rf -- "$DOCKER_CONFIG"
+        fi

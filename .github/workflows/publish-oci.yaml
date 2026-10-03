@@ -1,0 +1,27 @@
+name: Publish OCI
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  packages: write
+concurrency:
+  group: publish-oci
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: fluxcd/flux2/action@adf590e1525503fd26b0f07e78c89483e6ed751b # v2.9.5
+        with:
+          version: 2.9.5
+      - uses: ./.ci/actions/publish-oci
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}

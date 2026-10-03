@@ -1,0 +1,11 @@
+**
+!infrastructure/
+!infrastructure/forgejo/
+!infrastructure/forgejo/Dockerfile
+!infrastructure/forgejo/tests/
+!infrastructure/forgejo/tests/test_backup.py
+!kubernetes/
+!kubernetes/apps/
+!kubernetes/apps/forgejo/
+!kubernetes/apps/forgejo/backup/
+!kubernetes/apps/forgejo/backup/stage-forgejo.py
