@@ -13,9 +13,12 @@
 
 - Use conventional commits.
 
+## Documentation and operational records
+
+- Keep live operational audits, inventory, credential-rotation records, backup locations, recovery artifacts, and incident details in protected private local storage outside the repository. Public documentation, including `AGENTS.md`, should contain only durable procedures and reusable rules.
+
 ## Talos
 
-- Keep operational audits, credential-rotation records, recovery artifacts, and live diagnostic results in protected private local storage. Do not add live inventory, backup locations, or security incident details to public documentation, including this file.
 - Machine configurations contain bootstrap tokens, CA private keys, service-account signing keys, and the encryption secret. Capture raw configuration and diff output privately; never print them in agent output.
 - `talosctl get machineconfig` can return its `spec` as serialized multi-document YAML. Decode that value, assert the expected mapping types, and print only explicitly selected non-secret fields. Never stringify an unknown structure or convert it to a list for debugging.
 - `talosctl rotate-ca` can print newly generated private keys, including during dry-run. Capture its entire output privately and report only verified non-secret results.
