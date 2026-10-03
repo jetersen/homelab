@@ -22,6 +22,8 @@ the files readable by UID 1000. Set `RUNNER_REGISTRATION_DIR` to that directory
 and run `docker compose -f infrastructure/forgejo/runner/compose.yaml up -d`.
 Docker's restart policy starts the containers after the Docker daemon returns.
 Use the same file and registration directory for subsequent Compose commands.
+The nested daemon uses the homelab's LAN DNS servers explicitly; Docker's outer
+loopback resolver is not reachable from its build containers.
 
 Kubernetes stores its registration in a SOPS-encrypted Secret. The privileged
 namespace is dedicated to runners and denies incoming pod traffic. The runner

@@ -6,7 +6,7 @@ services:
     restart: unless-stopped
     environment:
       DOCKER_TLS_CERTDIR: ''
-    command: [--tls=false, --storage-driver=overlay2]
+    command: [--tls=false, --storage-driver=overlay2, --dns=192.168.1.21, --dns=192.168.1.2]
     volumes:
       - docker-cache:/var/lib/docker
     healthcheck:
