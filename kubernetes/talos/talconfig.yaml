@@ -35,6 +35,8 @@ nodes:
   - hostname: talos01
     patches:
       - "@./patches/control-plane-v1.14.yaml"
+      - "@./patches/etcd-lan.yaml"
+      - "@./patches/tailscale-service.yaml"
     userVolumes:
       - name: local-path-provisioner
         provisioning:

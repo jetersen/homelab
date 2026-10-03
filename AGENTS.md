@@ -13,6 +13,12 @@
 
 - Use conventional commits.
 
+## Talos
+
+- Machine configurations contain bootstrap tokens, CA private keys, service-account signing keys, and the encryption secret. Capture raw configuration and diff output privately; never print them in agent output.
+- `talosctl get machineconfig` can return its `spec` as serialized multi-document YAML. Decode that value, assert the expected mapping types, and print only explicitly selected non-secret fields. Never stringify an unknown structure or convert it to a list for debugging.
+- Keep interactive enrollment URLs out of terminal output and repository files.
+
 ## TrueNAS
 
 - Use the JSON-RPC 2.0 API over encrypted WebSocket at `wss://<host>/api/current`. Do not use deprecated REST `/api/v2.0` endpoints or the legacy `/websocket` protocol.

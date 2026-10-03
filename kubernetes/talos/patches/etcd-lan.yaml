@@ -1,0 +1,6 @@
+# Keep etcd peer and client addresses on the LAN when tailscale0 appears.
+# Talos defaults listenSubnets to advertisedSubnets when omitted.
+cluster:
+  etcd:
+    advertisedSubnets:
+      - 192.168.1.0/24
