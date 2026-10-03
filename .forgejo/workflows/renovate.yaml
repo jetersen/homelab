@@ -31,6 +31,19 @@ jobs:
             "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$AUDIENCE" | jq -er '.value')
           echo "::add-mask::$token"
           echo "token=$token" >> "$GITHUB_OUTPUT"
+      - name: Authenticate package lookups
+        id: packages
+        shell: bash
+        env:
+          AUDIENCE: ${{ vars.RENOVATE_PACKAGES_AUDIENCE }}
+        run: |
+          set -euo pipefail
+          : "${AUDIENCE:?Configure RENOVATE_PACKAGES_AUDIENCE for the read-only package integration}"
+          token=$(printf 'Authorization: bearer %s\n' "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            | curl --fail --silent --show-error --header @- \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$AUDIENCE" | jq -er '.value')
+          echo "::add-mask::$token"
+          echo "token=$token" >> "$GITHUB_OUTPUT"
       - name: Authenticate GitHub dependency lookups
         id: github
         uses: https://github.com/actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
@@ -53,10 +66,19 @@ jobs:
           RENOVATE_ONBOARDING: 'false'
           RENOVATE_GIT_AUTHOR: 'Renovate <renovate@jetersen.dev>'
           RENOVATE_DRY_RUN: ${{ inputs.dry_run && 'full' || 'none' }}
+          REGISTRY_USERNAME: ${{ forgejo.repository_owner }}
+          REGISTRY_TOKEN: ${{ steps.packages.outputs.token }}
         run: |
           set -euo pipefail
+          RENOVATE_HOST_RULES=$(jq -cn '[{
+            hostType: "docker",
+            matchHost: "forgejo.jetersen.dev",
+            username: env.REGISTRY_USERNAME,
+            password: env.REGISTRY_TOKEN
+          }]')
+          export RENOVATE_HOST_RULES
           docker run --rm --pull always \
-            -e RENOVATE_TOKEN -e RENOVATE_GITHUB_COM_TOKEN \
+            -e RENOVATE_TOKEN -e RENOVATE_GITHUB_COM_TOKEN -e RENOVATE_HOST_RULES \
             -e RENOVATE_PLATFORM -e RENOVATE_ENDPOINT -e RENOVATE_REPOSITORIES \
             -e RENOVATE_CONFIG_FILE_NAMES -e RENOVATE_ONBOARDING -e RENOVATE_GIT_AUTHOR -e RENOVATE_DRY_RUN \
             ghcr.io/renovatebot/renovate:44.132.2@sha256:0191afbc3937e5316263426fc0ce1450f5c143d42e3f91da8c6f771e317fae51
