@@ -57,6 +57,7 @@ spec:
     staticConfig:
       targets:
       - technitium-dns.technitium.svc.cluster.local:53
+      - 192.168.1.21:53
       - 192.168.1.2:53
       - 192.168.1.1:53
 ---
@@ -77,3 +78,41 @@ spec:
       - https://home.jetersen.dev/
       - https://homeassistant.jetersen.dev/
       - https://grafana.jetersen.dev/
+
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMProbe
+metadata:
+  name: dns-recursion-udp
+spec:
+  jobName: dns-recursion-udp
+  module: dns_recursion_udp
+  interval: 30s
+  scrapeTimeout: 10s
+  vmProberSpec:
+    url: blackbox-exporter.monitoring.svc.cluster.local:9115
+  targets:
+    staticConfig:
+      targets:
+      - 192.168.1.21:53
+      - 192.168.1.2:53
+      - 192.168.1.1:53
+
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMProbe
+metadata:
+  name: dns-recursion-tcp
+spec:
+  jobName: dns-recursion-tcp
+  module: dns_recursion_tcp
+  interval: 30s
+  scrapeTimeout: 10s
+  vmProberSpec:
+    url: blackbox-exporter.monitoring.svc.cluster.local:9115
+  targets:
+    staticConfig:
+      targets:
+      - 192.168.1.21:53
+      - 192.168.1.2:53
+      - 192.168.1.1:53

@@ -17,10 +17,12 @@ spec:
           minutes.
     - alert: ServiceProbeMetricsMissing
       expr: |
-        up{job=~"application-http|nas-mqtt-tcp|technitium-dns|gateway-https"} == 0
+        up{job=~"application-http|nas-mqtt-tcp|technitium-dns|dns-recursion-udp|dns-recursion-tcp|gateway-https"} == 0
         or absent(up{job="application-http"})
         or absent(up{job="nas-mqtt-tcp"})
         or absent(up{job="technitium-dns"})
+        or absent(up{job="dns-recursion-udp"})
+        or absent(up{job="dns-recursion-tcp"})
         or absent(up{job="gateway-https"})
       for: 5m
       labels:
