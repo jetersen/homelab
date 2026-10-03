@@ -18,6 +18,10 @@ are hidden. Its existing API key from Proton Pass is stored in the SOPS-encrypte
 `app/secret.sops.yaml` Secret and injected as `HOMEPAGE_VAR_TRUENAS_KEY`; the
 ConfigMap contains only a placeholder. Other service API widgets are not configured.
 
+TrueNAS connects directly at `https://truenas.lan.jetersen.dev`, independent of
+Envoy. Its certificate is issued and renewed by TrueNAS using Let's Encrypt and
+Cloudflare DNS validation. The DNS token must allow the NAS's outbound IP addresses.
+
 Validate locally with:
 
 ```sh

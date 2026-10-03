@@ -74,12 +74,12 @@
       namespace: konflate
       app: konflate
   - TrueNAS:
-      href: https://192.168.1.2/
+      href: https://truenas.lan.jetersen.dev/
       description: Network storage
       icon: truenas.png
       widget:
         type: truenas
-        url: https://192.168.1.2
+        url: https://truenas.lan.jetersen.dev
         version: 2
         key: "{{HOMEPAGE_VAR_TRUENAS_KEY}}"
         enablePools: true
