@@ -8,6 +8,10 @@ spec:
     kind: OCIRepository
     name: forgejo
   values:
+    dnsConfig:
+      options:
+        - name: ndots
+          value: "1"
     replicaCount: 1
     strategy:
       type: Recreate

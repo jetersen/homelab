@@ -12,6 +12,10 @@ spec:
       labels:
         app.kubernetes.io/name: openspeedtest
     spec:
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "1"
       containers:
         - name: openspeedtest
           image: openspeedtest/latest:v2.0.6
