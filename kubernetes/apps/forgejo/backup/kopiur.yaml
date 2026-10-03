@@ -121,7 +121,7 @@ spec:
                   type: RuntimeDefault
               containers:
               - name: backup
-                image: docker.io/library/python:3.14.5-slim@sha256:c845af9399020c7e562969a13689e929074a10fd057acd1b1fad06a2fb068e97
+                image: docker.io/library/python:3.14.8-slim@sha256:89fb7d3da20043c370643435258bdd7ab755d326d359001d02988ed15ae5219e
                 command:
                 - python3
                 - /scripts/stage-forgejo.py
