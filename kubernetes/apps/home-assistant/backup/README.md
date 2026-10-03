@@ -39,16 +39,11 @@ through GitOps by setting the workflow CronJob's `spec.suspend` to `true`.
 
 ## Restore
 
-Restore into a new volume using a cutoff between backup completion and now:
-
-```bash
-python infrastructure/backup/prepare-pilot-restore.py home-assistant \
-  --as-of EXPLICIT_RFC3339_TIMESTAMP > /tmp/home-assistant-pilot-restore.yaml
-kubectl --context homelab apply -f /tmp/home-assistant-pilot-restore.yaml
-```
-
-Use `zigbee2mqtt` instead for a Zigbee restore. Verify the restored archives before
-following the application's recovery procedure. Home Assistant needs the saved
+Follow the [isolated restore procedure](/kubernetes/cluster/volsync/README.md#isolated-restores)
+with application `home-assistant` or `zigbee2mqtt` in namespace `home-assistant`.
+Use the application's S3 connection and a new PVC after verifying completed
+replication. Verify the restored archives before following the application's
+recovery procedure. Home Assistant needs the saved
 emergency key. Keep Zigbee recovery tests disconnected from the live coordinator.
 
 References:

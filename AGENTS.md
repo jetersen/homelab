@@ -12,6 +12,7 @@
 ## Git
 
 - Use conventional commits.
+- Keep one-off setup, migration, inspection, and recovery helpers outside the repository. Commit scripts only when maintained automation or deployed workloads require them.
 
 ## Documentation and operational records
 

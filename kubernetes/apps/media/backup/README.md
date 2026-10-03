@@ -9,12 +9,8 @@ Both destinations share the same retention policy.
 ## Setup
 
 Configure the credentials described in the [backup infrastructure guide](/infrastructure/backup/README.md),
-then generate Sonarr's encrypted connection:
-
-```bash
-BACKUP_S3_CONFIGURED=true npm exec -- varlock run -- \
-  python infrastructure/backup/prepare-kubernetes-secrets.py --application sonarr
-```
+then prepare Sonarr's SOPS-encrypted connections using the existing backup Secret
+manifests as the schema. Preserve both NAS and S3 connections.
 
 Keep recovery credentials outside the cluster and repository. Backup archives
 contain credentials and must remain private.
@@ -35,13 +31,9 @@ to `true`. Maintenance schedules and backup alerts are managed separately.
 
 ## Restore
 
-Restore into a new volume using a cutoff between backup completion and now:
-
-```bash
-python infrastructure/backup/prepare-pilot-restore.py sonarr \
-  --as-of EXPLICIT_RFC3339_TIMESTAMP > /tmp/sonarr-pilot-restore.yaml
-kubectl --context homelab apply -f /tmp/sonarr-pilot-restore.yaml
-```
+Follow the [isolated restore procedure](/kubernetes/cluster/volsync/README.md#isolated-restores)
+with application `sonarr` in namespace `media`. Restore from the `sonarr-kopia`
+S3 connection into a new PVC after verifying completed replication.
 
 Verify the restored archive, then follow [Sonarr's restore instructions](https://wiki.servarr.com/sonarr/faq#how-do-i-backuprestore-my-sonarr).
 Block outbound traffic before starting a recovery test so it cannot contact live

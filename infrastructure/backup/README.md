@@ -40,7 +40,8 @@ Keep `BACKUP_S3_CONFIGURED=false` until the generated S3 credentials are stored.
 
 Provider inputs and credential outputs are secret in Pulumi. Do not use
 `--show-secrets` interactively or export decrypted state into the repository.
-The credential transfer helper captures decrypted outputs only in memory.
+For credential transfer, capture decrypted outputs only in memory and pass values
+to the password manager through stdin. Keep any one-off helper outside the repository.
 
 ## State and deployment
 
@@ -83,16 +84,11 @@ lifecycle policy, user, access policy, and credential. Lifecycle expiry permanen
 removes superseded versions after the retention period; keep independent recovery
 copies for longer retention.
 
-Run the credential transfer in your own terminal from the repository root:
-
-```bash
-BACKUP_IAC_CONFIGURED=true PULUMI_STATE_CONFIGURED=false npm exec -- varlock run -- python infrastructure/backup/store-backup-secrets.py --pulumi-state --store
-```
-
-This creates `Personal/OVHcloud Homelab Pulumi S3`, with the state access key in
-username and secret key in password. It preserves an existing login and refuses
-ambiguous names. Agents must not run storing mode. Without `--store`, it checks
-item names without reading credentials or creating anything.
+Store Pulumi's `stateAccessKeyId` and `stateSecretAccessKey` outputs in
+`Personal/OVHcloud Homelab Pulumi S3`, with the access key in username and secret
+key in password. Perform the transfer in your own terminal through Varlock with
+`BACKUP_IAC_CONFIGURED=true` and `PULUMI_STATE_CONFIGURED=false`. Preserve an
+existing login and resolve duplicate names before storing credentials.
 
 Before migrating, pause Pulumi updates and copy the entire local backend and
 `Pulumi.homelab.yaml` to protected storage outside the repository. Keep the current
@@ -129,27 +125,20 @@ encryption passphrase outside the cluster.
 
 ## S3 credentials and Kubernetes connections
 
-Run the transfer in your own terminal from the repository root:
-
-```bash
-BACKUP_IAC_CONFIGURED=true npm exec -- varlock run -- python infrastructure/backup/store-backup-secrets.py --store
-```
-
-The helper creates `Personal/OVHcloud Homelab S3` with the access key in username
-and secret key in password, and `Personal/Homelab Kopia` with a separate generated
-repository password. It passes values through memory and stdin, preserves existing
-logins, and refuses duplicate names or incompatible item types. Without `--store`,
-it checks item names without creating anything. Agents must not run storing mode.
+Store Pulumi's `accessKeyId` and `secretAccessKey` outputs in
+`Personal/OVHcloud Homelab S3`, with the access key in username and secret key in
+password. Create `Personal/Homelab Kopia` with a separate generated repository
+password. Perform the transfer in your own terminal through Varlock with
+`BACKUP_IAC_CONFIGURED=true`. Preserve existing logins and repository passwords;
+resolve duplicate names or incompatible item types before storing credentials.
 
 After storing the items, set `BACKUP_S3_CONFIGURED=true` in local Varlock overrides,
-confirm `BACKUP_S3_BUCKET`, and validate Varlock. Generate missing SOPS connections
-only after reviewing the credential references:
-
-```bash
-BACKUP_S3_CONFIGURED=true npm exec -- varlock run -- python infrastructure/backup/prepare-kubernetes-secrets.py
-```
-
-The helper refuses existing manifests and does not write plaintext files.
+confirm `BACKUP_S3_BUCKET`, and validate Varlock. Use the existing application
+Secret manifests as the schema for new connections. Resolve credentials through
+Varlock and encrypt the payload with SOPS using the destination filename and the
+repository's `.sops.yaml` rules. Keep plaintext in memory and verify that protected
+values are encrypted before writing manifests. Review existing connections before
+replacing them.
 See [application backup setup](../../kubernetes/cluster/volsync/README.md) for
 consistency, manual backup, and recovery procedures.
 

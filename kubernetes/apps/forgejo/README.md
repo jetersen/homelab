@@ -62,11 +62,12 @@ backup alerts. A five-minute watchdog resumes a pause older than 25 minutes,
 including after an abruptly terminated backup pod. Copy or validation failure
 resumes the application and prevents upload.
 
-Provision an empty, separate staging dataset with room for both stores. Run
-`infrastructure/forgejo/prepare.py` through Varlock with existing S3 backup
-settings enabled and protected NAS destination records. The generator refuses
-to replace existing manifests. Initialize the dedicated S3 repository once
-using the backup runner's `--initialize` option; scheduled jobs only connect
+Provision an empty, separate staging dataset with room for both stores. Use the
+existing SOPS manifests as the schema for NAS volumes, administrator credentials,
+and the backup connection. Resolve credentials through Varlock, keep NAS destination
+records private, and encrypt protected values before writing manifests. Review
+existing storage and credentials before replacing them. Initialize the dedicated
+S3 repository once using the backup runner's `--initialize` option; scheduled jobs only connect
 and fail if the repository is unavailable.
 
 For recovery, suspend the backup and recovery CronJobs and the HelmRelease,
