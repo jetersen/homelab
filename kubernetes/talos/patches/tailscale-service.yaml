@@ -10,6 +10,6 @@ environment:
   - TS_ACCEPT_DNS=false
   - TS_AUTH_ONCE=true
   - TS_BOOT_TIMEOUT=15m
-  - TS_ROUTES=192.168.1.10/32,192.168.1.20/32,192.168.1.21/32
+  - TS_ROUTES=192.168.1.10/32,192.168.1.20/32,192.168.1.21/32,fde2:b84e:c4cd:1::1000/128
   - TS_EXTRA_ARGS=--accept-routes=false --advertise-tags=tag:k8s-subnet-router
   - TS_TUN_DISABLE_UDP_GRO=true

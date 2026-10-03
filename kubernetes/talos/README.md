@@ -30,8 +30,17 @@ the requested DHCPv6 delegation size. See the
 TrueNAS also needs a persistent route for the public Pod subnet through the
 node's LAN ULA address. This keeps Pod-to-NAS traffic symmetric instead of
 sending replies through the gateway, which can break TCP DNS.
-Other LAN clients need the same symmetric routing for direct IPv6 Pod access;
-use the existing ingress addresses until that path is configured and tested.
+Direct IPv6 Pod access from other LAN clients requires symmetric routing.
+Application clients use Envoy ingress instead, so they do not need Pod routes.
+
+Envoy serves IPv4 at `192.168.1.20` and internal IPv6 at
+`fde2:b84e:c4cd:1::1000`. Cilium allocates that ULA from an Envoy-only /128
+pool and advertises it through NDP on the physical LAN interface. Keep this
+address outside the DHCPv6 allocation range. Envoy uses dual-stack listeners
+and Cluster external traffic policy, as required by Cilium L2 announcements.
+Internal DNS publishes both addresses after LAN and tailnet validation; public
+DNS continues to target the existing public entry point. The IPv6 ingress /128
+is also advertised by Tailscale, with the same allowed service ports as IPv4.
 
 Include the public Pod subnet in source-IP restrictions for outbound API
 credentials, including the Cloudflare token shared by cert-manager and
