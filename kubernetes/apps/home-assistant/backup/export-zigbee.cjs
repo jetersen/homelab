@@ -1,4 +1,4 @@
-// Run only through the suspended export CronJob. Never log MQTT payloads or ZIP contents.
+// Run through the Kopiur pre-backup Job. Never log MQTT payloads or ZIP contents.
 const fs = require('node:fs');
 const crypto = require('node:crypto');
 const {unzipSync, zipSync} = require('fflate');

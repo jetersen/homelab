@@ -95,6 +95,11 @@ repository and apply it with Kubernetes context `homelab`. Wait for
 `status.phase: Completed`, then validate the recovered archive or application
 state before starting an isolated recovery test.
 
+An unprivileged restore can write a fresh PVC through `fsGroup`, but cannot change
+its root directory metadata. Keep the default `ignorePermissionErrors: true` for
+that case, then separately check restored file hashes, modes, and ownership.
+Do not treat an ignored permission error as proof of successful recovery.
+
 Deletion of a produced Snapshot defaults to deleting its Kopia snapshot too.
 Use `deletionPolicy: Retain` for recovery points that must survive object cleanup.
 Deleting a Repository does not erase its underlying storage. Before retiring a
