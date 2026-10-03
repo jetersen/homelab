@@ -41,6 +41,10 @@ spec:
         create: false
         name: kube-system
     ipv4NativeRoutingCIDR: 172.22.0.0/16
+    ipv6:
+      enabled: true
+    ipv6NativeRoutingCIDR: 2a13:e747:b7be:2200::/56
+    enableIPv6Masquerade: false
     kubeProxyReplacement: true
     kubeProxyReplacementHealthzBindAddr: 0.0.0.0:10256
     l2announcements:
