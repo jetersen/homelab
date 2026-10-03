@@ -38,20 +38,6 @@ spec:
   shutdown:
     drainTimeout: 180s
 ---
-# Keep QUIC datagrams separate when forwarding from the Tailscale TUN to
-# the cluster Service; UDP GRO otherwise produces oversized UDP packets.
-apiVersion: tailscale.com/v1alpha1
-kind: ProxyClass
-metadata:
-  name: envoy-ingress
-spec:
-  statefulSet:
-    pod:
-      tailscaleContainer:
-        env:
-          - name: TS_TUN_DISABLE_UDP_GRO
-            value: "true"
----
 # yaml-language-server: $schema=https://kubernetes-schemas.pages.dev/gateway.envoyproxy.io/backendtrafficpolicy_v1alpha1.json
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: BackendTrafficPolicy
