@@ -31,3 +31,17 @@ docker build --target check -f infrastructure/backup/image/Dockerfile .
 The default Dockerfile target builds the runtime image without running tests or
 vet. Go module and compiler caches persist in BuildKit on each runner; separate
 runners do not share those caches.
+
+## Renovate registry authentication
+
+Forgejo Renovate uses its bot integration for repository updates and a separate
+Authorized Integration owned by `jetersen` for private registry lookups. The
+package integration grants only `read:package`; store its audience in the
+repository variable `RENOVATE_PACKAGES_AUDIENCE`. Restrict its claims to
+`renovate.yaml`, repository ID `1`, owner ID `1`, `refs/heads/main`, and the
+`schedule` and `workflow_dispatch` events.
+
+The workflow supplies this short-lived token through a Docker `hostRules` entry
+for `forgejo.jetersen.dev`. Forgejo API authentication alone does not authenticate
+Docker lookups. Use the workflow's `dry_run` input to verify dependency lookups
+without creating branches or pull requests.
