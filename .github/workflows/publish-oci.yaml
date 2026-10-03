@@ -22,7 +22,6 @@ jobs:
       - name: Check the backup helper
         run: docker build --target check -f infrastructure/backup/image/Dockerfile .
   publish:
-    needs: check
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-26.04
     timeout-minutes: 20
