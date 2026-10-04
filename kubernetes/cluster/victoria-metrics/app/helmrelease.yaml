@@ -42,6 +42,10 @@ spec:
               - url: http://ntfy.monitoring.svc.cluster.local:8080/homelab-alerts?template=homelab
                 send_resolved: true
                 http_config:
+                  http_headers:
+                    Icon:
+                      values:
+                        - https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/kubernetes.png
                   authorization:
                     type: Bearer
                     credentials_file: /etc/vm/secrets/ntfy-alertmanager-auth/token

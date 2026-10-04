@@ -12,6 +12,8 @@ recoveries use low priority. Alertmanager waits 30 seconds to group new alerts,
 sends group changes at five-minute intervals, and repeats ongoing alerts every
 12 hours. A resolved alert means its expression stopped firing; for failed Jobs,
 this can also happen when Kubernetes deletes the Job.
+Alerts show a Kubernetes icon and Helm activity shows a Flux icon. The Android
+client downloads these PNGs from the Dashboard Icons collection on jsDelivr.
 
 Flux sends HelmRelease events through the internal Chaski webhook. Chaski
 forwards only successful installs, upgrades, and rollbacks to the low-priority

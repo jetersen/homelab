@@ -44,3 +44,4 @@ spec:
           headers:
             Title: '{{ .payload.involvedObject.namespace }}/{{ .payload.involvedObject.name }}: {{ .payload.reason }}'
             Priority: "2"
+            Icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/flux-cd.png
