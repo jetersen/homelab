@@ -2,6 +2,12 @@
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
   packageRules: [
     {
+      description: "Keep Kubernetes and TrueNAS Technitium images aligned",
+      groupName: "Technitium",
+      matchDatasources: ["docker"],
+      matchPackageNames: ["technitium/dns-server", "docker.io/technitium/dns-server"],
+    },
+    {
       description: "Flux Group",
       groupName: "Flux",
       matchDatasources: ["docker"],

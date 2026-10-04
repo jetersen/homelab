@@ -11,6 +11,10 @@ Forgejo and GitHub run three independent workflows on `main`:
 All three support manual dispatch. Go checks do not gate either publisher.
 The shared actions under `.ci/actions/` publish to the workflow's registry.
 
+Forgejo also runs `truenas.yaml` for the [TrueNAS Pulumi project](../infrastructure/truenas/README.md):
+PRs receive a preview, and changes on `main` are applied using the shared S3 state
+backend. It deploys independently of Flux.
+
 Publishers retain immutable `sha-<commit>` tags and advance `main` after
 verification. Flux requires the current branch head. Images allow newer commits
 that leave image inputs unchanged, because unrelated commits do not trigger a

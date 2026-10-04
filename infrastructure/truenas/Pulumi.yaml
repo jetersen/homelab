@@ -1,0 +1,5 @@
+name: homelab-truenas
+description: TrueNAS applications
+runtime: dotnet
+backend:
+  url: s3://jetersen-homelab-pulumi?endpoint=https://s3.de.io.cloud.ovh.net&region=de&s3ForcePathStyle=true&awssdk=v2
