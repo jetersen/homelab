@@ -123,8 +123,8 @@ on Forgejo and selects the entries for the exact deployed release tags. The
 cache refreshes Cilium, Envoy Gateway, Flux, cert-manager, and Talos matrices
 monthly and after source or release changes reach `main`. Renovate maintains the
 selected releases; generated entries record Kubernetes minors and document hashes.
-Flux uses upstream CNCF minor-release notes and preserves minimum Kubernetes
-patches. Cert-manager uses its tested range as the single compatibility range.
+Flux uses upstream CNCF minor-release notes. All compatibility ranges use
+Kubernetes minors; cert-manager uses its tested range.
 Renovate tracks cert-manager release tags, while monthly refreshes read its
 official support table without tracking website commits. Only
 running and newer versions are retained. The policy rejects missing or unavailable

@@ -71,7 +71,6 @@ const catalog = () => ({
       "versions": {
         "v2.9.6": {
           "source": "https://api.github.com/repos/fluxcd/flux2/releases/tags/v2.9.0",
-          "minimumKubernetes": { "1.35": "1.35.0", "1.36": "1.36.0" },
           "sourceSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
           "supportedKubernetes": [
             "1.35",
@@ -147,25 +146,20 @@ test('all five deployed projects constrain the Kubernetes intersection', () => {
   }
 });
 
-test('rejects Enterprise Flux provenance, wrong release lines, and missing patch constraints', () => {
+test('rejects Enterprise Flux provenance and wrong release lines', () => {
   for (const mutate of [
     c => { c.schemaVersion = 2; },
     c => { c.projects.flux.source = 'https://raw.githubusercontent.com/controlplaneio-fluxcd/distribution/v2.9.6/releases/release-v2.9.md'; },
     c => { c.projects.flux.versions['v2.9.6'].source = 'https://api.github.com/repos/fluxcd/flux2/releases/tags/v2.10.0'; },
-    c => { delete c.projects.flux.versions['v2.9.6'].minimumKubernetes; },
-    c => { c.projects.flux.versions['v2.9.6'].minimumKubernetes['1.36'] = '1.35.0'; },
   ]) {
     const value = catalog(); mutate(value);
     assert.throws(() => cachedMatrices(value, liveVersions(badges(), 1050), Date.parse('2026-10-04')));
   }
 });
-test('enforces Flux minimum patches for the running cluster and next-minor proposals', () => {
+test('uses minor compatibility without patch floors for current and next-minor versions', () => {
   const value = catalog(), live = liveVersions(badges(), 1050), now = Date.parse('2026-10-04');
   live.kubernetes = version('1.35.0');
-  value.projects.flux.versions['v2.9.6'].minimumKubernetes['1.35'] = '1.35.1';
-  assert.throws(() => cachedMatrices(value, live, now), /minimum patch/);
-  live.kubernetes = version('1.35.1');
-  assert.doesNotThrow(() => cachedMatrices(value, live, now));
-  const result = policy(live, [['1.35', '1.36']], [live.talos.line], { '1.36': '1.36.2' });
-  assert.equal(result.packageRules[2].allowedVersions, '>=1.35.1 <1.36.0 || >=1.36.2 <1.37.0');
+  const matrices = cachedMatrices(value, live, now);
+  const result = policy(live, Object.values(matrices).map(entry => entry.supportedKubernetes));
+  assert.equal(result.packageRules[2].allowedVersions, '>=1.35.0 <1.37.0');
 });

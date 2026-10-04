@@ -64,22 +64,14 @@ export function cachedMatrices(catalog, live, now = Date.now()) {
     }
     if (id === 'flux') {
       const expected = `https://api.github.com/repos/fluxcd/flux2/releases/tags/v${live.flux.line}.0`;
-      const minimums = entry.minimumKubernetes;
-      if (entry.source !== expected || !minimums || Object.keys(minimums).length !== versions.length ||
-          versions.some(line => version(minimums[line]).line !== line)) {
-        throw new Error('Invalid upstream Flux release provenance or minimum patch versions');
-      }
-      const minimum = minimums[live.kubernetes.line];
-      if (minimum && live.kubernetes.patch < version(minimum).patch) {
-        throw new Error('Running Kubernetes is below the Flux minimum patch version');
-      }
+      if (entry.source !== expected) throw new Error('Invalid upstream Flux release provenance');
     }
     result[id] = { source: data.source, ...entry };
   }
   return result;
 }
 
-export function policy(live, matrices, talosLines = [live.talos.line], kubernetesMinimums = {}) {
+export function policy(live, matrices, talosLines = [live.talos.line]) {
   if (!matrices.length) throw new Error('Compatibility matrices are required');
   const supported = matrices.reduce((common, list) => common.filter(v => list.includes(v)));
   if (!supported.includes(live.kubernetes.line)) {
@@ -92,14 +84,10 @@ export function policy(live, matrices, talosLines = [live.talos.line], kubernete
     const next = `${current.major}.${current.minor + 1}`;
     const allowNext = name === 'talos' ? talosLines.includes(next) : supported.includes(next);
     const upper = `${current.major}.${current.minor + (allowNext ? 2 : 1)}.0`;
-    let allowedVersions = `>=${current.text} <${upper}`;
-    if (name === 'kubernetes' && allowNext && kubernetesMinimums[next]) {
-      allowedVersions = `>=${current.text} <${next}.0 || >=${kubernetesMinimums[next]} <${upper}`;
-    }
     packageRules.push({
       description: `Constrain ${name} to the live cluster and released compatibility matrices`,
       matchPackageNames: packages[name],
-      allowedVersions,
+      allowedVersions: `>=${current.text} <${upper}`,
       automerge: false,
     }, {
       description: `Allow ${name} patches only on the live minor`,
@@ -134,7 +122,7 @@ export async function generate(base = 'https://upgrade-versions.lan.jetersen.dev
       Object.entries(catalog.projects.talos.versions)
         .filter(([tag, entry]) => /^v\d+\.\d+$/.test(tag) && !entry.unavailable &&
           Array.isArray(entry.supportedKubernetes) && entry.supportedKubernetes.includes(live.kubernetes.line))
-        .map(([tag]) => tag.slice(1)), matrices.flux.minimumKubernetes),
+        .map(([tag]) => tag.slice(1))),
   };
 }
 
