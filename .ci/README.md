@@ -91,9 +91,10 @@ without creating branches or pull requests. Scheduled runs and manual runs with
 ## Live upgrade policy
 
 The Forgejo Renovate workflow runs `renovate-upgrade-policy.mjs` before starting
-Renovate. Kromgo at `https://upgrade-versions.lan.jetersen.dev` exposes three
+Renovate. Kromgo at `https://upgrade-versions.lan.jetersen.dev` exposes five
 fixed queries over VictoriaMetrics: the ready node's Talos/Kubernetes versions
-and ready Cilium/Envoy Gateway container image versions. It exposes no arbitrary
+ready Cilium/Envoy Gateway/cert-manager container image versions, and the
+reconciled Flux distribution revision. It exposes no arbitrary
 query API and needs no Kubernetes credentials. The runner needs LAN or tailnet
 access to this hostname. No public DNS record is published.
 
@@ -102,8 +103,10 @@ Missing, mixed, or older-than-two-minute results stop the workflow. The script
 reads the public
 [kubernetes-compatibility cache](https://forgejo.jetersen.dev/jetersen/kubernetes-compatibility)
 on Forgejo and selects the entries for the exact deployed release tags. The
-cache refreshes upstream Cilium and Envoy documentation every six hours and
-records source URLs and hashes. The policy rejects missing or unavailable
+cache refreshes Cilium, Envoy Gateway, Flux, cert-manager, and Talos matrices
+every six hours. Renovate maintains one source URL per project; generated
+version entries record supported Kubernetes minors and document hashes. Only
+running and newer versions are retained. The policy rejects missing or unavailable
 released rows, malformed entries, and catalogs older than seven days. Short
 GitHub outages therefore do not block runs while the cache remains fresh.
 
@@ -113,6 +116,8 @@ so the policy uses Renovate's existing Forgejo token to read the cache. The
 restricted `renovate` user needs read-only collaborator access to the cache repo.
 
 The workflow supplies generated rules through `RENOVATE_PACKAGE_RULES`.
+Kubernetes must satisfy all five deployed matrices. A Talos minor proposal
+also needs a cached matrix supporting the current Kubernetes minor.
 Repository rules merge afterward: do not override the generated version bounds
 or patch automerge rules in presets. The bounds exclude downgrades and skipped
 minor upgrades. Only patches on the live minor auto-merge; the repository adds
