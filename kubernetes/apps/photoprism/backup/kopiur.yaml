@@ -16,7 +16,7 @@ spec:
   concurrency:
     maxConcurrentJobs: 1
   create:
-    enabled: true
+    enabled: false
   encryption:
     passwordSecretRef:
       key: KOPIA_PASSWORD
@@ -278,6 +278,6 @@ spec:
     name: photoprism-backup
   sync:
     deleteExtra: true
-    mustExist: false
+    mustExist: true
     parallel: 4
     update: true
