@@ -31,22 +31,17 @@ func copyFile(ctx context.Context, source, target string, info os.FileInfo) erro
 		return err
 	}
 	defer in.Close()
-	out, err := os.OpenFile(target, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
-	if err != nil {
-		return err
-	}
-	_, copyErr := io.Copy(out, contextReader{ctx, in})
-	closeErr := out.Close()
-	if copyErr != nil {
-		return copyErr
-	}
-	if closeErr != nil {
-		return closeErr
-	}
-	if err := os.Chmod(target, info.Mode()); err != nil {
-		return err
-	}
-	return os.Chtimes(target, info.ModTime(), info.ModTime())
+	// Replace the directory entry: Git objects may already be staged read-only.
+	// An interrupted copy must also leave the previous staged file intact.
+	return atomicExport(ctx, target, func(out *os.File) error {
+		if _, err := io.Copy(out, contextReader{ctx, in}); err != nil {
+			return err
+		}
+		if err := out.Chmod(info.Mode()); err != nil {
+			return err
+		}
+		return os.Chtimes(out.Name(), info.ModTime(), info.ModTime())
+	}, nil)
 }
 
 func digest(ctx context.Context, path string) ([32]byte, error) {

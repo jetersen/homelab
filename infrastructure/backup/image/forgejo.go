@@ -213,7 +213,7 @@ func synchronize(ctx context.Context, source, target string, live bool) error {
 func (l forgejoLayout) copy(ctx context.Context, live bool) error {
 	for _, store := range []struct{ source, name string }{{l.local, "local"}, {l.nas, "nas"}} {
 		if err := synchronize(ctx, store.source, filepath.Join(l.stage, "current", store.name), live); err != nil && !(live && os.IsNotExist(err)) {
-			return err
+			return fmt.Errorf("synchronize %s store: %w", store.name, err)
 		}
 	}
 	return nil
@@ -308,7 +308,7 @@ func stageForgejo(ctx context.Context, api forgejoAPI, copy, validate func(conte
 	}
 	fmt.Println("Forgejo stopped; synchronizing both stores.")
 	if err := copy(ctx); err != nil {
-		return err
+		return fmt.Errorf("synchronize stopped Forgejo stores: %w", err)
 	}
 	after, err := api.Deployment(ctx)
 	if err != nil {
@@ -321,5 +321,8 @@ func stageForgejo(ctx context.Context, api forgejoAPI, copy, validate func(conte
 	if after.Spec.Replicas != 0 || pods != 0 || after.Metadata.Annotations[pauseAnnotation] != marker {
 		return backupError("Forgejo restarted during staging; refusing an inconsistent backup.")
 	}
-	return validate(ctx)
+	if err := validate(ctx); err != nil {
+		return fmt.Errorf("validate staged Forgejo database: %w", err)
+	}
+	return nil
 }

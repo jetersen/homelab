@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -77,6 +78,65 @@ func TestSynchronize(t *testing.T) {
 	}
 	if link, err := os.Readlink(filepath.Join(target, "source-link")); err != nil || link != "../outside" {
 		t.Fatal("Source symlink was followed")
+	}
+}
+
+func TestSynchronizeReadOnlyFile(t *testing.T) {
+	for _, live := range []bool{true, false} {
+		t.Run(fmt.Sprintf("live=%t", live), func(t *testing.T) {
+			root := t.TempDir()
+			source, target := filepath.Join(root, "source"), filepath.Join(root, "target")
+			from, to := filepath.Join(source, "pack"), filepath.Join(target, "pack")
+			writeFixture(t, from, []byte("new"))
+			old := "old"
+			if live {
+				// Git can refresh a pack's timestamp without changing its contents.
+				old = "new"
+			}
+			writeFixture(t, to, []byte(old))
+			mtime := time.Unix(1700000000, 123456789)
+			for path, stamp := range map[string]time.Time{from: mtime, to: mtime.Add(-time.Hour)} {
+				if err := os.Chmod(path, 0444); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.Chtimes(path, stamp, stamp); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if err := synchronize(context.Background(), source, target, live); err != nil {
+				t.Fatal(err)
+			}
+			info, err := os.Stat(to)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if string(readFixture(t, to)) != "new" || info.Mode().Perm() != 0444 || !info.ModTime().Equal(mtime) {
+				t.Fatal("Staged content or metadata differs from source")
+			}
+		})
+	}
+}
+
+func TestCopyFileCancellationPreservesDestination(t *testing.T) {
+	root := t.TempDir()
+	source, target := filepath.Join(root, "source"), filepath.Join(root, "target")
+	writeFixture(t, source, []byte("new"))
+	writeFixture(t, target, []byte("previous backup"))
+	info, err := os.Stat(source)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if err := copyFile(ctx, source, target, info); !errors.Is(err, context.Canceled) {
+		t.Fatalf("Expected cancellation, got %v", err)
+	}
+	if string(readFixture(t, target)) != "previous backup" {
+		t.Fatal("Interrupted copy damaged the previous staged file")
+	}
+	entries, err := os.ReadDir(root)
+	if err != nil || len(entries) != 2 {
+		t.Fatalf("Temporary copy was not removed: %v", err)
 	}
 }
 

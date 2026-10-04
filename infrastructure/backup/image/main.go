@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -24,17 +23,17 @@ func run(ctx context.Context, args []string) error {
 	case "forgejo", "forgejo-recover":
 		api, err := newKubernetes()
 		if err != nil {
-			return err
+			return fmt.Errorf("initialize Kubernetes client: %w", err)
 		}
 		if args[0] == "forgejo-recover" {
 			return recoverForgejo(ctx, api, time.Now())
 		}
 		layout := forgejoLayout{"/source/local", "/source/nas", "/stage", "/cache"}
 		if err := layout.prepare("/proc/self/mountinfo"); err != nil {
-			return err
+			return fmt.Errorf("prepare Forgejo staging: %w", err)
 		}
 		if err := layout.copy(ctx, true); err != nil {
-			return err
+			return fmt.Errorf("pre-copy live Forgejo stores: %w", err)
 		}
 		return stageForgejo(ctx, api, func(ctx context.Context) error { return layout.copy(ctx, false) },
 			func(ctx context.Context) error { return layout.validate(ctx) })
@@ -55,12 +54,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	if err := run(ctx, os.Args[1:]); err != nil {
-		var safe backupError
-		if errors.As(err, &safe) {
-			fmt.Fprintln(os.Stderr, safe)
-		} else {
-			fmt.Fprintln(os.Stderr, "Backup failed; private diagnostics withheld.")
-		}
+		fmt.Fprintf(os.Stderr, "Backup failed: %v\n", err)
 		os.Exit(1)
 	}
 }
