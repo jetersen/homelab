@@ -11,6 +11,7 @@ resources:
   - webhook-test-filter.yaml
   - receiver.yaml
   - forgejo-receiver.yaml
+  - forgejo-oci-receiver.yaml
   - source.yaml
 components:
   - ../../../components/helmrelease-defaults

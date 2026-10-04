@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/notification.toolkit.fluxcd.io/receiver_v1.json
+apiVersion: notification.toolkit.fluxcd.io/v1
+kind: Receiver
+metadata:
+  name: forgejo-oci-receiver
+  namespace: flux-system
+spec:
+  # Forgejo sends GitHub-compatible event and HMAC signature headers.
+  type: github
+  events: [package]
+  secretRef:
+    name: webhook-token
+  # Tag overwrites also emit "created". Ignore immutable tags and other packages.
+  resourceFilter: >-
+    req.action == 'created' &&
+    req.package.owner.login == 'jetersen' &&
+    req.package.type == 'container' &&
+    req.package.name == 'homelab/flux' &&
+    req.package.version == 'main'
+  resources:
+    - apiVersion: source.toolkit.fluxcd.io/v1
+      kind: OCIRepository
+      name: homelab
+      namespace: flux-system
