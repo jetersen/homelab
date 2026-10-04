@@ -11,6 +11,12 @@
   ],
   "packageRules": [
     {
+      "description": "TrueNAS SDK upgrades use GitHub release assets and a reviewed lockfile update",
+      "matchDatasources": ["nuget"],
+      "matchPackageNames": ["Jetersen.Pulumi.TrueNas"],
+      "enabled": false
+    },
+    {
       "description": "GitHub Actions: prefer the latest update over separate major and minor PRs",
       "matchManagers": [
         "github-actions"

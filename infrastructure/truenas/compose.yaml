@@ -1,0 +1,20 @@
+services:
+  dns-server:
+    image: docker.io/technitium/dns-server:15.6.0
+    container_name: dns-server
+    hostname: dns-server
+    network_mode: host
+    restart: unless-stopped
+    environment:
+      - DNS_SERVER_DOMAIN=nas.technitium.lan.jetersen.dev
+      - DNS_SERVER_WEB_SERVICE_HTTP_PORT=5380
+      - DNS_SERVER_WEB_SERVICE_HTTPS_PORT=53443
+      - DNS_SERVER_WEB_SERVICE_ENABLE_HTTPS=false
+      - DNS_SERVER_LOG_USING_LOCAL_TIME=true
+      - DNS_SERVER_LOG_FOLDER_PATH=/var/log/technitium/dns
+    volumes:
+      - config:/etc/dns
+      - logs:/var/log/technitium/dns
+volumes:
+  config:
+  logs:
