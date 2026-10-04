@@ -42,6 +42,18 @@ spec:
             == 1))) and on() (count(max by (image_spec) (timestamp(kube_pod_container_info{namespace="kube-system",container="envoy-gateway"})
             and on(namespace,pod,container) (kube_pod_container_status_ready{namespace="kube-system",container="envoy-gateway"}
             == 1))) == 1)
+        - id: flux
+          query: >-
+            (max by (revision) (timestamp(flux_instance_info{name="flux",exported_namespace="flux-system",ready="True"})))
+            and on() (count(max by (revision) (timestamp(flux_instance_info{name="flux",exported_namespace="flux-system",ready="True"})))
+            == 1)
+        - id: cert-manager
+          query: >-
+            (max by (image_spec) (timestamp(kube_pod_container_info{namespace="cert-manager",container="cert-manager-controller"})
+            and on(namespace,pod,container) (kube_pod_container_status_ready{namespace="cert-manager",container="cert-manager-controller"}
+            == 1))) and on() (count(max by (image_spec) (timestamp(kube_pod_container_info{namespace="cert-manager",container="cert-manager-controller"})
+            and on(namespace,pod,container) (kube_pod_container_status_ready{namespace="cert-manager",container="cert-manager-controller"}
+            == 1))) == 1)
     httpRoute:
       enabled: true
       annotations:
