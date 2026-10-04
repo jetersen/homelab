@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/operator.victoriametrics.com/vmprobe_v1beta1.json
 apiVersion: operator.victoriametrics.com/v1beta1
 kind: VMProbe
 metadata:
@@ -24,6 +25,7 @@ spec:
       - http://sonarr.media.svc.cluster.local:8989/ping
       - http://qbittorrent.media.svc.cluster.local:8080/
 ---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/operator.victoriametrics.com/vmprobe_v1beta1.json
 apiVersion: operator.victoriametrics.com/v1beta1
 kind: VMProbe
 metadata:
@@ -42,6 +44,7 @@ spec:
       - 192.168.1.2:2049
       - mosquitto.home-assistant.svc.cluster.local:1883
 ---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/operator.victoriametrics.com/vmprobe_v1beta1.json
 apiVersion: operator.victoriametrics.com/v1beta1
 kind: VMProbe
 metadata:
@@ -61,6 +64,7 @@ spec:
       - 192.168.1.2:53
       - 192.168.1.1:53
 ---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/operator.victoriametrics.com/vmprobe_v1beta1.json
 apiVersion: operator.victoriametrics.com/v1beta1
 kind: VMProbe
 metadata:
@@ -80,6 +84,7 @@ spec:
       - https://grafana.jetersen.dev/
 
 ---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/operator.victoriametrics.com/vmprobe_v1beta1.json
 apiVersion: operator.victoriametrics.com/v1beta1
 kind: VMProbe
 metadata:
@@ -99,6 +104,7 @@ spec:
       - 192.168.1.1:53
 
 ---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/operator.victoriametrics.com/vmprobe_v1beta1.json
 apiVersion: operator.victoriametrics.com/v1beta1
 kind: VMProbe
 metadata:

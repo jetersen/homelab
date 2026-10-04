@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/core/persistentvolume_v1.json
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -39,4 +40,5 @@ sops:
     version: 3.13.3
 
 ---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/core/persistentvolumeclaim_v1.json
 {"apiVersion": "v1", "kind": "PersistentVolumeClaim", "metadata": {"name": "sonarr-nas-backup", "namespace": "media", "annotations": {"kustomize.toolkit.fluxcd.io/prune": "disabled"}}, "spec": {"accessModes": ["ReadWriteMany"], "storageClassName": "", "volumeName": "sonarr-nas-backup", "resources": {"requests": {"storage": "100Gi"}}}}

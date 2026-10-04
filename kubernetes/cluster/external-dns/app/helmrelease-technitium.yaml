@@ -1,5 +1,5 @@
 ---
-# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/helmrelease-helm-v2.json
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/helm.toolkit.fluxcd.io/helmrelease_v2.json
 # Internal DNS tier, 1 of 2. Shares its record set and annotation prefix with
 # external-dns-unifi; only the provider and txtOwnerId differ. external-dns
 # supports one provider per instance, which is the sole reason these are two

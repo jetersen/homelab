@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/external/siderolabs/talos/config.schema.json
 # Talos 1.14 moves component configuration into dedicated documents.
 # Retain authenticated HTTPS metrics and localhost health probe access.
 apiVersion: v1alpha1
@@ -5,16 +6,19 @@ kind: KubeControllerManagerConfig
 extraArgs:
   bind-address: 0.0.0.0
 ---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/external/siderolabs/talos/config.schema.json
 apiVersion: v1alpha1
 kind: KubeSchedulerConfig
 extraArgs:
   bind-address: 0.0.0.0
 ---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/external/siderolabs/talos/config.schema.json
 # Cilium supplies kube-proxy replacement.
 apiVersion: v1alpha1
 kind: KubeProxyConfig
 enabled: false
 ---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/external/siderolabs/talos/config.schema.json
 # Expose metrics only, retaining etcd's authenticated client API settings.
 cluster:
   etcd:

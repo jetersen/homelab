@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/external/siderolabs/talos/config.schema.json
 # Keep etcd peer and client addresses on the LAN when tailscale0 appears.
 # Talos defaults listenSubnets to advertisedSubnets when omitted.
 cluster:
