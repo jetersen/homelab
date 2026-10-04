@@ -1,0 +1,42 @@
+{
+  "TZ": "America/Los_Angeles",
+  "labels": [],
+  "network": {
+    "host_network": true
+  },
+  "resources": {
+    "limits": {
+      "cpus": 1,
+      "memory": 512
+    }
+  },
+  "storage": {
+    "additional_storage": [],
+    "state": {
+      "ix_volume_config": {
+        "acl_enable": false,
+        "dataset_name": "state"
+      },
+      "type": "ix_volume"
+    }
+  },
+  "tailscale": {
+    "accept_dns": false,
+    "accept_routes": false,
+    "additional_envs": [
+      {
+        "name": "TS_BOOT_TIMEOUT",
+        "value": "15m"
+      }
+    ],
+    "advertise_exit_node": false,
+    "advertise_routes": [],
+    "auth_key": "",
+    "auth_once": true,
+    "extra_args": [],
+    "hostname": "truenas",
+    "reset": false,
+    "tailscaled_args": [],
+    "userspace": false
+  }
+}

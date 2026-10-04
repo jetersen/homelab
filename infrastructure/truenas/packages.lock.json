@@ -4,9 +4,9 @@
     "net10.0": {
       "Jetersen.Pulumi.TrueNas": {
         "type": "Direct",
-        "requested": "[0.1.0, )",
-        "resolved": "0.1.0",
-        "contentHash": "eZ3sb1mFdkMDse2DT4Fvg0YT7DOmCQG/cZwYE1RgegCPXqQ+UeP56XeZuuBXyKXxhUrnlIixyEi+yz9vgZKD0Q==",
+        "requested": "[0.2.0-rc.1, )",
+        "resolved": "0.2.0-rc.1",
+        "contentHash": "TX4plW9p/FPYKdFMZBhmdqIfej7XcySc+kZEDER/LLoyQKt5uD9xDHuzc/R0aOny5FkIUC5zxgXx6SrnU4j2aw==",
         "dependencies": {
           "Pulumi": "3.114.1"
         }
@@ -46,6 +46,12 @@
           "Serilog.Sinks.Console": "4.0.1",
           "semver": "3.0.0"
         }
+      },
+      "YamlDotNet": {
+        "type": "Direct",
+        "requested": "[18.1.0, )",
+        "resolved": "18.1.0",
+        "contentHash": "5K+9KFg2TdTl7VXv88Qzi/0lqK6JFoNP3lRuImPYGRV7K/QYklDyTrj4+A+KAki1JsQi6qKY+hDyY7d6WRqjrw=="
       },
       "Ben.Demystifier": {
         "type": "Transitive",
