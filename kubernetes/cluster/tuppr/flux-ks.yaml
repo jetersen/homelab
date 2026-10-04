@@ -7,8 +7,8 @@ metadata:
   labels:
     homelab.jetersen.dev/flux-defaults: enabled
     homelab.jetersen.dev/flux-homelab-source: enabled
+    homelab.jetersen.dev/flux-wait: enabled
 spec:
-  wait: true
   targetNamespace: system-upgrade
   path: ./kubernetes/cluster/tuppr/app
   dependsOn:

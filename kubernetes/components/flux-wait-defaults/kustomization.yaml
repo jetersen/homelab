@@ -7,6 +7,18 @@ patches:
       group: kustomize.toolkit.fluxcd.io
       version: v1
       kind: Kustomization
+      labelSelector: homelab.jetersen.dev/flux-wait=enabled
+    patch: |-
+      apiVersion: kustomize.toolkit.fluxcd.io/v1
+      kind: Kustomization
+      metadata:
+        name: not-used
+      spec:
+        wait: true
+  - target:
+      group: kustomize.toolkit.fluxcd.io
+      version: v1
+      kind: Kustomization
       labelSelector: homelab.jetersen.dev/flux-wait=disabled
     patch: |-
       apiVersion: kustomize.toolkit.fluxcd.io/v1
