@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: tuppr
+spec:
+  releaseName: tuppr
+  chartRef:
+    kind: OCIRepository
+    name: tuppr
+  values:
+    fullnameOverride: tuppr
+    resources:
+      requests:
+        cpu: 20m
+        memory: 64Mi
+      limits:
+        memory: 256Mi
+    controller:
+      logFormat: json
+    monitoring:
+      dashboards:
+        enabled: true

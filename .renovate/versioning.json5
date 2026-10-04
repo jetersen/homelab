@@ -27,17 +27,8 @@
       matchPackageNames: ["siderolabs/talos"],
       versioning: "semver",
     },
-    {
-      description: "Keep Kubernetes within Cilium and Envoy Gateway compatibility limits",
-      matchPackageNames: [
-        "kubernetes/kubernetes",
-        "ghcr.io/siderolabs/kubelet",
-      ],
-      // Cilium 1.20 and Envoy Gateway 1.9 both test Kubernetes through 1.36.
-      // Recheck both matrices before raising this limit:
-      // https://docs.cilium.io/en/stable/network/kubernetes/compatibility/
-      // https://gateway.envoyproxy.io/news/releases/matrix/
-      allowedVersions: "<1.37.0",
-    },
+    // Forgejo injects allowedVersions and live-minor patch automerge rules from
+    // .ci/renovate-upgrade-policy.mjs before starting Renovate. Do not override
+    // those fields here: repository package rules follow the injected rules.
   ],
 }

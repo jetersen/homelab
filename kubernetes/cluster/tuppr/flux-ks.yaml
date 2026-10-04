@@ -1,0 +1,30 @@
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: tuppr
+  namespace: flux-system
+  labels:
+    homelab.jetersen.dev/flux-defaults: enabled
+    homelab.jetersen.dev/flux-homelab-source: enabled
+    homelab.jetersen.dev/flux-wait: enabled
+spec:
+  targetNamespace: system-upgrade
+  path: ./kubernetes/cluster/tuppr/app
+  dependsOn:
+    - name: victoria-metrics-k8s-stack
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: tuppr-upgrades
+  namespace: flux-system
+  labels:
+    homelab.jetersen.dev/flux-defaults: enabled
+    homelab.jetersen.dev/flux-homelab-source: enabled
+    homelab.jetersen.dev/flux-wait: disabled
+spec:
+  path: ./kubernetes/cluster/tuppr/upgrades
+  dependsOn:
+    - name: tuppr

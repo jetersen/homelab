@@ -18,6 +18,16 @@ jobs:
     runs-on: oci-build
     timeout-minutes: 45
     steps:
+      - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify live upgrade compatibility
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test .ci/renovate-upgrade-policy.test.mjs
+          node .ci/renovate-upgrade-policy.mjs "$RUNNER_TEMP/upgrade-package-rules.json"
+          echo "RENOVATE_PACKAGE_RULES=$(cat "$RUNNER_TEMP/upgrade-package-rules.json")" >> "$GITHUB_ENV"
       - name: Authenticate with the Renovate integration
         id: auth
         shell: bash
@@ -87,6 +97,7 @@ jobs:
           export RENOVATE_HOST_RULES
           docker run --rm --pull always \
             -e RENOVATE_TOKEN -e RENOVATE_GITHUB_COM_TOKEN -e RENOVATE_HOST_RULES \
+            -e RENOVATE_PACKAGE_RULES \
             -e RENOVATE_PLATFORM -e RENOVATE_ENDPOINT -e RENOVATE_REPOSITORIES \
             -e RENOVATE_CONFIG_FILE_NAMES -e RENOVATE_ONBOARDING -e RENOVATE_GIT_AUTHOR -e RENOVATE_DRY_RUN \
             ghcr.io/renovatebot/renovate:44.132.2@sha256:0191afbc3937e5316263426fc0ce1450f5c143d42e3f91da8c6f771e317fae51

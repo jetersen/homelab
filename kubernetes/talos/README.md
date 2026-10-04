@@ -61,14 +61,34 @@ Service traffic, DNS over UDP and TCP, and Cilium's outbound source address
 after restart. Add IPv6 load-balancer addresses and DNS records only after LAN
 and tailnet routes are ready.
 
-## Kubernetes upgrades
+## Cluster upgrades
 
-Renovate limits Kubernetes and kubelet updates in
-[versioning.json5](../../.renovate/versioning.json5). Before raising the limit,
-check the Kubernetes compatibility matrices for the Cilium and Envoy Gateway
-release lines selected in their OCIRepository manifests. Use the supported
-range common to both releases; development releases do not establish support
-for the deployed versions.
+Tuppr reconciles the Talos and Kubernetes targets under
+[cluster/tuppr/upgrades](../cluster/tuppr/upgrades). Renovate groups each target
+with its matching version in `talconfig.yaml`. Upgrades may start on Sundays
+between 04:00 and 06:00 Europe/Copenhagen; the window does not stop an upgrade
+already in progress. Single-node upgrades interrupt workloads during reboot.
+Node readiness, Cilium rollout, and CoreDNS availability gate upgrades.
+
+The [API access patch](patches/tuppr-api-access.yaml) grants `os:admin` to Talos
+service accounts in `system-upgrade`. Apply it before installing Tuppr. Keep the
+stored installer URL aligned with the running Factory schematic so Tuppr can
+verify that upgrades preserve extensions and boot customization.
+
+Forgejo checks the live versions through Kromgo and the compatibility matrices
+from the deployed Cilium and Envoy Gateway release tags. Kubernetes must remain
+within their common supported range. Renovate can propose at most the next
+minor; minor upgrades require dashboard approval and manual merge. Only patches
+on the node's live minor can auto-merge, after a three-day release age. See the
+[CI policy](../../.ci/README.md#live-upgrade-policy) for validation and failure
+behavior.
+
+Inspect `TalosUpgrade` and `KubernetesUpgrade` status with context `homelab`.
+Tuppr dashboards and VictoriaMetrics rules cover unavailable, failed, stuck,
+and overdue upgrades. Alert delivery depends on Alertmanager receivers.
+Investigate terminal failures before resetting a plan using Tuppr's documented
+reset annotation or changing its target; a maintenance window alone does not
+retry a failed upgrade.
 
 ## Native Tailscale
 

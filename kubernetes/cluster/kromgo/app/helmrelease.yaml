@@ -1,0 +1,54 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: kromgo
+spec:
+  releaseName: kromgo
+  chartRef:
+    kind: OCIRepository
+    name: kromgo
+  values:
+    fullnameOverride: kromgo
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        memory: 128Mi
+    config:
+      prometheus: http://vmsingle-vm.monitoring.svc.cluster.local:8428
+      gallery:
+        enabled: false
+      cache:
+        enabled: false
+      badges:
+        - id: node
+          query: >-
+            (max by (os_image, kubelet_version) (timestamp(kube_node_info{node="talos01"}) and on(node) (kube_node_status_condition{node="talos01",condition="Ready",status="true"}
+            == 1))) and on() (count(max by (os_image, kubelet_version) (timestamp(kube_node_info{node="talos01"})
+            and on(node) (kube_node_status_condition{node="talos01",condition="Ready",status="true"} == 1))) ==
+            1)
+        - id: cilium
+          query: >-
+            (max by (image_spec) (timestamp(kube_pod_container_info{namespace="kube-system",container="cilium-agent"})
+            and on(namespace,pod,container) (kube_pod_container_status_ready{namespace="kube-system",container="cilium-agent"}
+            == 1))) and on() (count(max by (image_spec) (timestamp(kube_pod_container_info{namespace="kube-system",container="cilium-agent"})
+            and on(namespace,pod,container) (kube_pod_container_status_ready{namespace="kube-system",container="cilium-agent"}
+            == 1))) == 1)
+        - id: envoy
+          query: >-
+            (max by (image_spec) (timestamp(kube_pod_container_info{namespace="kube-system",container="envoy-gateway"})
+            and on(namespace,pod,container) (kube_pod_container_status_ready{namespace="kube-system",container="envoy-gateway"}
+            == 1))) and on() (count(max by (image_spec) (timestamp(kube_pod_container_info{namespace="kube-system",container="envoy-gateway"})
+            and on(namespace,pod,container) (kube_pod_container_status_ready{namespace="kube-system",container="envoy-gateway"}
+            == 1))) == 1)
+    httpRoute:
+      enabled: true
+      annotations:
+        public.external-dns.alpha.kubernetes.io/enabled: 'false'
+      hostnames:
+        - upgrade-versions.lan.jetersen.dev
+      parentRefs:
+        - name: envoy-proxy
+          namespace: kube-system
+          sectionName: https

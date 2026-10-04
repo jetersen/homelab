@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/operator.victoriametrics.com/vmservicescrape_v1beta1.json
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: tuppr
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tuppr
+      app.kubernetes.io/instance: tuppr
+  endpoints:
+    - port: metrics
+      interval: 30s
+      scrapeTimeout: 10s
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/operator.victoriametrics.com/vmrule_v1beta1.json
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+metadata:
+  name: tuppr
+spec:
+  groups:
+    - name: homelab.upgrades
+      rules:
+        - alert: TupprOperatorUnavailable
+          expr: absent(tuppr_build_info) or (up{namespace="system-upgrade",endpoint="metrics"} == 0)
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Tuppr is unavailable; scheduled upgrades cannot be verified
+        - alert: ClusterUpgradeFailed
+          expr: tuppr_upgrades{phase="Failed"} > 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: A {{ $labels.upgrade_type }} upgrade failed and needs intervention
+        - alert: ClusterUpgradeStuck
+          expr: sum by (upgrade_type) (tuppr_upgrades{phase=~"HealthChecking|PreHook|Draining|Upgrading|Rebooting|PostHook"}) > 0
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: A {{ $labels.upgrade_type }} upgrade has been active for over an hour
+        - alert: ClusterUpgradeOverdue
+          expr: sum by (upgrade_type) (tuppr_upgrades{phase!~"Completed|Failed"}) > 0
+          for: 8d
+          labels:
+            severity: warning
+          annotations:
+            summary: A {{ $labels.upgrade_type }} target has not completed within a weekly maintenance cycle

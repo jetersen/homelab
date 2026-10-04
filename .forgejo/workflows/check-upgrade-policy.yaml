@@ -1,0 +1,16 @@
+name: Check upgrade policy
+on:
+  push:
+    branches: [main]
+    paths: ['.ci/renovate-upgrade-policy*.mjs', '.forgejo/workflows/check-upgrade-policy.yaml']
+  pull_request:
+    paths: ['.ci/renovate-upgrade-policy*.mjs', '.forgejo/workflows/check-upgrade-policy.yaml']
+jobs:
+  check:
+    runs-on: oci-build
+    timeout-minutes: 5
+    steps:
+      - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: node --test .ci/renovate-upgrade-policy.test.mjs

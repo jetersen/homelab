@@ -7,6 +7,19 @@
   platformAutomerge: true,
   packageRules: [
     {
+      description: "Separate operating-system and Kubernetes patch updates from reviewed minor upgrades",
+      matchPackageNames: ["siderolabs/talos", "ghcr.io/siderolabs/talos", "kubernetes/kubernetes", "ghcr.io/siderolabs/kubelet"],
+      separateMinorPatch: true,
+      minimumReleaseAge: "3 days",
+    },
+    {
+      description: "Talos and Kubernetes minor or major upgrades need explicit review",
+      matchPackageNames: ["siderolabs/talos", "ghcr.io/siderolabs/talos", "kubernetes/kubernetes", "ghcr.io/siderolabs/kubelet"],
+      matchUpdateTypes: ["major", "minor"],
+      dependencyDashboardApproval: true,
+      automerge: false,
+    },
+    {
       description: "GitHub Actions: wait out fresh releases",
       matchManagers: ["github-actions"],
       matchUpdateTypes: ["minor", "patch", "digest"],
