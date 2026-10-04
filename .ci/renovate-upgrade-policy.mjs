@@ -14,7 +14,7 @@ export function version(value) {
 }
 
 export function liveVersions(badges, now = Date.now() / 1000) {
-  for (const id of ['node', 'cilium', 'envoy']) {
+  for (const id of ['node', 'cilium', 'envoy', 'flux', 'cert-manager']) {
     const badge = badges[id];
     if (badge?.id !== id || typeof badge.result !== 'number' ||
         !Number.isFinite(badge.result) || now - badge.result > 120 || now - badge.result < -30) {
@@ -32,47 +32,53 @@ export function liveVersions(badges, now = Date.now() / 1000) {
     kubernetes: version(badges.node.labels?.kubelet_version),
     cilium: imageVersion('cilium', 'cilium/cilium'),
     envoy: imageVersion('envoy', 'envoyproxy/gateway'),
+    flux: version(/^(v\d+\.\d+\.\d+)@sha256:[a-f0-9]{64}$/.exec(badges.flux.labels?.revision)?.[1]),
+    'cert-manager': imageVersion('cert-manager', 'jetstack/cert-manager-controller'),
   };
 }
 
 export function cachedMatrices(catalog, live, now = Date.now()) {
   const refreshed = Date.parse(catalog?.refreshedAt);
-  if (catalog?.schemaVersion !== 1 || !Number.isFinite(refreshed) ||
+  if (catalog?.schemaVersion !== 2 || !Number.isFinite(refreshed) ||
       now - refreshed > 7 * 24 * 60 * 60 * 1000 || refreshed - now > 300_000) {
     throw new Error('Missing, unsupported, or stale compatibility cache');
   }
   const result = {};
-  for (const [id, project, repository, path] of [
-    ['cilium', 'cilium', 'cilium/cilium', 'Documentation/network/kubernetes/compatibility.rst'],
-    ['envoy', 'envoy-gateway', 'envoyproxy/gateway', 'site/content/en/news/releases/matrix.md'],
+  for (const [id, project, sourcePattern] of [
+    ['cilium', 'cilium', /^https:\/\/raw\.githubusercontent\.com\/cilium\/cilium\/v\d+\.\d+\.\d+\/Documentation\/network\/kubernetes\/compatibility\.rst$/],
+    ['envoy', 'envoy-gateway', /^https:\/\/raw\.githubusercontent\.com\/envoyproxy\/gateway\/v\d+\.\d+\.\d+\/site\/content\/en\/news\/releases\/matrix\.md$/],
+    ['flux', 'flux', /^https:\/\/raw\.githubusercontent\.com\/controlplaneio-fluxcd\/distribution\/v\d+\.\d+\.\d+\/releases\/release-v\d+\.\d+\.md$/],
+    ['cert-manager', 'cert-manager', /^https:\/\/raw\.githubusercontent\.com\/cert-manager\/website\/[a-f0-9]{40}\/content\/docs\/releases\/README\.md$/],
+    ['talos', 'talos', /^https:\/\/raw\.githubusercontent\.com\/siderolabs\/docs\/main\/public\/talos\/v\d+\.\d+\/getting-started\/support-matrix\.mdx$/],
   ]) {
-    const tag = `v${live[id].text}`;
-    const entry = catalog.projects?.[project]?.[tag];
-    const expectedSource = `https://raw.githubusercontent.com/${repository}/${tag}/${path}`;
+    const data = catalog.projects?.[project];
+    const tag = ['talos', 'cert-manager'].includes(id) ? `v${live[id].line}` : `v${live[id].text}`;
+    const entry = data?.versions?.[tag];
     const versions = entry?.supportedKubernetes;
-    if (entry?.unavailable || entry?.source !== expectedSource ||
+    if (entry?.unavailable || !sourcePattern.test(data?.source ?? '') ||
         !/^[a-f0-9]{64}$/.test(entry?.sourceSha256 ?? '') ||
         !Array.isArray(versions) || !versions.length ||
         versions.some(v => typeof v !== 'string' || !/^\d+\.\d+$/.test(v)) ||
         new Set(versions).size !== versions.length) {
       throw new Error(`Missing or invalid released compatibility cache: ${project}/${tag}`);
     }
-    result[id] = entry;
+    result[id] = { source: data.source, ...entry };
   }
   return result;
 }
 
-export function policy(live, cilium, envoy) {
-  const supported = cilium.filter(v => envoy.includes(v));
+export function policy(live, matrices, talosLines = [live.talos.line]) {
+  if (!matrices.length) throw new Error('Compatibility matrices are required');
+  const supported = matrices.reduce((common, list) => common.filter(v => list.includes(v)));
   if (!supported.includes(live.kubernetes.line)) {
-    throw new Error('Running Kubernetes is outside the deployed Cilium/Envoy compatibility intersection');
+    throw new Error('Running Kubernetes is outside the deployed compatibility intersection');
   }
   const packageRules = [];
   for (const name of ['talos', 'kubernetes']) {
     const current = live[name];
     // Propose at most one minor step; only patches on the live minor may auto-merge.
     const next = `${current.major}.${current.minor + 1}`;
-    const allowNext = name === 'talos' || supported.includes(next);
+    const allowNext = name === 'talos' ? talosLines.includes(next) : supported.includes(next);
     const upper = `${current.major}.${current.minor + (allowNext ? 2 : 1)}.0`;
     packageRules.push({
       description: `Constrain ${name} to the live cluster and released compatibility matrices`,
@@ -97,7 +103,7 @@ async function fetchText(url, headers = {}) {
 }
 
 export async function generate(base = 'https://upgrade-versions.lan.jetersen.dev') {
-  const entries = await Promise.all(['node', 'cilium', 'envoy'].map(async id =>
+  const entries = await Promise.all(['node', 'cilium', 'envoy', 'flux', 'cert-manager'].map(async id =>
     [id, JSON.parse(await fetchText(`${base}/badges/${id}?format=json`))]));
   const live = liveVersions(Object.fromEntries(entries));
   const cacheUrl = 'https://forgejo.jetersen.dev/api/v1/repos/jetersen/kubernetes-compatibility/raw/catalog.json?ref=main';
@@ -107,8 +113,12 @@ export async function generate(base = 'https://upgrade-versions.lan.jetersen.dev
   const matrices = cachedMatrices(catalog, live);
   return {
     live, cacheUrl, cacheRefreshedAt: catalog.refreshedAt,
-    urls: { cilium: matrices.cilium.source, envoy: matrices.envoy.source },
-    ...policy(live, matrices.cilium.supportedKubernetes, matrices.envoy.supportedKubernetes),
+    urls: Object.fromEntries(Object.entries(matrices).map(([name, entry]) => [name, entry.source])),
+    ...policy(live, Object.values(matrices).map(entry => entry.supportedKubernetes),
+      Object.entries(catalog.projects.talos.versions)
+        .filter(([tag, entry]) => /^v\d+\.\d+$/.test(tag) && !entry.unavailable &&
+          Array.isArray(entry.supportedKubernetes) && entry.supportedKubernetes.includes(live.kubernetes.line))
+        .map(([tag]) => tag.slice(1))),
   };
 }
 
