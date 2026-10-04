@@ -6,8 +6,8 @@ metadata:
   labels:
     homelab.jetersen.dev/flux-defaults: enabled
     homelab.jetersen.dev/flux-homelab-source: enabled
+    homelab.jetersen.dev/flux-wait: enabled
 spec:
-  wait: true
   targetNamespace: monitoring
   path: ./kubernetes/cluster/kromgo/app
   dependsOn:
