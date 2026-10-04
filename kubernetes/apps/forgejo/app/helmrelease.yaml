@@ -136,6 +136,6 @@ spec:
           DISABLE_REGISTRATION: true
           REQUIRE_SIGNIN_VIEW: true
         webhook:
-          ALLOWED_HOST_LIST: external,webhook-receiver.flux-system.svc.cluster.local,konflate.jetersen.dev
+          ALLOWED_HOST_LIST: external,webhook-receiver.flux-system.svc.cluster.local,webhook.jetersen.dev,konflate.jetersen.dev
         log:
           MODE: console

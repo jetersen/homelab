@@ -39,6 +39,8 @@ repository and configure a Forgejo webhook there for package events. Use JSON,
 the `flux-system/webhook-token` Secret's `token` as the webhook secret, and
 `https://webhook.jetersen.dev/flux` followed by the `forgejo-oci-receiver`
 Receiver's `status.webhookPath` as the target URL, with TLS verification enabled.
+Keep `webhook.jetersen.dev` in Forgejo's webhook allowlist because internal DNS
+resolves it to the private gateway address.
 The receiver accepts only `created` events for the `main` tag, including tag
 overwrites, and reconciles the
 `homelab` OCI source. Flux then reconciles dependent resources automatically;
