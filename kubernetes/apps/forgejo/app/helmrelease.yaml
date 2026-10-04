@@ -134,7 +134,7 @@ spec:
           LOGIN_REMEMBER_DAYS: 365
         service:
           DISABLE_REGISTRATION: true
-          REQUIRE_SIGNIN_VIEW: true
+          REQUIRE_SIGNIN_VIEW: false
         webhook:
           ALLOWED_HOST_LIST: external,webhook-receiver.flux-system.svc.cluster.local,webhook.jetersen.dev,konflate.jetersen.dev
         log:
