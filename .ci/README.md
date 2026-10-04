@@ -11,6 +11,14 @@ Forgejo and GitHub run three independent workflows on `main`:
 All three support manual dispatch. Go checks do not gate either publisher.
 The shared actions under `.ci/actions/` publish to the workflow's registry.
 
+The Flux publisher renders local-path-provisioner's versioned upstream YAML and
+our patches into the artifact during CI. The HTTPS resource URL lets Konflate
+render it without a Git executable, and Renovate tracks its version. Flux builds
+the bundled resources without fetching GitHub. Other overlays remain as source
+files. Bundle any new remote Kustomize dependencies before publishing so manifest
+builds need no network access in the cluster. Helm charts and container images
+are fetched separately.
+
 Forgejo also runs `truenas.yaml` for the [TrueNAS Pulumi project](../infrastructure/truenas/README.md):
 PRs receive a preview, and changes on `main` are applied using the shared S3 state
 backend. It deploys independently of Flux.

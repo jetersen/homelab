@@ -24,6 +24,15 @@ runs:
         directory=$(mktemp -d "$RUNNER_TEMP/homelab-oci.XXXXXX")
         git archive HEAD kubernetes/apps kubernetes/cluster kubernetes/components kubernetes/flux \
           | tar -x -C "$directory"
+        # Resolve the remote base in CI so Flux can build this overlay offline.
+        local_path="$directory/kubernetes/cluster/local-path-provisioner/app"
+        kubectl kustomize "$local_path" > "$local_path/bundled.yaml"
+        cat > "$local_path/kustomization.yaml" <<'EOF'
+        apiVersion: kustomize.config.k8s.io/v1beta1
+        kind: Kustomization
+        resources:
+          - bundled.yaml
+        EOF
         while IFS= read -r file; do
           kubectl kustomize "$(dirname "$file")" > /dev/null
         done < <(find "$directory/kubernetes/apps" "$directory/kubernetes/cluster" \
