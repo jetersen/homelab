@@ -27,7 +27,7 @@ jobs:
       - uses: https://github.com/actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: infrastructure/truenas/global.json
-      - uses: https://github.com/pulumi/actions@8582a9e8cc630786854029b4e09281acd6794b58 # v6
+      - uses: https://github.com/pulumi/actions@8e5e406f4007fca908480587cb9893c07090f58d # v7.0.0
         with:
           pulumi-version: '3.267.0'
       - name: Restore and build
