@@ -35,27 +35,31 @@ export function liveVersions(badges, now = Date.now() / 1000) {
   };
 }
 
-function minorList(cell) {
-  if (!/^v?\d+\.\d+(?:\s*,\s*v?\d+\.\d+)*$/.test(cell)) {
-    throw new Error('Unrecognized Kubernetes compatibility list');
+export function cachedMatrices(catalog, live, now = Date.now()) {
+  const refreshed = Date.parse(catalog?.refreshedAt);
+  if (catalog?.schemaVersion !== 1 || !Number.isFinite(refreshed) ||
+      now - refreshed > 7 * 24 * 60 * 60 * 1000 || refreshed - now > 300_000) {
+    throw new Error('Missing, unsupported, or stale compatibility cache');
   }
-  return cell.split(',').map(v => v.trim().replace(/^v/, ''));
-}
-
-export function ciliumMatrix(text) {
-  if (!text.includes('| k8s Version')) throw new Error('Cilium compatibility table missing');
-  const rows = text.split('\n').filter(row => /^\|\s*\d+\.\d+[ ,]*.*\|/.test(row));
-  if (rows.length !== 1) throw new Error('Ambiguous Cilium compatibility table');
-  return minorList(rows[0].split('|')[1].trim());
-}
-
-export function envoyMatrix(text, line) {
-  const rows = text.split('\n').map(row => row.split('|').map(cell => cell.trim()));
-  const header = rows.find(row => row[1] === 'Envoy Gateway version');
-  const column = header?.indexOf('Kubernetes version');
-  const matches = rows.filter(row => row[1] === `v${line}`);
-  if (!column || column < 0 || matches.length !== 1) throw new Error('Released Envoy compatibility row missing');
-  return minorList(matches[0][column]);
+  const result = {};
+  for (const [id, project, repository, path] of [
+    ['cilium', 'cilium', 'cilium/cilium', 'Documentation/network/kubernetes/compatibility.rst'],
+    ['envoy', 'envoy-gateway', 'envoyproxy/gateway', 'site/content/en/news/releases/matrix.md'],
+  ]) {
+    const tag = `v${live[id].text}`;
+    const entry = catalog.projects?.[project]?.[tag];
+    const expectedSource = `https://raw.githubusercontent.com/${repository}/${tag}/${path}`;
+    const versions = entry?.supportedKubernetes;
+    if (entry?.unavailable || entry?.source !== expectedSource ||
+        !/^[a-f0-9]{64}$/.test(entry?.sourceSha256 ?? '') ||
+        !Array.isArray(versions) || !versions.length ||
+        versions.some(v => typeof v !== 'string' || !/^\d+\.\d+$/.test(v)) ||
+        new Set(versions).size !== versions.length) {
+      throw new Error(`Missing or invalid released compatibility cache: ${project}/${tag}`);
+    }
+    result[id] = entry;
+  }
+  return result;
 }
 
 export function policy(live, cilium, envoy) {
@@ -86,8 +90,8 @@ export function policy(live, cilium, envoy) {
   return { supported, packageRules };
 }
 
-async function fetchText(url) {
-  const response = await fetch(url, { signal: AbortSignal.timeout(30_000), cache: 'no-store' });
+async function fetchText(url, headers = {}) {
+  const response = await fetch(url, { signal: AbortSignal.timeout(30_000), cache: 'no-store', headers, redirect: 'error' });
   if (!response.ok) throw new Error(`HTTP ${response.status}: ${url}`);
   return response.text();
 }
@@ -96,12 +100,16 @@ export async function generate(base = 'https://upgrade-versions.lan.jetersen.dev
   const entries = await Promise.all(['node', 'cilium', 'envoy'].map(async id =>
     [id, JSON.parse(await fetchText(`${base}/badges/${id}?format=json`))]));
   const live = liveVersions(Object.fromEntries(entries));
-  const urls = {
-    cilium: `https://raw.githubusercontent.com/cilium/cilium/v${live.cilium.text}/Documentation/network/kubernetes/compatibility.rst`,
-    envoy: `https://raw.githubusercontent.com/envoyproxy/gateway/v${live.envoy.text}/site/content/en/news/releases/matrix.md`,
+  const cacheUrl = 'https://forgejo.jetersen.dev/api/v1/repos/jetersen/kubernetes-compatibility/raw/catalog.json?ref=main';
+  // The repository is public, but this Forgejo instance requires sign-in.
+  const token = process.env.RENOVATE_TOKEN || process.env.FORGEJO_TOKEN;
+  const catalog = JSON.parse(await fetchText(cacheUrl, token ? { Authorization: `token ${token}` } : {}));
+  const matrices = cachedMatrices(catalog, live);
+  return {
+    live, cacheUrl, cacheRefreshedAt: catalog.refreshedAt,
+    urls: { cilium: matrices.cilium.source, envoy: matrices.envoy.source },
+    ...policy(live, matrices.cilium.supportedKubernetes, matrices.envoy.supportedKubernetes),
   };
-  const [cilium, envoy] = await Promise.all([fetchText(urls.cilium), fetchText(urls.envoy)]);
-  return { live, urls, ...policy(live, ciliumMatrix(cilium), envoyMatrix(envoy, live.envoy.line)) };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
