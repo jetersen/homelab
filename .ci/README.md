@@ -37,13 +37,17 @@ repository, `refs/heads/main`, and the `push` and `workflow_dispatch` events.
 Link the Forgejo container package `jetersen/homelab/flux` to the `homelab`
 repository and configure a Forgejo webhook there for package events. Use JSON,
 the `flux-system/webhook-token` Secret's `token` as the webhook secret, and
-`http://webhook-receiver.flux-system.svc.cluster.local` followed by the
-`forgejo-oci-receiver` Receiver's `status.webhookPath` as the target URL.
-Forgejo already permits this internal webhook host. The receiver accepts only
-`created` events for the `main` tag, including tag overwrites, and reconciles the
+`https://webhook.jetersen.dev/flux` followed by the `forgejo-oci-receiver`
+Receiver's `status.webhookPath` as the target URL, with TLS verification enabled.
+The receiver accepts only `created` events for the `main` tag, including tag
+overwrites, and reconciles the
 `homelab` OCI source. Flux then reconciles dependent resources automatically;
 source polling remains the fallback. Git push notifications alone can arrive
 before the new OCI artifact is published.
+
+Forgejo 16.0.5 sends an empty `X-GitHub-Event` for package events. The receiver
+allows that header alongside `package`, verifies the HMAC signature, and filters
+the signed payload by owner, package type, name, tag, and action.
 
 Run the Go checks locally with:
 

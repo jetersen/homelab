@@ -7,7 +7,9 @@ metadata:
 spec:
   # Forgejo sends GitHub-compatible event and HMAC signature headers.
   type: github
-  events: [package]
+  # Forgejo 16.0.5 omits package from HookEventType.Event(), sending an empty
+  # X-GitHub-Event. Keep HMAC validation and filter the signed payload below.
+  events: [package, ""]
   secretRef:
     name: webhook-token
   # Tag overwrites also emit "created". Ignore immutable tags and other packages.
