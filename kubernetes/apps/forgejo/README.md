@@ -2,8 +2,9 @@
 
 User repositories can be created with the first SSH push. Push-created repos
 default to private; pass `git push -o repo.private=false origin main` to publish
-one. Organization push-to-create remains disabled. Instance sign-in requirements
-still apply to repositories marked public.
+one. Organization push-to-create remains disabled. Public repositories and
+public owners' packages allow anonymous reads; private repositories require
+authorized access. Account registration remains disabled.
 
 Web access is available at `https://forgejo.jetersen.dev` on the LAN and Tailscale.
 For Git SSH, add an account SSH key and use

@@ -134,11 +134,10 @@ released rows, malformed entries, and catalogs older than 45 days. Short
 GitHub outages therefore do not block runs while the cache remains fresh.
 
 Matrix lookups need only Forgejo; GitHub access for them is confined to the
-cache refresh workflow. This instance requires sign-in even for public repos,
-so the policy uses Renovate's existing Forgejo token to read the cache. The
-restricted `renovate` user needs collaborator access to the cache repo. Reading
-the catalog requires only read permission; maintaining source-update pull
-requests as that account requires write collaborator access.
+cache refresh workflow. The policy uses Renovate's existing Forgejo token to
+read the cache. Reading the public catalog requires no write permission;
+maintaining source-update pull requests as the `renovate` user requires write
+collaborator access.
 
 The workflow supplies generated rules through `RENOVATE_PACKAGE_RULES`.
 Kubernetes must satisfy all five deployed matrices. A Talos minor proposal
