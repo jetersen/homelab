@@ -13,8 +13,9 @@ devices; Android keeps deleted camera files in the camera directory until its
 trash expires. Kopiur also excludes these files. Syncthing can connect through
 LAN discovery or the NAS's published TCP port over Tailscale.
 
-PhotoPrism indexes every 15 minutes with one worker. Albums, labels, face recognition, and
-metadata changes live in its storage volume. File uploads, deletion, and other
+PhotoPrism indexes every 15 minutes with one worker. Start manual scans through
+Library > Index so they share the server's worker lock with scheduled scans.
+Albums, labels, face recognition, and metadata changes live in its storage volume. File uploads, deletion, and other
 operations that require writing originals are disabled. Add Google Takeout files
 and their JSON sidecars to the originals folder, then index them.
 Keep the original Takeout metadata. For exports using
