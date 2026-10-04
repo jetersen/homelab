@@ -57,8 +57,10 @@ spec:
               requests:
                 cpu: 250m
                 memory: 512Mi
+                gpu.intel.com/i915: 1
               limits:
                 memory: 4Gi
+                gpu.intel.com/i915: 1
     service:
       app:
         controller: jellyfin

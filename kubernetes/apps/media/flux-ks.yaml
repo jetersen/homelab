@@ -99,6 +99,7 @@ spec:
   path: ./kubernetes/apps/media/jellyfin
   wait: true
   dependsOn:
+    - name: intel-gpu-plugin
     - name: media-storage
     - name: app-template
     - name: technitium
