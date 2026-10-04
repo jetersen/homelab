@@ -62,7 +62,7 @@ spec:
   backend:
     s3:
       bucket: jetersen-homelab-kopia
-      prefix: pilot/home-assistant/
+      prefix: applications/home-assistant/
       endpoint: s3.de.io.cloud.ovh.net
       region: de
       auth:
@@ -235,7 +235,7 @@ spec:
   destination:
     s3:
       bucket: jetersen-homelab-kopia
-      prefix: pilot/home-assistant/
+      prefix: applications/home-assistant/
       endpoint: s3.de.io.cloud.ovh.net
       region: de
       auth:
@@ -315,7 +315,7 @@ spec:
   backend:
     s3:
       bucket: jetersen-homelab-kopia
-      prefix: pilot/zigbee2mqtt/
+      prefix: applications/zigbee2mqtt/
       endpoint: s3.de.io.cloud.ovh.net
       region: de
       auth:
@@ -524,7 +524,7 @@ spec:
   destination:
     s3:
       bucket: jetersen-homelab-kopia
-      prefix: pilot/zigbee2mqtt/
+      prefix: applications/zigbee2mqtt/
       endpoint: s3.de.io.cloud.ovh.net
       region: de
       auth:

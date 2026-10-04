@@ -62,7 +62,7 @@ spec:
   backend:
     s3:
       bucket: jetersen-homelab-kopia
-      prefix: pilot/sonarr/
+      prefix: applications/sonarr/
       endpoint: s3.de.io.cloud.ovh.net
       region: de
       auth:
@@ -235,7 +235,7 @@ spec:
   destination:
     s3:
       bucket: jetersen-homelab-kopia
-      prefix: pilot/sonarr/
+      prefix: applications/sonarr/
       endpoint: s3.de.io.cloud.ovh.net
       region: de
       auth:
