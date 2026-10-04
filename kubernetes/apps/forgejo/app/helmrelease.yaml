@@ -86,6 +86,8 @@ spec:
       config:
         APP_NAME: Forgejo
         RUN_MODE: prod
+        actions:
+          LOG_RETENTION_DAYS: 90
         server:
           DOMAIN: forgejo.jetersen.dev
           ROOT_URL: https://forgejo.jetersen.dev/
