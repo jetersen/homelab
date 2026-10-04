@@ -54,16 +54,24 @@
       "separateMajorMinor": false
     },
     {
-      "description": "Display GitHub action names without changing their Forgejo uses URLs",
+      "description": "Update GitHub and Forgejo references to each GitHub action together",
       "matchManagers": [
         "github-actions"
       ],
       "matchDepNames": [
-        "/^https:\\/\\/github\\.com\\//"
+        "/^(https:\\/\\/github\\.com\\/)?[^/]+\\/[^/]+$/"
       ],
+      "matchDepTypes": [
+        "action"
+      ],
+      "groupName": "{{{packageName}}} action",
+      "groupSlug": "{{{replace '/' '-' packageName}}}-action",
       "commitMessageTopic": "action {{{packageName}}}",
+      "group": {
+        "commitMessageTopic": "action {{{packageName}}}"
+      },
       "prBodyDefinitions": {
-        "Package": "[{{{packageName}}}]({{{depName}}})"
+        "Package": "[{{{packageName}}}](https://github.com/{{{packageName}}})"
       }
     }
   ],
