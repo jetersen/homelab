@@ -9,6 +9,15 @@
     "local>jetersen/homelab//.renovate/versioning.json5",
     "local>jetersen/homelab//.renovate/groups.json5"
   ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update the local-path-provisioner manifest fetched directly over HTTPS",
+      "managerFilePatterns": ["/^kubernetes/cluster/local-path-provisioner/app/kustomization\\.yaml$/"],
+      "matchStrings": ["https://raw\\.githubusercontent\\.com/(?<depName>rancher/local-path-provisioner)/(?<currentValue>[^/]+)/deploy/local-path-storage\\.yaml"],
+      "datasourceTemplate": "github-tags"
+    }
+  ],
   "packageRules": [
     {
       "description": "TrueNAS SDK upgrades use GitHub release assets and a reviewed lockfile update",
