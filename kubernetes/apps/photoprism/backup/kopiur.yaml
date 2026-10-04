@@ -214,6 +214,9 @@ spec:
     ignoreCacheDirs: false
     ignoreRules:
     - .syncthing.*.tmp
+    - .trashed-*
+    - .pending-*
+    - .thumbnails/
   identity:
     hostname: homelab
     username: photoprism

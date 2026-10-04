@@ -6,11 +6,21 @@ clients only. Public DNS publication is disabled. The administrator login is in
 `Personal/PhotoPrism` in Proton Pass; Varlock resolves the initial password for
 the SOPS-encrypted Secret. Changing that Secret does not reset an existing account.
 
-Syncthing delivers Android camera files to the originals folder. PhotoPrism
-indexes every 15 minutes with one worker. Albums, labels, face recognition, and
+Syncthing delivers Android camera files to the originals folder. Use send-only
+on Android and receive-only on the NAS, with staggered versioning on the NAS.
+Before sharing, ignore `.trashed-*`, `.pending-*`, and `.thumbnails` on both
+devices; Android keeps deleted camera files in the camera directory until its
+trash expires. Kopiur also excludes these files. Syncthing can connect through
+LAN discovery or the NAS's published TCP port over Tailscale.
+
+PhotoPrism indexes every 15 minutes with one worker. Albums, labels, face recognition, and
 metadata changes live in its storage volume. File uploads, deletion, and other
 operations that require writing originals are disabled. Add Google Takeout files
 and their JSON sidecars to the originals folder, then index them.
+Keep the original Takeout metadata. For exports using
+`photo.jpg.supplemental-metadata.json`, add a matching `photo.jpg.json` copy so
+PhotoPrism reads it. Resolve duplicate filename suffixes against the actual media
+file before adding a sidecar. Google album membership needs a separate import.
 
 ## Backups and recovery
 
