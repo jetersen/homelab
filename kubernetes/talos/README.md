@@ -75,8 +75,8 @@ service accounts in `system-upgrade`. Apply it before installing Tuppr. Keep the
 stored installer URL aligned with the running Factory schematic so Tuppr can
 verify that upgrades preserve extensions and boot customization.
 
-Forgejo checks the live versions through Kromgo and the compatibility matrices
-from the deployed Cilium and Envoy Gateway release tags. Kubernetes must remain
+Forgejo checks the live versions through Kromgo and the cached compatibility
+matrices for the deployed Cilium and Envoy Gateway release tags. Kubernetes must remain
 within their common supported range. Renovate can propose at most the next
 minor; minor upgrades require dashboard approval and manual merge. Only patches
 on the node's live minor can auto-merge, after a three-day release age. See the

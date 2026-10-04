@@ -21,13 +21,6 @@ jobs:
       - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Verify live upgrade compatibility
-        shell: bash
-        run: |
-          set -euo pipefail
-          node --test .ci/renovate-upgrade-policy.test.mjs
-          node .ci/renovate-upgrade-policy.mjs "$RUNNER_TEMP/upgrade-package-rules.json"
-          echo "RENOVATE_PACKAGE_RULES=$(cat "$RUNNER_TEMP/upgrade-package-rules.json")" >> "$GITHUB_ENV"
       - name: Authenticate with the Renovate integration
         id: auth
         shell: bash
@@ -41,6 +34,15 @@ jobs:
             "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$AUDIENCE" | jq -er '.value')
           echo "::add-mask::$token"
           echo "token=$token" >> "$GITHUB_OUTPUT"
+      - name: Verify live upgrade compatibility
+        shell: bash
+        env:
+          RENOVATE_TOKEN: ${{ steps.auth.outputs.token }}
+        run: |
+          set -euo pipefail
+          node --test .ci/renovate-upgrade-policy.test.mjs
+          node .ci/renovate-upgrade-policy.mjs "$RUNNER_TEMP/upgrade-package-rules.json"
+          echo "RENOVATE_PACKAGE_RULES=$(cat "$RUNNER_TEMP/upgrade-package-rules.json")" >> "$GITHUB_ENV"
       - name: Authenticate package lookups
         id: packages
         shell: bash

@@ -99,10 +99,17 @@ access to this hostname. No public DNS record is published.
 
 Queries return one version only and include the original scrape timestamp.
 Missing, mixed, or older-than-two-minute results stop the workflow. The script
-fetches compatibility tables from the exact deployed release tags, selects the
-released Envoy row, and intersects their supported Kubernetes minors. Missing
-or unrecognized upstream tables also stop the workflow; there is no stale-policy
-fallback. GitHub access is needed during this CI check, not Flux reconciliation.
+reads the public
+[kubernetes-compatibility cache](https://forgejo.jetersen.dev/jetersen/kubernetes-compatibility)
+on Forgejo and selects the entries for the exact deployed release tags. The
+cache refreshes upstream Cilium and Envoy documentation every six hours and
+records source URLs and hashes. The policy rejects missing or unavailable
+released rows, malformed entries, and catalogs older than seven days. Short
+GitHub outages therefore do not block runs while the cache remains fresh.
+
+Matrix lookups need only Forgejo; GitHub access for them is confined to the
+cache refresh workflow. This instance requires sign-in even for public repos,
+so the policy uses Renovate's existing Forgejo token to read the cache.
 
 The workflow supplies generated rules through `RENOVATE_PACKAGE_RULES`.
 Repository rules merge afterward: do not override the generated version bounds
@@ -113,5 +120,6 @@ If Git is ahead of the node, patches on that future minor require manual merge
 until the live node catches up.
 
 Run `node --test .ci/renovate-upgrade-policy.test.mjs` for policy regression
-checks, or `node .ci/renovate-upgrade-policy.mjs` to read live data and print the
-computed policy without changing the cluster or Renovate.
+checks, or `npm exec -- varlock run -- node .ci/renovate-upgrade-policy.mjs` to
+read live data and print the computed policy without changing the cluster or
+Renovate.

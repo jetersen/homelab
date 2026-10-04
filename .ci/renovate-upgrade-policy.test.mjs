@@ -1,16 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { ciliumMatrix, envoyMatrix, liveVersions, policy, version } from './renovate-upgrade-policy.mjs';
+import { cachedMatrices, liveVersions, policy, version } from './renovate-upgrade-policy.mjs';
 
 const badges = () => ({
   node: { id: 'node', result: 1000, labels: { os_image: 'Talos (v1.14.2)', kubelet_version: 'v1.36.5' } },
   cilium: { id: 'cilium', result: 1000, labels: { image_spec: `quay.io/cilium/cilium:v1.20.2@sha256:${'a'.repeat(64)}` } },
   envoy: { id: 'envoy', result: 1000, labels: { image_spec: 'mirror.gcr.io/envoyproxy/gateway:v1.9.2' } },
 });
-const matrix = `| Envoy Gateway version | Envoy Proxy version | Rate Limit version | Gateway API version | Kubernetes version | End of Life |
-| latest | dev | main | v1.7 | v1.36, v1.37 | n/a |
-| v1.9 | envoy | rate | v1.6 | v1.33, v1.34, v1.35, v1.36 | date |`;
-
 test('reads live version labels, including digest-pinned Cilium images', () => {
   assert.equal(liveVersions(badges(), 1050).cilium.text, '1.20.2');
   assert.equal(liveVersions(badges(), 1050).talos.text, '1.14.2');
@@ -23,16 +19,6 @@ test('fails closed on stale, missing, future, ambiguous, or malformed observatio
   const input = badges(); input.cilium.labels.image_spec = 'quay.io/cilium/cilium:latest';
   assert.throws(() => liveVersions(input, 1050));
   assert.throws(() => version('1.37.0-rc.1'));
-});
-test('uses the exact released Envoy row, never latest', () => {
-  assert.deepEqual(envoyMatrix(matrix, '1.9'), ['1.33', '1.34', '1.35', '1.36']);
-  assert.throws(() => envoyMatrix(matrix, '1.10'));
-  assert.throws(() => envoyMatrix(matrix.replace('v1.33, v1.34, v1.35, v1.36', 'v1.33-v1.36'), '1.9'));
-});
-test('parses only the Cilium tested Kubernetes version list and rejects changed formats', () => {
-  assert.deepEqual(ciliumMatrix('| k8s Version | API |\n| 1.34, 1.35, 1.36 | API |'), ['1.34', '1.35', '1.36']);
-  assert.throws(() => ciliumMatrix('| 1.36 | API |'));
-  assert.throws(() => ciliumMatrix('| k8s Version | API |\n| 1.36 | API |\n| 1.37 | API |'));
 });
 test('intersection blocks unsupported minors and only live-minor patches auto-merge', () => {
   const result = policy(liveVersions(badges(), 1050), ['1.35', '1.36', '1.37'], ['1.35', '1.36']);
@@ -48,4 +34,37 @@ test('permits only one reviewed minor step and rejects an unsupported running cl
   assert.equal(result.packageRules[2].allowedVersions, '>=1.36.5 <1.38.0');
   assert.equal(result.packageRules[0].allowedVersions, '>=1.14.2 <1.16.0');
   assert.throws(() => policy(live, ['1.36'], ['1.35']));
+});
+
+const catalog = () => ({
+  schemaVersion: 1,
+  refreshedAt: '2026-10-01T00:00:00Z',
+  projects: {
+    cilium: { 'v1.20.2': {
+      source: 'https://raw.githubusercontent.com/cilium/cilium/v1.20.2/Documentation/network/kubernetes/compatibility.rst',
+      sourceSha256: 'a'.repeat(64), supportedKubernetes: ['1.35', '1.36'],
+    } },
+    'envoy-gateway': { 'v1.9.2': {
+      source: 'https://raw.githubusercontent.com/envoyproxy/gateway/v1.9.2/site/content/en/news/releases/matrix.md',
+      sourceSha256: 'b'.repeat(64), supportedKubernetes: ['1.35', '1.36'],
+    } },
+  },
+});
+test('reads exact release entries from the cache through a short upstream outage', () => {
+  const cached = cachedMatrices(catalog(), liveVersions(badges(), 1050), Date.parse('2026-10-04'));
+  assert.deepEqual(cached.envoy.supportedKubernetes, ['1.35', '1.36']);
+});
+test('rejects stale caches, missing releases, wrong provenance, and unavailable matrix rows', () => {
+  const live = liveVersions(badges(), 1050), now = Date.parse('2026-10-04');
+  assert.throws(() => cachedMatrices(catalog(), live, Date.parse('2026-10-09')));
+  assert.throws(() => cachedMatrices(catalog(), live, Date.parse('2026-09-30')));
+  for (const mutate of [
+    c => { delete c.projects.cilium['v1.20.2']; },
+    c => { c.projects.cilium['v1.20.2'].source = 'https://example.com/latest'; },
+    c => { c.projects.cilium['v1.20.2'].supportedKubernetes = ['latest']; },
+    c => { c.projects['envoy-gateway']['v1.9.2'].unavailable = 'Released row missing'; },
+  ]) {
+    const value = catalog(); mutate(value);
+    assert.throws(() => cachedMatrices(value, live, now));
+  }
 });
