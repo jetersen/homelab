@@ -17,38 +17,6 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Build and smoke test the backup helper image
-      shell: bash
-      env:
-        REGISTRY: ${{ inputs.registry }}
-        REPOSITORY: ${{ inputs.repository }}
-      run: |
-        set -euo pipefail
-        revision=$BACKUP_HELPER_REVISION
-        image="$REGISTRY/${REPOSITORY,,}/backup-helper"
-        docker build -f infrastructure/backup/image/Dockerfile \
-          --build-arg REVISION="$revision" \
-          --build-arg VERSION="$BACKUP_HELPER_VERSION" \
-          --build-arg SOURCE_DATE_EPOCH="$BACKUP_HELPER_EPOCH" \
-          -t "$image:sha-$revision" .
-        docker run --rm --network none --read-only --user 1000:1000 \
-          --cap-drop ALL --security-opt no-new-privileges "$image:sha-$revision" --help
-    - name: Build and test the runner job image
-      shell: bash
-      env:
-        REGISTRY: ${{ inputs.registry }}
-        REPOSITORY: ${{ inputs.repository }}
-      run: |
-        set -euo pipefail
-        revision=$(git rev-parse HEAD)
-        image="$REGISTRY/${REPOSITORY,,}/runner-job"
-        docker build -f infrastructure/forgejo/runner/Dockerfile \
-          --build-arg REVISION="$revision" \
-          --build-arg SOURCE_DATE_EPOCH="$(git show -s --format=%ct HEAD)" \
-          -t "$image:sha-$revision" .
-        docker run --rm --network none --read-only --cap-drop ALL \
-          --security-opt no-new-privileges "$image:sha-$revision" \
-          bash -euc 'node --version; git --version; docker --version; docker buildx version; kubectl version --client; curl --version; jq --version'
     - name: Prepare registry credentials
       shell: bash
       run: echo "DOCKER_CONFIG=$(mktemp -d "$RUNNER_TEMP/homelab-auth.XXXXXX")" >> "$GITHUB_ENV"
@@ -61,54 +29,18 @@ runs:
       run: |
         set -euo pipefail
         printf '%s' "$TOKEN" | docker login "$REGISTRY" --username "$USERNAME" --password-stdin
-    - name: Publish the image revisions
+    - name: Publish the backup helper release
       shell: bash
       env:
         REGISTRY: ${{ inputs.registry }}
         REPOSITORY: ${{ inputs.repository }}
-      run: |
-        set -euo pipefail
-        revision=$(git rev-parse HEAD)
-        package="$REGISTRY/${REPOSITORY,,}"
-        helper="$package/backup-helper"
-        config=$(mktemp "$RUNNER_TEMP/helper-config.XXXXXX")
-        error=$(mktemp "$RUNNER_TEMP/helper-inspect.XXXXXX")
-        if docker buildx imagetools inspect "$helper:$BACKUP_HELPER_VERSION" \
-            --format '{{json .Image}}' > "$config" 2> "$error"; then
-          jq -e --arg revision "$BACKUP_HELPER_REVISION" --arg version "$BACKUP_HELPER_VERSION" \
-            '.config.Labels["org.opencontainers.image.revision"] == $revision and
-             .config.Labels["org.opencontainers.image.version"] == $version' "$config" > /dev/null
-          # Reuse the published image, including on a different runner. Never
-          # replace an existing SemVer tag with a newly built digest.
-          docker pull "$helper:$BACKUP_HELPER_VERSION"
-          docker tag "$helper:$BACKUP_HELPER_VERSION" "$helper:sha-$BACKUP_HELPER_REVISION"
-        elif grep -Eqi 'manifest unknown|MANIFEST_UNKNOWN|not found|no such manifest' "$error"; then
-          docker push "$helper:sha-$BACKUP_HELPER_REVISION"
-          docker tag "$helper:sha-$BACKUP_HELPER_REVISION" "$helper:$BACKUP_HELPER_VERSION"
-          docker push "$helper:$BACKUP_HELPER_VERSION"
-        else
-          cat "$error" >&2
-          exit 1
-        fi
-        docker push "$package/runner-job:sha-$revision"
-        git fetch --no-tags --depth=1 origin refs/heads/main
-        input_changes=$(git diff --name-only "$revision" FETCH_HEAD -- \
-          infrastructure/backup/image \
-          infrastructure/forgejo/runner/Dockerfile \
-          infrastructure/forgejo/runner/Dockerfile.dockerignore \
-          .ci/actions/publish-images \
-          .ci/backup-helper-cliff.toml \
-          .ci/backup-helper-release.sh \
-          .forgejo/workflows/publish-images.yaml \
-          .github/workflows/publish-images.yaml)
-        if [ -n "$input_changes" ]; then
-          echo 'Newer image inputs exist; keeping revision tags without advancing main.'
-          exit 0
-        fi
-        docker tag "$package/backup-helper:sha-$BACKUP_HELPER_REVISION" "$package/backup-helper:main"
-        docker push "$package/backup-helper:main"
-        docker tag "$package/runner-job:sha-$revision" "$package/runner-job:main"
-        docker push "$package/runner-job:main"
+      run: bash .ci/publish-image.sh backup-helper
+    - name: Publish the runner job release
+      shell: bash
+      env:
+        REGISTRY: ${{ inputs.registry }}
+        REPOSITORY: ${{ inputs.repository }}
+      run: bash .ci/publish-image.sh runner-job
     - name: Remove registry credentials
       if: always()
       shell: bash

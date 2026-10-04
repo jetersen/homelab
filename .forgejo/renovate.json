@@ -33,6 +33,19 @@
       ],
       "datasourceTemplate": "custom.truenas-app",
       "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "description": "Update the job image used by both Forgejo runners",
+      "managerFilePatterns": [
+        "/^infrastructure/forgejo/runner/rocket\\.yaml$/",
+        "/^kubernetes/apps/forgejo/runner/runner\\.yaml$/"
+      ],
+      "matchStrings": [
+        "docker://(?<depName>forgejo\\.jetersen\\.dev/jetersen/homelab/runner-job):(?<currentValue>[0-9]+\\.[0-9]+\\.[0-9]+)@(?<currentDigest>sha256:[a-f0-9]+)"
+      ],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "semver"
     }
   ],
   "packageRules": [

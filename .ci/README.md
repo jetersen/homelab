@@ -1,6 +1,7 @@
 # Publication workflows
 
-Forgejo and GitHub run three independent workflows on `main`:
+Forgejo runs three independent workflows on `main`. GitHub also publishes the
+Flux artifact and runs Go checks:
 
 | Workflow | Automatic trigger | Output |
 | --- | --- | --- |
@@ -23,11 +24,11 @@ Forgejo also runs `truenas.yaml` for the [TrueNAS Pulumi project](../infrastruct
 PRs receive a preview, and changes on `main` are applied using the shared S3 state
 backend. It deploys independently of Flux.
 
-Publishers retain immutable `sha-<commit>` tags and advance `main` after
-verification. Flux requires the current branch head. Images allow newer commits
-that leave image inputs unchanged, because unrelated commits do not trigger a
-replacement image build. Keep the image workflow path filters and the shared
-action's input comparison in sync.
+The Flux publisher retains `sha-<commit>` tags and advances `main` only at the
+current branch head. Workload images publish immutable SemVer tags and advance
+`main` when their component inputs are still current. Image reruns inspect and
+reuse existing releases before building; they do not publish per-commit tags.
+Keep the workflow path filters and `.ci/image-inputs.sh` in sync.
 
 Forgejo uses an Authorized Integration with `write:package` permission and the
 audience stored in `OCI_PACKAGES_AUDIENCE`. Its claim rules must allow the
@@ -61,34 +62,35 @@ The default Dockerfile target builds the runtime image without running tests or
 vet. Go module and compiler caches persist in BuildKit on each runner; separate
 runners do not share those caches.
 
-## Backup helper releases
+## Workload image releases
 
-The backup helper stays in this repository and publishes independent SemVer
-image tags to Forgejo and GHCR. Kubernetes references use `version@sha256:digest`;
+The backup helper and runner job image publish independent SemVer tags to
+Forgejo. Kubernetes references use `version@sha256:digest`;
 Renovate tracks newer versions. The `main` tag remains available for development.
 
-Forgejo uses `git-cliff` with `.ci/backup-helper-cliff.toml` to calculate releases
-from conventional commits affecting the helper's runtime inputs. `feat` bumps
+Forgejo uses `git-cliff` with `.ci/<component>-cliff.toml` to calculate releases
+from conventional commits affecting each component's runtime inputs. `feat` bumps
 minor; `feat!`, `feat(scope)!`, and `BREAKING CHANGE` footers bump major. Other
 runtime changes, including dependency updates, bump patch. Test-only and
 unrelated homelab changes do not create releases. The first release is `0.1.0`.
 
-Forgejo reserves a `backup-helper/vX.Y.Z` Git tag before building. Reruns reuse
-that tag and preserve an already published image's digest. The helper's revision,
+Forgejo reserves a `<component>/vX.Y.Z` Git tag before building. Reruns reuse
+that tag and preserve an already published image's digest. Each image's revision,
 version, and source timestamp come from its component commit, so unrelated
 commits do not change release metadata or invalidate compilation.
 
-Forgejo mirrors release tags to GitHub using the repository deploy key stored in
-its `GH_RELEASE_DEPLOY_KEY` Actions secret. Tag pushes trigger GHCR publication;
-GitHub main builds wait for the corresponding tag. Hosted runners never need
-access to the internal Forgejo hostname. Both registries use the same version
-when jobs are delayed or retried.
+Workload images are built only by Forgejo. Public packages allow anonymous pulls
+on the LAN and tailnet; GitHub-hosted runners cannot reach the private registry.
+Existing GHCR releases remain usable, but receive no new workload image builds.
+The Flux artifact continues to publish to both registries for bootstrap recovery.
 
-The Forgejo image workflow also uses a repository-scoped Authorized Integration
+The Forgejo image workflow uses a repository-scoped Authorized Integration
 with `write:repository` for release tags, referenced by `IMAGE_RELEASE_AUDIENCE`.
 Restrict it to `publish-images.yaml`, this repository, `refs/heads/main`, and
-`push`/`workflow_dispatch`. The GitHub deploy key has write access only to this
-repository; its publisher needs `contents: read` and `packages: write`.
+`push`/`workflow_dispatch`.
+
+Run `node --test .ci/image-publishing.test.mjs` with Git, git-cliff, Bash, and jq
+available to verify release allocation and publication in isolated local fixtures.
 
 ## Renovate registry authentication
 

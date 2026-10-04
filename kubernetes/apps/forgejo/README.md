@@ -55,3 +55,19 @@ preserving configuration, generated secrets, host keys, and UID/GID 1000
 permissions. Validate SQLite on local storage and run `git fsck` on restored
 repositories before starting Forgejo. Resume Flux and the backup schedules after
 verifying login, clone/push, LFS, and uploads.
+
+The helper image is published by Forgejo. Its pinned image uses `IfNotPresent`,
+so the scheduled recovery watchdog can reuse the node's cached copy while
+Forgejo is paused. If Forgejo is unavailable and the image is missing, resume
+its Deployment directly with `kubectl --context homelab -n forgejo scale
+deployment/forgejo --replicas=1`; inspect the backup job and pause annotations
+before resuming schedules.
+
+For a recovery that needs the helper while the registry is down, clone the
+GitHub mirror, check out the helper's recorded source revision, and build it
+locally with `docker build -f infrastructure/backup/image/Dockerfile -t
+homelab-backup-helper:recovery .`. Run `docker run --rm
+homelab-backup-helper:recovery --help` to verify it. A Kubernetes recovery job
+needs that image imported into its node runtime or pushed to another reachable
+registry first. Do not rely on the Forgejo registry as the only source of
+recovery tooling.

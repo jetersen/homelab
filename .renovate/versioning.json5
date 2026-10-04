@@ -2,10 +2,11 @@
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
   packageRules: [
     {
-      description: "Track backup helper SemVer releases on both registries",
+      description: "Track homelab image SemVer releases",
       matchDatasources: ["docker"],
       matchPackageNames: [
         "forgejo.jetersen.dev/jetersen/homelab/backup-helper",
+        "forgejo.jetersen.dev/jetersen/homelab/runner-job",
         "ghcr.io/jetersen/homelab/backup-helper",
       ],
       versioning: "semver",

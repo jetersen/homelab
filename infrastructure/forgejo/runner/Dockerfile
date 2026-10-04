@@ -10,9 +10,11 @@ COPY --from=docker /usr/local/libexec/docker/cli-plugins/docker-buildx /usr/loca
 COPY --from=kubectl /bin/kubectl /usr/local/bin/kubectl
 
 ARG REVISION
+ARG VERSION
 ARG SOURCE_URL=https://forgejo.jetersen.dev/jetersen/homelab
 LABEL org.opencontainers.image.source=$SOURCE_URL \
       org.opencontainers.image.revision=$REVISION \
+      org.opencontainers.image.version=$VERSION \
       org.opencontainers.image.description="Tools for homelab Forgejo Actions jobs"
 ENTRYPOINT []
 CMD ["bash"]
