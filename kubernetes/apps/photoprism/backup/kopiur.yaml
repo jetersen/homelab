@@ -1,0 +1,283 @@
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: Repository
+metadata:
+  name: photoprism-backup
+spec:
+  backend:
+    filesystem:
+      path: /mnt/nas-repository
+      volume:
+        pvc:
+          name: photoprism-nas-backup
+  catalog:
+    adoption: Ignore
+    periodicRefresh: true
+    refreshInterval: 1h
+  concurrency:
+    maxConcurrentJobs: 1
+  create:
+    enabled: true
+  encryption:
+    passwordSecretRef:
+      key: KOPIA_PASSWORD
+      name: photoprism-kopia
+  maintenance:
+    enabled: true
+    schedule:
+      full:
+        cron: 40 10 * * *
+        jitter: 0s
+      quick:
+        cron: 40 */6 * * *
+        jitter: 0s
+      timezone: Etc/UTC
+    takeoverPolicy: Force
+  mode: ReadWrite
+  moverDefaults:
+    cache:
+      capacity: 1Gi
+      contentCacheSizeMb: 128
+      metadataCacheSizeMb: 64
+    resources:
+      limits:
+        memory: 1Gi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+    securityContext:
+      runAsUser: 568
+      runAsGroup: 568
+      runAsNonRoot: true
+    ttlSecondsAfterFinished: 3600
+    podSecurityContext:
+      fsGroup: 568
+      fsGroupChangePolicy: OnRootMismatch
+  scheduleDefaults:
+    timezone: Etc/UTC
+---
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: Repository
+metadata:
+  name: photoprism-offsite
+spec:
+  backend:
+    s3:
+      auth:
+        secretRef:
+          name: photoprism-kopia
+      bucket: jetersen-homelab-kopia
+      endpoint: s3.de.io.cloud.ovh.net
+      prefix: applications/photoprism/
+      region: de
+  catalog:
+    adoption: Ignore
+    periodicRefresh: true
+    refreshInterval: 1h
+  concurrency:
+    maxConcurrentJobs: 1
+  create:
+    enabled: false
+  encryption:
+    passwordSecretRef:
+      key: KOPIA_PASSWORD
+      name: photoprism-kopia
+  maintenance:
+    enabled: false
+  mode: ReadOnly
+  moverDefaults:
+    cache:
+      capacity: 1Gi
+      contentCacheSizeMb: 128
+      metadataCacheSizeMb: 64
+    resources:
+      limits:
+        memory: 1Gi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+    securityContext:
+      runAsUser: 568
+      runAsGroup: 568
+      runAsNonRoot: true
+    ttlSecondsAfterFinished: 3600
+    podSecurityContext:
+      fsGroup: 568
+      fsGroupChangePolicy: OnRootMismatch
+  scheduleDefaults:
+    timezone: Etc/UTC
+---
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotPolicy
+metadata:
+  name: photoprism-state
+spec:
+  adoption: Ignore
+  copyMethod: Direct
+  defaultDeletionPolicy: Delete
+  errorHandling:
+    failFast: true
+  extraArgs:
+  - --inherit=false
+  - --clear-dot-ignore
+  - --keep-latest=2147483647
+  - --keep-hourly=0
+  - --keep-daily=0
+  - --keep-weekly=0
+  - --keep-monthly=0
+  - --keep-annual=0
+  files:
+    ignoreCacheDirs: false
+    ignoreRules:
+    - /cache/
+    - /index.db
+    - /index.db-shm
+    - /index.db-wal
+    - /index.db-journal
+    - /photoprism.pid
+    - /photoprism.log
+  hooks:
+    beforeSnapshot:
+    - workloadExec:
+        podSelector:
+          matchLabels:
+            app.kubernetes.io/name: photoprism
+            app.kubernetes.io/instance: photoprism
+        container: app
+        command:
+        - /opt/photoprism/bin/photoprism
+        - backup
+        - --database
+        - --albums
+        - --force
+        timeout: 10m
+  identity:
+    hostname: homelab
+    username: photoprism
+  repository:
+    kind: Repository
+    name: photoprism-backup
+  retention:
+    keepLatest: 3
+    keepHourly: 0
+    keepDaily: 14
+    keepWeekly: 8
+    keepMonthly: 12
+    keepAnnual: 0
+  sources:
+  - pvc:
+      name: photoprism
+    sourcePathOverride: /storage
+  verification:
+    quick:
+      schedule:
+        cron: 40 9 * * *
+        jitter: 0s
+    successExpr: stats.files > 0 && stats.errors == 0
+    verifyFilesPercent: 100
+---
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotSchedule
+metadata:
+  name: photoprism-state
+spec:
+  deletion:
+    onScheduleDelete: Retain
+  failedJobsHistoryLimit: 2
+  policyRef:
+    name: photoprism-state
+  schedule:
+    concurrencyPolicy: Forbid
+    cron: 0 2 * * *
+    startingDeadlineSeconds: 3600
+    timezone: Etc/UTC
+---
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotPolicy
+metadata:
+  name: photoprism-originals
+spec:
+  adoption: Ignore
+  copyMethod: Direct
+  defaultDeletionPolicy: Delete
+  errorHandling:
+    failFast: true
+  extraArgs:
+  - --inherit=false
+  - --clear-dot-ignore
+  - --keep-latest=2147483647
+  - --keep-hourly=0
+  - --keep-daily=0
+  - --keep-weekly=0
+  - --keep-monthly=0
+  - --keep-annual=0
+  files:
+    ignoreCacheDirs: false
+    ignoreRules:
+    - .syncthing.*.tmp
+  identity:
+    hostname: homelab
+    username: photoprism
+  repository:
+    kind: Repository
+    name: photoprism-backup
+  retention:
+    keepLatest: 3
+    keepHourly: 0
+    keepDaily: 14
+    keepWeekly: 8
+    keepMonthly: 12
+    keepAnnual: 0
+  sources:
+  - pvc:
+      name: photoprism-originals
+    sourcePathOverride: /originals
+  verification:
+    quick:
+      schedule:
+        cron: 50 9 * * *
+        jitter: 0s
+    successExpr: stats.errors == 0
+    verifyFilesPercent: 100
+---
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotSchedule
+metadata:
+  name: photoprism-originals
+spec:
+  deletion:
+    onScheduleDelete: Retain
+  failedJobsHistoryLimit: 2
+  policyRef:
+    name: photoprism-originals
+  schedule:
+    concurrencyPolicy: Forbid
+    cron: 30 2 * * *
+    startingDeadlineSeconds: 3600
+    timezone: Etc/UTC
+---
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: RepositoryReplication
+metadata:
+  name: photoprism-offsite
+spec:
+  destination:
+    s3:
+      auth:
+        secretRef:
+          name: photoprism-kopia
+      bucket: jetersen-homelab-kopia
+      endpoint: s3.de.io.cloud.ovh.net
+      prefix: applications/photoprism/
+      region: de
+  schedule:
+    cron: 20 * * * *
+    jitter: 0s
+    timezone: Etc/UTC
+  sourceRef:
+    kind: Repository
+    name: photoprism-backup
+  sync:
+    deleteExtra: true
+    mustExist: false
+    parallel: 4
+    update: true

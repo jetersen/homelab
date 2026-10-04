@@ -9,6 +9,7 @@ resources:
   - konflate/flux-ks.yaml
   - media/flux-ks.yaml
   - openspeedtest/flux-ks.yaml
+  - photoprism/flux-ks.yaml
   - reflector/flux-ks.yaml
   - reloader/flux-ks.yaml
 components:

@@ -1,0 +1,70 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+    name: photoprism-nas-backup
+    annotations:
+        kustomize.toolkit.fluxcd.io/prune: disabled
+spec:
+    capacity:
+        storage: 100Gi
+    accessModes:
+        - ReadWriteMany
+    persistentVolumeReclaimPolicy: Retain
+    storageClassName: ""
+    mountOptions:
+        - nfsvers=4.2
+        - hard
+        - timeo=600
+        - retrans=2
+    claimRef:
+        namespace: photoprism
+        name: photoprism-nas-backup
+    nfs:
+        server: ENC[AES256_GCM,data:4+AiVquljHzab0U=,iv:050Ha76RYhyq/NqGDDHmmqwFcNk69iHFR2P5O43xbT0=,tag:wWjk4bAGxep0cO7kWKkF1g==,type:str]
+        path: ENC[AES256_GCM,data:v631++kAQgDowELXtG7AQbPcF5EdT26/kP+ekDkcR2kstamZ9Z8=,iv:o6/0hnvrf6N1S4WYR2vOZnWnuV/b0kK9mVbvKPI86sA=,tag:TnLGS4dSrNIhAirYGvhigw==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSB0NkxTbGtYUVozSE04N2Jn
+            TlE4VkF4VE9HQTdYOWt6TFFvc3NkaExaYldnCnltSHNRcndDbm5jcmZZZlc2Mlpl
+            T1JxRFlBQ3Z5TDJ6ckxtVk9iMkZoMFEKLS0tIHBTU0NLK3VRcDd3MUJGUlZaNzJE
+            b3haVWZQNHo0WXBIQTVGQXlXMXBCZTQKTzuLtzbCatpBSubSU3yRreXiHrixtbb+
+            9nQcv8ap47ZsPg1Fz2c5al8Xb6SDs4M887WYNjU4n+SYqGcJO+t+JQ==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1u0m8ryqg7hfhuykraxe35v4xzw92a03w9jpt75yv3m57g6pvpp0sf24mdy
+    encrypted_regex: ^nfs$
+    lastmodified: "2026-10-04T17:25:52Z"
+    mac: ENC[AES256_GCM,data:CsBvDNoMy/m8EYwKo7TfgeYm4dXXgtS0tCDVSFUrdXt37IwU8amqvzG1svJQqkUM6rd4Rf6CjGP7dHzAajZxmJWV7TG/hxCzmFQBBBi1xj/QgoPoEHmoxPM0n1ISm4VvwQ/qMnLf/scjw98LSHm2tfFcqbSvww8xbA0Z118BM0w=,iv:OlhTaqCYt3n6pCUdFIxdZ8IDAeB82S1oKNxOnlC0n9w=,tag:CHGmjjF/WS4cu6g+BAyicA==,type:str]
+    version: 3.13.3
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    name: photoprism-nas-backup
+    annotations:
+        kustomize.toolkit.fluxcd.io/prune: disabled
+    namespace: photoprism
+spec:
+    accessModes:
+        - ReadWriteMany
+    storageClassName: ""
+    volumeName: photoprism-nas-backup
+    resources:
+        requests:
+            storage: 100Gi
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSB0NkxTbGtYUVozSE04N2Jn
+            TlE4VkF4VE9HQTdYOWt6TFFvc3NkaExaYldnCnltSHNRcndDbm5jcmZZZlc2Mlpl
+            T1JxRFlBQ3Z5TDJ6ckxtVk9iMkZoMFEKLS0tIHBTU0NLK3VRcDd3MUJGUlZaNzJE
+            b3haVWZQNHo0WXBIQTVGQXlXMXBCZTQKTzuLtzbCatpBSubSU3yRreXiHrixtbb+
+            9nQcv8ap47ZsPg1Fz2c5al8Xb6SDs4M887WYNjU4n+SYqGcJO+t+JQ==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1u0m8ryqg7hfhuykraxe35v4xzw92a03w9jpt75yv3m57g6pvpp0sf24mdy
+    encrypted_regex: ^nfs$
+    lastmodified: "2026-10-04T17:25:52Z"
+    mac: ENC[AES256_GCM,data:CsBvDNoMy/m8EYwKo7TfgeYm4dXXgtS0tCDVSFUrdXt37IwU8amqvzG1svJQqkUM6rd4Rf6CjGP7dHzAajZxmJWV7TG/hxCzmFQBBBi1xj/QgoPoEHmoxPM0n1ISm4VvwQ/qMnLf/scjw98LSHm2tfFcqbSvww8xbA0Z118BM0w=,iv:OlhTaqCYt3n6pCUdFIxdZ8IDAeB82S1oKNxOnlC0n9w=,tag:CHGmjjF/WS4cu6g+BAyicA==,type:str]
+    version: 3.13.3

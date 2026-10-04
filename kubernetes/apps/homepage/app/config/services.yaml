@@ -12,6 +12,12 @@
       namespace: home-assistant
       app: zigbee2mqtt
 - Media:
+  - PhotoPrism:
+      href: https://photos.jetersen.dev
+      description: Photos and albums
+      icon: photoprism.png
+      namespace: photoprism
+      app: photoprism
   - Jellyfin:
       href: https://jellyfin.lan.jetersen.dev
       description: Movies and television

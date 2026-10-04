@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: photoprism
+resources:
+- helmrelease.yaml
+- nas-storage.sops.yaml
+- admin-secret.sops.yaml
+- access-policy.yaml
+components:
+- ../../../components/helmrelease-defaults

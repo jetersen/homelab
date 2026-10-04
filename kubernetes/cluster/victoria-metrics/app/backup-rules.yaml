@@ -52,7 +52,7 @@ spec:
       annotations:
         summary: No successful offsite replication within two hours for {{ $labels.namespace }}/{{ $labels.name }}
     - alert: BackupMonitoringMissing
-      expr: absent(homelab_kopiur_schedule_created{namespace="home-assistant",name="home-assistant-backup"}) or absent(homelab_kopiur_schedule_created{namespace="home-assistant",name="zigbee2mqtt-backup"}) or absent(homelab_kopiur_schedule_created{namespace="media",name="sonarr-backup"}) or absent(homelab_kopiur_schedule_created{namespace="forgejo",name="forgejo-backup"})
+      expr: absent(homelab_kopiur_schedule_created{namespace="home-assistant",name="home-assistant-backup"}) or absent(homelab_kopiur_schedule_created{namespace="home-assistant",name="zigbee2mqtt-backup"}) or absent(homelab_kopiur_schedule_created{namespace="media",name="sonarr-backup"}) or absent(homelab_kopiur_schedule_created{namespace="forgejo",name="forgejo-backup"}) or absent(homelab_kopiur_schedule_created{namespace="photoprism",name="photoprism-state"}) or absent(homelab_kopiur_schedule_created{namespace="photoprism",name="photoprism-originals"})
       for: 10m
       labels:
         severity: warning

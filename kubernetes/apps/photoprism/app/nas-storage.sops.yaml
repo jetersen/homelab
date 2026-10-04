@@ -1,0 +1,70 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+    name: photoprism-originals
+    annotations:
+        kustomize.toolkit.fluxcd.io/prune: disabled
+spec:
+    capacity:
+        storage: 100Gi
+    accessModes:
+        - ReadWriteMany
+    persistentVolumeReclaimPolicy: Retain
+    storageClassName: ""
+    mountOptions:
+        - nfsvers=4.2
+        - hard
+        - timeo=600
+        - retrans=2
+    claimRef:
+        namespace: photoprism
+        name: photoprism-originals
+    nfs:
+        server: ENC[AES256_GCM,data:sc7ho4IpmU8WXLE=,iv:TGT+aU880p2NMtcU3qeusTIfnbmsUQZ6gnGUtxo6wbk=,tag:SZiahGMxnUnaiYBYbmfGfQ==,type:str]
+        path: ENC[AES256_GCM,data:/5eT8DmQTrujBKkOtaKa5RY3r7qyAA==,iv:RhoROoMs0LVX/PByqYcdpXB9d54MX6FTEMXHu813yH8=,tag:L3dwgpwh7k/WT2bKnvUElg==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSAvOVUzZnRUc1A4dFdUc3pi
+            cnBxZDgzWmRXaXZsbTBNc0xNQ00vUDV5YnpVCnorQkJaRG1ZdTJjdFYyaDhlUGxm
+            N29waUoxSzR2R1JQbzhBV2VqcHFDYlEKLS0tIGhpMXJDb1pIbDRTcmprcE8rb0U0
+            eGZkL0J4SUNpc3o1TUdKdjJBcWNEMWcKlNdh/KA2CZUMiiY9QSbdPkk8dgJX5Lis
+            4kkgOhqjpq7B78erAfjLafeQR4N1FgSDL1LC8dlFlFZ19CgY7Rx3aw==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1u0m8ryqg7hfhuykraxe35v4xzw92a03w9jpt75yv3m57g6pvpp0sf24mdy
+    encrypted_regex: ^nfs$
+    lastmodified: "2026-10-04T17:25:52Z"
+    mac: ENC[AES256_GCM,data:KyvuQY0bwyje4ktJpQfDfqq9FkAgEAP2HxNkUxcqZpVqB9+/V22uAomT3LbKfEA+54lZ1PvcDcCQRluu+mCdGrBn1+T3ljnF/yEZTzON9e5d/Dx6x7J6bMc5hDh6LBMYBmtbYXs0PDLEbX5j3+sKKmPIGQpvbYbsrqXV8yEzjxk=,iv:QIsNu6z71CVhLl7Rv/VM1qf6xS2KwxRcRcE0YuZTAR0=,tag:m8mge0EswOWEsMveTneO1w==,type:str]
+    version: 3.13.3
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    name: photoprism-originals
+    annotations:
+        kustomize.toolkit.fluxcd.io/prune: disabled
+    namespace: photoprism
+spec:
+    accessModes:
+        - ReadWriteMany
+    storageClassName: ""
+    volumeName: photoprism-originals
+    resources:
+        requests:
+            storage: 100Gi
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSAvOVUzZnRUc1A4dFdUc3pi
+            cnBxZDgzWmRXaXZsbTBNc0xNQ00vUDV5YnpVCnorQkJaRG1ZdTJjdFYyaDhlUGxm
+            N29waUoxSzR2R1JQbzhBV2VqcHFDYlEKLS0tIGhpMXJDb1pIbDRTcmprcE8rb0U0
+            eGZkL0J4SUNpc3o1TUdKdjJBcWNEMWcKlNdh/KA2CZUMiiY9QSbdPkk8dgJX5Lis
+            4kkgOhqjpq7B78erAfjLafeQR4N1FgSDL1LC8dlFlFZ19CgY7Rx3aw==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1u0m8ryqg7hfhuykraxe35v4xzw92a03w9jpt75yv3m57g6pvpp0sf24mdy
+    encrypted_regex: ^nfs$
+    lastmodified: "2026-10-04T17:25:52Z"
+    mac: ENC[AES256_GCM,data:KyvuQY0bwyje4ktJpQfDfqq9FkAgEAP2HxNkUxcqZpVqB9+/V22uAomT3LbKfEA+54lZ1PvcDcCQRluu+mCdGrBn1+T3ljnF/yEZTzON9e5d/Dx6x7J6bMc5hDh6LBMYBmtbYXs0PDLEbX5j3+sKKmPIGQpvbYbsrqXV8yEzjxk=,iv:QIsNu6z71CVhLl7Rv/VM1qf6xS2KwxRcRcE0YuZTAR0=,tag:m8mge0EswOWEsMveTneO1w==,type:str]
+    version: 3.13.3

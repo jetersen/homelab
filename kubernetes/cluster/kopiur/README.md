@@ -1,6 +1,6 @@
 # Application backups with Kopiur
 
-Home Assistant, Zigbee2MQTT, and Sonarr write encrypted repositories to retained
+Home Assistant, Zigbee2MQTT, Sonarr, and PhotoPrism write encrypted repositories to retained
 NAS PVCs. `RepositoryReplication` mirrors each repository to S3 hourly, with
 separate schedules from snapshots and maintenance. Offsite recovery depends on
 a successful replication after the selected snapshot. The read-only
@@ -23,7 +23,8 @@ use `create.enabled: true` for its first initialization.
 
 See [Home Assistant and Zigbee backups](/kubernetes/apps/home-assistant/backup/README.md),
 [Sonarr backups](/kubernetes/apps/media/backup/README.md), and
-[Forgejo recovery](/kubernetes/apps/forgejo/README.md#backup-and-recovery).
+[Forgejo recovery](/kubernetes/apps/forgejo/README.md#backup-and-recovery), and
+[PhotoPrism recovery](/kubernetes/apps/photoprism/README.md#backups-and-recovery).
 PVC backups do not recover Talos configuration, SOPS keys, unrelated NAS data,
 Pulumi state, or secrets outside those volumes.
 

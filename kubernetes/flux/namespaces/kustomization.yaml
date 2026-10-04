@@ -14,6 +14,7 @@ resources:
   - media.yaml
   - monitoring.yaml
   - openspeedtest.yaml
+  - photoprism.yaml
   - reflector.yaml
   - system-upgrade.yaml
   - technitium.yaml

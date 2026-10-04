@@ -1,0 +1,22 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: photoprism-internal
+spec:
+  targetRefs:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    name: photoprism
+  authorization:
+    defaultAction: Deny
+    rules:
+    - action: Allow
+      principal:
+        clientCIDRs:
+        - 192.168.1.0/24
+        - fde2:b84e:c4cd:1::/64
+        - 2a13:e747:b7be:9100::/64
+        - 100.64.0.0/10
+        - fd7a:115c:a1e0::/48
+        - 172.22.0.0/16
+        - 2a13:e747:b7be:2200::/56
