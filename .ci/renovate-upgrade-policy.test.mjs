@@ -39,7 +39,7 @@ test('permits only one reviewed minor step and rejects an unsupported running cl
 });
 
 const catalog = () => ({
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "refreshedAt": "2026-10-01T00:00:00Z",
   "projects": {
     "cilium": {
@@ -67,9 +67,11 @@ const catalog = () => ({
       }
     },
     "flux": {
-      "source": "https://raw.githubusercontent.com/controlplaneio-fluxcd/distribution/v2.9.6/releases/release-v2.9.md",
+      "source": "https://api.github.com/repos/fluxcd/flux2/releases/tags/v2.9.0",
       "versions": {
         "v2.9.6": {
+          "source": "https://api.github.com/repos/fluxcd/flux2/releases/tags/v2.9.0",
+          "minimumKubernetes": { "1.35": "1.35.0", "1.36": "1.36.0" },
           "sourceSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
           "supportedKubernetes": [
             "1.35",
@@ -79,7 +81,7 @@ const catalog = () => ({
       }
     },
     "cert-manager": {
-      "source": "https://raw.githubusercontent.com/cert-manager/website/f3d3eb067ef6c469d3a41d4c616906f609c94170/content/docs/releases/README.md",
+      "source": "https://raw.githubusercontent.com/cert-manager/website/master/content/docs/releases/README.md",
       "versions": {
         "v1.21": {
           "sourceSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
@@ -143,4 +145,27 @@ test('all five deployed projects constrain the Kubernetes intersection', () => {
     const input = structuredClone(matrices); input[i] = ['1.36'];
     assert.equal(policy(live, input).packageRules[2].allowedVersions, '>=1.36.5 <1.37.0');
   }
+});
+
+test('rejects Enterprise Flux provenance, wrong release lines, and missing patch constraints', () => {
+  for (const mutate of [
+    c => { c.schemaVersion = 2; },
+    c => { c.projects.flux.source = 'https://raw.githubusercontent.com/controlplaneio-fluxcd/distribution/v2.9.6/releases/release-v2.9.md'; },
+    c => { c.projects.flux.versions['v2.9.6'].source = 'https://api.github.com/repos/fluxcd/flux2/releases/tags/v2.10.0'; },
+    c => { delete c.projects.flux.versions['v2.9.6'].minimumKubernetes; },
+    c => { c.projects.flux.versions['v2.9.6'].minimumKubernetes['1.36'] = '1.35.0'; },
+  ]) {
+    const value = catalog(); mutate(value);
+    assert.throws(() => cachedMatrices(value, liveVersions(badges(), 1050), Date.parse('2026-10-04')));
+  }
+});
+test('enforces Flux minimum patches for the running cluster and next-minor proposals', () => {
+  const value = catalog(), live = liveVersions(badges(), 1050), now = Date.parse('2026-10-04');
+  live.kubernetes = version('1.35.0');
+  value.projects.flux.versions['v2.9.6'].minimumKubernetes['1.35'] = '1.35.1';
+  assert.throws(() => cachedMatrices(value, live, now), /minimum patch/);
+  live.kubernetes = version('1.35.1');
+  assert.doesNotThrow(() => cachedMatrices(value, live, now));
+  const result = policy(live, [['1.35', '1.36']], [live.talos.line], { '1.36': '1.36.2' });
+  assert.equal(result.packageRules[2].allowedVersions, '>=1.35.1 <1.36.0 || >=1.36.2 <1.37.0');
 });

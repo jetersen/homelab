@@ -39,7 +39,7 @@ export function liveVersions(badges, now = Date.now() / 1000) {
 
 export function cachedMatrices(catalog, live, now = Date.now()) {
   const refreshed = Date.parse(catalog?.refreshedAt);
-  if (catalog?.schemaVersion !== 2 || !Number.isFinite(refreshed) ||
+  if (catalog?.schemaVersion !== 3 || !Number.isFinite(refreshed) ||
       now - refreshed > 45 * 24 * 60 * 60 * 1000 || refreshed - now > 300_000) {
     throw new Error('Missing, unsupported, or stale compatibility cache');
   }
@@ -47,8 +47,8 @@ export function cachedMatrices(catalog, live, now = Date.now()) {
   for (const [id, project, sourcePattern] of [
     ['cilium', 'cilium', /^https:\/\/raw\.githubusercontent\.com\/cilium\/cilium\/v\d+\.\d+\.\d+\/Documentation\/network\/kubernetes\/compatibility\.rst$/],
     ['envoy', 'envoy-gateway', /^https:\/\/raw\.githubusercontent\.com\/envoyproxy\/gateway\/v\d+\.\d+\.\d+\/site\/content\/en\/news\/releases\/matrix\.md$/],
-    ['flux', 'flux', /^https:\/\/raw\.githubusercontent\.com\/controlplaneio-fluxcd\/distribution\/v\d+\.\d+\.\d+\/releases\/release-v\d+\.\d+\.md$/],
-    ['cert-manager', 'cert-manager', /^https:\/\/raw\.githubusercontent\.com\/cert-manager\/website\/[a-f0-9]{40}\/content\/docs\/releases\/README\.md$/],
+    ['flux', 'flux', /^https:\/\/api\.github\.com\/repos\/fluxcd\/flux2\/releases\/tags\/v\d+\.\d+\.0$/],
+    ['cert-manager', 'cert-manager', /^https:\/\/raw\.githubusercontent\.com\/cert-manager\/website\/master\/content\/docs\/releases\/README\.md$/],
     ['talos', 'talos', /^https:\/\/raw\.githubusercontent\.com\/siderolabs\/docs\/main\/public\/talos\/v\d+\.\d+\/getting-started\/support-matrix\.mdx$/],
   ]) {
     const data = catalog.projects?.[project];
@@ -62,12 +62,24 @@ export function cachedMatrices(catalog, live, now = Date.now()) {
         new Set(versions).size !== versions.length) {
       throw new Error(`Missing or invalid released compatibility cache: ${project}/${tag}`);
     }
+    if (id === 'flux') {
+      const expected = `https://api.github.com/repos/fluxcd/flux2/releases/tags/v${live.flux.line}.0`;
+      const minimums = entry.minimumKubernetes;
+      if (entry.source !== expected || !minimums || Object.keys(minimums).length !== versions.length ||
+          versions.some(line => version(minimums[line]).line !== line)) {
+        throw new Error('Invalid upstream Flux release provenance or minimum patch versions');
+      }
+      const minimum = minimums[live.kubernetes.line];
+      if (minimum && live.kubernetes.patch < version(minimum).patch) {
+        throw new Error('Running Kubernetes is below the Flux minimum patch version');
+      }
+    }
     result[id] = { source: data.source, ...entry };
   }
   return result;
 }
 
-export function policy(live, matrices, talosLines = [live.talos.line]) {
+export function policy(live, matrices, talosLines = [live.talos.line], kubernetesMinimums = {}) {
   if (!matrices.length) throw new Error('Compatibility matrices are required');
   const supported = matrices.reduce((common, list) => common.filter(v => list.includes(v)));
   if (!supported.includes(live.kubernetes.line)) {
@@ -80,10 +92,14 @@ export function policy(live, matrices, talosLines = [live.talos.line]) {
     const next = `${current.major}.${current.minor + 1}`;
     const allowNext = name === 'talos' ? talosLines.includes(next) : supported.includes(next);
     const upper = `${current.major}.${current.minor + (allowNext ? 2 : 1)}.0`;
+    let allowedVersions = `>=${current.text} <${upper}`;
+    if (name === 'kubernetes' && allowNext && kubernetesMinimums[next]) {
+      allowedVersions = `>=${current.text} <${next}.0 || >=${kubernetesMinimums[next]} <${upper}`;
+    }
     packageRules.push({
       description: `Constrain ${name} to the live cluster and released compatibility matrices`,
       matchPackageNames: packages[name],
-      allowedVersions: `>=${current.text} <${upper}`,
+      allowedVersions,
       automerge: false,
     }, {
       description: `Allow ${name} patches only on the live minor`,
@@ -118,7 +134,7 @@ export async function generate(base = 'https://upgrade-versions.lan.jetersen.dev
       Object.entries(catalog.projects.talos.versions)
         .filter(([tag, entry]) => /^v\d+\.\d+$/.test(tag) && !entry.unavailable &&
           Array.isArray(entry.supportedKubernetes) && entry.supportedKubernetes.includes(live.kubernetes.line))
-        .map(([tag]) => tag.slice(1))),
+        .map(([tag]) => tag.slice(1)), matrices.flux.minimumKubernetes),
   };
 }
 
