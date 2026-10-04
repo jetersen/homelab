@@ -120,6 +120,7 @@ spec:
         repository:
           ROOT: /mnt/nas/repositories
           DEFAULT_BRANCH: main
+          ENABLE_PUSH_CREATE_USER: true
         repository.pull-request:
           DEFAULT_MERGE_STYLE: rebase
           DEFAULT_UPDATE_STYLE: rebase
