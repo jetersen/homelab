@@ -79,11 +79,11 @@ spec:
   defaultDeletionPolicy: Delete
   adoption: Ignore
   retention:
-    keepLatest: 3
+    keepLatest: 0
     keepHourly: 0
     keepDaily: 14
-    keepWeekly: 8
-    keepMonthly: 6
+    keepWeekly: 4
+    keepMonthly: 0
     keepAnnual: 0
   files:
     ignoreRules:
