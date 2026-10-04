@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/gateway.envoyproxy.io/backendtrafficpolicy_v1alpha1.json
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: BackendTrafficPolicy
+metadata:
+  name: forgejo-error-page
+spec:
+  mergeType: StrategicMerge
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: forgejo
+  responseOverride:
+    - source: Local
+      match:
+        statusCodes:
+          - type: Range
+            range:
+              start: 502
+              end: 504
+      response:
+        contentType: text/html; charset=utf-8
+        header:
+          set:
+            - name: Cache-Control
+              value: no-store
+            - name: Retry-After
+              value: "30"
+            - name: X-Content-Type-Options
+              value: nosniff
+        body:
+          type: ValueRef
+          valueRef:
+            group: ""
+            kind: ConfigMap
+            name: forgejo-error-page

@@ -10,6 +10,13 @@ resources:
   - admin-secret.sops.yaml
   - github-oauth.sops.yaml
   - access-policy.yaml
+  - error-page.yaml
+configMapGenerator:
+  - name: forgejo-error-page
+    files:
+      - response.body=error-page.html
+    options:
+      disableNameSuffixHash: true
 components:
   - ../../../components/oci-source-defaults
   - ../../../components/helmrelease-defaults
