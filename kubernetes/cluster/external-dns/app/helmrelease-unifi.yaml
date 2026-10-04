@@ -1,5 +1,5 @@
 ---
-# yaml-language-server: $schema=https://raw.githubusercontent.com/fluxcd-community/flux2-schemas/main/helmrelease-helm-v2.json
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/helm.toolkit.fluxcd.io/helmrelease_v2.json
 # Internal DNS tier, 2 of 2. This tier must not depend on Technitium: Technitium
 # runs inside this cluster, and the nodes need DNS before the cluster exists.
 # Hence a synced copy here rather than forwarding. Shares its record set and

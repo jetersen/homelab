@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/core/persistentvolume_v1.json
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -39,8 +40,10 @@ sops:
     version: 3.13.3
 
 ---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/core/persistentvolumeclaim_v1.json
 {"apiVersion": "v1", "kind": "PersistentVolumeClaim", "metadata": {"name": "home-assistant-nas-backup", "namespace": "home-assistant", "annotations": {"kustomize.toolkit.fluxcd.io/prune": "disabled"}}, "spec": {"accessModes": ["ReadWriteMany"], "storageClassName": "", "volumeName": "home-assistant-nas-backup", "resources": {"requests": {"storage": "100Gi"}}}}
 ---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/core/persistentvolume_v1.json
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -82,4 +85,5 @@ sops:
     version: 3.13.3
 
 ---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/core/persistentvolumeclaim_v1.json
 {"apiVersion": "v1", "kind": "PersistentVolumeClaim", "metadata": {"name": "zigbee2mqtt-nas-backup", "namespace": "home-assistant", "annotations": {"kustomize.toolkit.fluxcd.io/prune": "disabled"}}, "spec": {"accessModes": ["ReadWriteMany"], "storageClassName": "", "volumeName": "zigbee2mqtt-nas-backup", "resources": {"requests": {"storage": "100Gi"}}}}

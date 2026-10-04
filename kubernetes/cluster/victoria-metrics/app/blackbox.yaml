@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/core/configmap_v1.json
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -56,6 +57,7 @@ data:
             - '.*\s+IN\s+A\s+.*'
 
 ---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/apps/deployment_v1.json
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -117,6 +119,7 @@ spec:
         configMap:
           name: blackbox-exporter
 ---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/core/service_v1.json
 apiVersion: v1
 kind: Service
 metadata:
@@ -131,6 +134,7 @@ spec:
     port: 9115
     targetPort: http
 ---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/operator.victoriametrics.com/vmservicescrape_v1beta1.json
 apiVersion: operator.victoriametrics.com/v1beta1
 kind: VMServiceScrape
 metadata:

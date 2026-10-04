@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://www.schemastore.org/github-action.json
 name: Publish homelab images
 description: Build, smoke test, and publish workload images
 inputs:

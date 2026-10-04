@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/external/siderolabs/talos/config.schema.json
 # Included in generated machine configs; apply changes without reboot.
 # Requires a Talos image containing siderolabs/tailscale.
 # Enrollment uses an interactive login; credentials persist under /var/lib/tailscale.

@@ -1,4 +1,5 @@
 ---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/core/persistentvolume_v1.json
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -24,6 +25,7 @@ spec:
     server: 192.168.1.2
     path: /mnt/nvme/media
 ---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/core/persistentvolumeclaim_v1.json
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:

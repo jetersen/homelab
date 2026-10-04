@@ -1,9 +1,11 @@
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/core/serviceaccount_v1.json
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: forgejo-runner
 automountServiceAccountToken: false
 ---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/apps/deployment_v1.json
 apiVersion: apps/v1
 kind: Deployment
 metadata:

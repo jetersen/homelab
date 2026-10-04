@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/kopiur.home-operations.com/repository_v1alpha1.json
 apiVersion: kopiur.home-operations.com/v1alpha1
 kind: Repository
 metadata:
@@ -52,6 +53,7 @@ spec:
         jitter: 0s
       timezone: Etc/UTC
 ---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/kopiur.home-operations.com/repository_v1alpha1.json
 apiVersion: kopiur.home-operations.com/v1alpha1
 kind: Repository
 metadata:
@@ -100,6 +102,7 @@ spec:
   maintenance:
     enabled: false
 ---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/kopiur.home-operations.com/snapshotpolicy_v1alpha1.json
 apiVersion: kopiur.home-operations.com/v1alpha1
 kind: SnapshotPolicy
 metadata:
@@ -203,6 +206,7 @@ spec:
         jitter: 0s
     successExpr: stats.files > 0 && stats.errors == 0
 ---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/kopiur.home-operations.com/snapshotschedule_v1alpha1.json
 apiVersion: kopiur.home-operations.com/v1alpha1
 kind: SnapshotSchedule
 metadata:
@@ -219,6 +223,7 @@ spec:
   deletion:
     onScheduleDelete: Retain
 ---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/kopiur.home-operations.com/repositoryreplication_v1alpha1.json
 apiVersion: kopiur.home-operations.com/v1alpha1
 kind: RepositoryReplication
 metadata:
