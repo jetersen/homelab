@@ -108,9 +108,17 @@ test('reads exact release entries from the cache through a short upstream outage
   const cached = cachedMatrices(catalog(), liveVersions(badges(), 1050), Date.parse('2026-10-04'));
   assert.deepEqual(cached.envoy.supportedKubernetes, ['1.35', '1.36']);
 });
+test('allows a monthly refresh with outage tolerance but rejects caches older than 45 days', () => {
+  const live = liveVersions(badges(), 1050), cached = catalog();
+  const refreshed = Date.parse(cached.refreshedAt), day = 24 * 60 * 60 * 1000;
+  for (const age of [31 * day, 45 * day]) {
+    assert.deepEqual(cachedMatrices(cached, live, refreshed + age).envoy.supportedKubernetes, ['1.35', '1.36']);
+  }
+  assert.throws(() => cachedMatrices(cached, live, refreshed + 45 * day + 1));
+});
 test('rejects stale caches, missing releases, wrong provenance, and unavailable matrix rows', () => {
   const live = liveVersions(badges(), 1050), now = Date.parse('2026-10-04');
-  assert.throws(() => cachedMatrices(catalog(), live, Date.parse('2026-10-09')));
+  assert.throws(() => cachedMatrices(catalog(), live, Date.parse('2026-11-16')));
   assert.throws(() => cachedMatrices(catalog(), live, Date.parse('2026-09-30')));
   for (const mutate of [
     c => { delete c.projects.cilium.versions['v1.20.2']; },

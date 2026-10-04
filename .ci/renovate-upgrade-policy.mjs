@@ -40,7 +40,7 @@ export function liveVersions(badges, now = Date.now() / 1000) {
 export function cachedMatrices(catalog, live, now = Date.now()) {
   const refreshed = Date.parse(catalog?.refreshedAt);
   if (catalog?.schemaVersion !== 2 || !Number.isFinite(refreshed) ||
-      now - refreshed > 7 * 24 * 60 * 60 * 1000 || refreshed - now > 300_000) {
+      now - refreshed > 45 * 24 * 60 * 60 * 1000 || refreshed - now > 300_000) {
     throw new Error('Missing, unsupported, or stale compatibility cache');
   }
   const result = {};

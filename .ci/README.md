@@ -121,10 +121,10 @@ reads the public
 [kubernetes-compatibility cache](https://forgejo.jetersen.dev/jetersen/kubernetes-compatibility)
 on Forgejo and selects the entries for the exact deployed release tags. The
 cache refreshes Cilium, Envoy Gateway, Flux, cert-manager, and Talos matrices
-every six hours. Renovate maintains one source URL per project; generated
-version entries record supported Kubernetes minors and document hashes. Only
+monthly and after source changes reach `main`. Renovate maintains one source URL
+per project; generated version entries record supported Kubernetes minors and document hashes. Only
 running and newer versions are retained. The policy rejects missing or unavailable
-released rows, malformed entries, and catalogs older than seven days. Short
+released rows, malformed entries, and catalogs older than 45 days. Short
 GitHub outages therefore do not block runs while the cache remains fresh.
 
 Matrix lookups need only Forgejo; GitHub access for them is confined to the
