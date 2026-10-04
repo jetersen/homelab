@@ -17,5 +17,5 @@ services:
       - config:/etc/dns
       - logs:/var/log/technitium/dns
 volumes:
-  config:
-  logs:
+  config: {}
+  logs: {}

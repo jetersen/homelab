@@ -1,0 +1,10 @@
+{
+  "syncthing": {
+    "train": "stable",
+    "version": "1.3.12"
+  },
+  "tailscale": {
+    "train": "community",
+    "version": "1.4.17"
+  }
+}

@@ -13,16 +13,37 @@
     {
       "customType": "regex",
       "description": "Update the local-path-provisioner manifest fetched directly over HTTPS",
-      "managerFilePatterns": ["/^kubernetes/cluster/local-path-provisioner/app/kustomization\\.yaml$/"],
-      "matchStrings": ["https://raw\\.githubusercontent\\.com/(?<depName>rancher/local-path-provisioner)/(?<currentValue>[^/]+)/deploy/local-path-storage\\.yaml"],
+      "managerFilePatterns": [
+        "/^kubernetes/cluster/local-path-provisioner/app/kustomization\\.yaml$/"
+      ],
+      "matchStrings": [
+        "https://raw\\.githubusercontent\\.com/(?<depName>rancher/local-path-provisioner)/(?<currentValue>[^/]+)/deploy/local-path-storage\\.yaml"
+      ],
       "datasourceTemplate": "github-tags"
+    },
+    {
+      "customType": "jsonata",
+      "description": "Update TrueNAS catalog app versions consumed by Pulumi",
+      "fileFormat": "json",
+      "managerFilePatterns": [
+        "/^infrastructure/truenas/catalog-apps\\.json$/"
+      ],
+      "matchStrings": [
+        "$each($, function($app, $name) { {\"depName\": \"truenas/\" & $name, \"packageName\": $app.train & \"/\" & $name, \"currentValue\": $app.version} })"
+      ],
+      "datasourceTemplate": "custom.truenas-app",
+      "versioningTemplate": "semver"
     }
   ],
   "packageRules": [
     {
       "description": "TrueNAS SDK upgrades use GitHub release assets and a reviewed lockfile update",
-      "matchDatasources": ["nuget"],
-      "matchPackageNames": ["Jetersen.Pulumi.TrueNas"],
+      "matchDatasources": [
+        "nuget"
+      ],
+      "matchPackageNames": [
+        "Jetersen.Pulumi.TrueNas"
+      ],
       "enabled": false
     },
     {
@@ -32,5 +53,14 @@
       ],
       "separateMajorMinor": false
     }
-  ]
+  ],
+  "customDatasources": {
+    "truenas-app": {
+      "defaultRegistryUrlTemplate": "https://raw.githubusercontent.com/truenas/apps/master/trains/{{packageName}}/app_versions.json",
+      "format": "json",
+      "transformTemplates": [
+        "{\"releases\": [$.*[healthy and supported].{\"version\": version}], \"sourceUrl\": \"https://github.com/truenas/apps\"}"
+      ]
+    }
+  }
 }
