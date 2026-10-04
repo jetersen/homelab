@@ -18,6 +18,7 @@ resources:
   - local-path-provisioner/flux-ks.yaml
   - kromgo/flux-ks.yaml
   - metrics-server/flux-ks.yaml
+  - notifications/flux-ks.yaml
   - technitium/flux-ks.yaml
   - towonel-operator/flux-ks.yaml
   - towonel-operator/tunnel-ks.yaml

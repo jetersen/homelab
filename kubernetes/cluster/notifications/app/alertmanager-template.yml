@@ -1,0 +1,13 @@
+title: >-
+  {{ if eq .status "resolved" }}Resolved{{ else }}Alert{{ end }}:
+  {{ .commonLabels.alertname }} ({{ len .alerts }})
+message: |-
+  {{ range .alerts }}{{ .annotations.summary }}
+  {{ if .annotations.description }}{{ .annotations.description }}
+  {{ end }}{{ if .labels.namespace }}Namespace: {{ .labels.namespace }}
+  {{ end }}{{ if .labels.job_name }}Job: {{ .labels.job_name }}
+  {{ end }}{{ if .annotations.runbook_url }}Runbook: {{ .annotations.runbook_url }}
+  {{ end }}
+  {{ end }}
+priority: >-
+  {{ if eq .status "resolved" }}2{{ else if eq .commonLabels.severity "critical" }}5{{ else }}3{{ end }}

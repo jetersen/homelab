@@ -1,0 +1,43 @@
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
+  name: chaski
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: chaski
+  endpoints:
+    - port: metrics
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMProbe
+metadata:
+  name: notifications
+spec:
+  jobName: notifications
+  module: http_2xx
+  interval: 30s
+  vmProberSpec:
+    url: blackbox-exporter.monitoring.svc.cluster.local:9115
+  targets:
+    staticConfig:
+      targets:
+        - http://ntfy.monitoring.svc.cluster.local:8080/v1/health
+        - http://chaski.monitoring.svc.cluster.local:8080/readyz
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+metadata:
+  name: notifications
+spec:
+  groups:
+    - name: homelab.notifications
+      rules:
+        - alert: NotificationRelayFailed
+          expr: sum(increase(chaski_target_sends_total{outcome=~"permanent|retryable"}[5m])) > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Chaski could not deliver notifications
+            description: Check Chaski target credentials and ntfy availability.

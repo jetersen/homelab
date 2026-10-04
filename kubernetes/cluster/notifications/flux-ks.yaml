@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/kustomize.toolkit.fluxcd.io/kustomization_v1.json
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: notifications
+  namespace: flux-system
+  labels:
+    homelab.jetersen.dev/flux-defaults: enabled
+    homelab.jetersen.dev/flux-homelab-source: enabled
+    homelab.jetersen.dev/flux-wait: disabled
+spec:
+  targetNamespace: monitoring
+  path: ./kubernetes/cluster/notifications/app
+  dependsOn:
+    - name: app-template
+    - name: envoy-gateway-config
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: ntfy
+      namespace: monitoring
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: chaski
+      namespace: monitoring
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: notification-events
+  namespace: flux-system
+  labels:
+    homelab.jetersen.dev/flux-defaults: enabled
+    homelab.jetersen.dev/flux-homelab-source: enabled
+    homelab.jetersen.dev/flux-wait: disabled
+spec:
+  targetNamespace: flux-system
+  path: ./kubernetes/cluster/notifications/events
+  dependsOn:
+    - name: notifications

@@ -1,0 +1,24 @@
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
+kind: Provider
+metadata:
+  name: chaski
+spec:
+  type: generic
+  address: http://chaski.monitoring.svc.cluster.local:8080/hooks/flux
+  secretRef:
+    name: chaski-webhook-auth
+---
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
+kind: Alert
+metadata:
+  name: helm-activity
+spec:
+  providerRef:
+    name: chaski
+  eventSeverity: info
+  eventMetadata:
+    cluster: homelab
+  eventSources:
+    - kind: HelmRelease
+      name: '*'
+      namespace: '*'

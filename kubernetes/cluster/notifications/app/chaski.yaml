@@ -1,0 +1,46 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: chaski
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: chaski
+  values:
+    fullnameOverride: chaski
+    deploymentAnnotations:
+      reloader.stakater.com/auto: "true"
+    auth:
+      existingSecret: chaski-auth
+      existingSecretKey: webhook-token
+    extraEnv:
+      - name: NTFY_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: chaski-auth
+            key: ntfy-token
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        memory: 128Mi
+    config:
+      targets:
+        activity:
+          http:
+            url: http://ntfy.monitoring.svc.cluster.local:8080/homelab-activity
+            headers:
+              Authorization: 'Bearer {{ env "NTFY_TOKEN" }}'
+              Content-Type: text/plain
+      routes:
+        flux:
+          target: activity
+          # Only completed Helm actions, not every successful reconciliation.
+          whenExpr: >-
+            payload.involvedObject.kind == "HelmRelease" &&
+            payload.reason in ["InstallSucceeded", "UpgradeSucceeded", "RollbackSucceeded"]
+          message: '{{ .payload.message }}'
+          headers:
+            Title: '{{ .payload.involvedObject.namespace }}/{{ .payload.involvedObject.name }}: {{ .payload.reason }}'
+            Priority: "2"

@@ -1,0 +1,104 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: ntfy
+  labels:
+    homelab.jetersen.dev/dns-profile: app-template
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+    namespace: flux-system
+  values:
+    defaultPodOptions:
+      securityContext:
+        runAsUser: 568
+        runAsGroup: 568
+        runAsNonRoot: true
+        fsGroup: 568
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+    controllers:
+      ntfy:
+        strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          app:
+            image:
+              repository: docker.io/binwiederhier/ntfy
+              tag: v2.28.0@sha256:6ef4b819f722fccdc036af611c4774cfdc2de821ab74fdd48bbf4c9d6f8973da
+            args: [serve]
+            env:
+              TZ: Europe/Copenhagen
+              NTFY_BASE_URL: https://ntfy.jetersen.dev
+              NTFY_LISTEN_HTTP: ":8080"
+              NTFY_CACHE_FILE: /var/lib/ntfy/cache.db
+              NTFY_CACHE_DURATION: 168h
+              NTFY_AUTH_FILE: /var/lib/ntfy/auth.db
+              NTFY_AUTH_DEFAULT_ACCESS: deny-all
+              NTFY_ENABLE_LOGIN: "true"
+              NTFY_REQUIRE_LOGIN: "true"
+              NTFY_ENABLE_SIGNUP: "false"
+              NTFY_BEHIND_PROXY: "true"
+              NTFY_TEMPLATE_DIR: /etc/ntfy/templates
+            envFrom:
+              - secretRef:
+                  name: ntfy-auth
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop: [ALL]
+            probes:
+              liveness: &health
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /v1/health
+                    port: 8080
+                  periodSeconds: 10
+              readiness: *health
+            resources:
+              requests:
+                cpu: 10m
+                memory: 64Mi
+              limits:
+                memory: 256Mi
+    service:
+      app:
+        controller: ntfy
+        ports:
+          http:
+            port: 8080
+    route:
+      app:
+        hostnames: [ntfy.jetersen.dev]
+        parentRefs:
+          - name: envoy-proxy
+            namespace: kube-system
+            sectionName: https
+        rules:
+          - backendRefs:
+              - identifier: app
+                port: 8080
+            # Streaming subscriptions must outlive the default request timeout.
+            timeouts:
+              request: 0s
+              backendRequest: 0s
+    persistence:
+      data:
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        storageClass: local-path
+        size: 1Gi
+        retain: true
+        globalMounts:
+          - path: /var/lib/ntfy
+      templates:
+        type: configMap
+        name: ntfy-templates
+        globalMounts:
+          - path: /etc/ntfy/templates

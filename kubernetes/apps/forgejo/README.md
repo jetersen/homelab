@@ -43,6 +43,9 @@ The backup job briefly stops Forgejo to stage a consistent copy of both stores,
 validates SQLite on local storage, and resumes Forgejo before Kopiur uploads the
 staged copy to S3. Staging is not an independent backup. A watchdog resumes a
 pause older than 25 minutes, including after an abruptly terminated backup pod.
+The five-minute recovery CronJob retains up to 12 failed Jobs, enough for the
+15-minute failed-Job alert to fire during repeated failures. Completed Jobs
+expire after 24 hours; successful history is limited to one Job.
 
 Provision a separate staging dataset with room for both stores. See the
 [shared backup setup](../../cluster/kopiur/README.md#storage-and-credentials)

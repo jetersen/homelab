@@ -1,0 +1,8 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: OCIRepository
+metadata:
+  name: chaski
+spec:
+  ref:
+    tag: 0.5.1
+  url: oci://ghcr.io/home-operations/charts/chaski

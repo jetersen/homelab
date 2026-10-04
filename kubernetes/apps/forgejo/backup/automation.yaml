@@ -51,9 +51,11 @@ spec:
   concurrencyPolicy: Forbid
   startingDeadlineSeconds: 3600
   successfulJobsHistoryLimit: 1
-  failedJobsHistoryLimit: 2
+  # Retain an hour of failures at this cadence, beyond the 15-minute alert delay.
+  failedJobsHistoryLimit: 12
   jobTemplate:
     spec:
+      ttlSecondsAfterFinished: 86400
       backoffLimit: 0
       activeDeadlineSeconds: 420
       template:

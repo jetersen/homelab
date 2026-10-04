@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: chaski-webhook-auth
+    namespace: flux-system
+type: Opaque
+stringData:
+    headers: ENC[AES256_GCM,data:iTXfycTjnxOu0RRbp4Zs/QfMDH2UlZu70y2zbd56EPUGuMEP4fYnTSj2nG/IoZQBmhV96RWOD3yqFCjjJiePrQBjRbYZDxA=,iv:X7j5myp6RBKvvxSGnMF6F6sK0YrHeshEzyYXgYQqDoM=,tag:HP7Ut54UW/9dbjbMVmLpvQ==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBCZ3JmM2hncHMwYlZhZXYw
+            dk9mbzdNdmZmSlc2ODVOQ0owL3JQdVdrYlFBCjRWbVB4cytoLzZsTTIvL1RyRjFa
+            U0J2aTFsczljUTVNNlkweTRyUnRxc3cKLS0tIDlPT3k4TGpkTzZmdTNOb29laVZB
+            RkJnRjV3L2JWemNOVGxMSTBTaDhMZ1UKNEIAm6yR6Uk8mvn3t7SED4ReTUoDPfbk
+            TMyYVphtZHZ4WjchjPCUE8UjZFLa6rj5i6uJgZDXqICw5Ten6AZlWA==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1u0m8ryqg7hfhuykraxe35v4xzw92a03w9jpt75yv3m57g6pvpp0sf24mdy
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-10-04T16:37:49Z"
+    mac: ENC[AES256_GCM,data:eKE7czSeWgVR9L4hXZWvsVwRc3PZe7hSyuGD77Xks1UuqXQ4HgEpXlUD/jSudIHYBOGe63ZpS1Cf7lJC/4M7xnAj5GLGGZibSYekjJeE1jgtrm33Wg64FqXNxYHEahmj0MMhUjOUFeQkudzyNMLNpFseJEN9aD/MhQT8U+oLI6U=,iv:4OVAuWv4kANgR/C6WmlyzkTT9eWYfMDx1EXVs5wNO6U=,tag:SnW9fDoAp5wCoXXBtheouw==,type:str]
+    version: 3.13.3
