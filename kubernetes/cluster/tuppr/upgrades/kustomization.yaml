@@ -1,0 +1,39 @@
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/kustomize.config.k8s.io/kustomization_v1beta1.json
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - talos.yaml
+  - kubernetes.yaml
+patches:
+  - target:
+      group: tuppr.home-operations.com
+      version: v1alpha1
+      kind: (TalosUpgrade|KubernetesUpgrade)
+    patch: |-
+      - op: add
+        path: /spec/maintenance
+        value:
+          windows:
+            - start: "0 4 * * 0"
+              duration: 2h
+              timezone: Europe/Copenhagen
+      - op: add
+        path: /spec/healthChecks
+        value:
+          - apiVersion: v1
+            kind: Node
+            name: talos01
+            expr: status.conditions.exists(c, c.type == "Ready" && c.status == "True")
+            timeout: 10m
+          - apiVersion: apps/v1
+            kind: DaemonSet
+            name: cilium
+            namespace: kube-system
+            expr: status.numberReady == status.desiredNumberScheduled && status.updatedNumberScheduled == status.desiredNumberScheduled
+            timeout: 10m
+          - apiVersion: apps/v1
+            kind: Deployment
+            name: coredns
+            namespace: kube-system
+            expr: has(status.availableReplicas) && status.availableReplicas == spec.replicas
+            timeout: 10m

@@ -1,0 +1,14 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: kromgo
+  namespace: flux-system
+  labels:
+    homelab.jetersen.dev/flux-defaults: enabled
+    homelab.jetersen.dev/flux-homelab-source: enabled
+    homelab.jetersen.dev/flux-wait: enabled
+spec:
+  targetNamespace: monitoring
+  path: ./kubernetes/cluster/kromgo/app
+  dependsOn:
+  - name: victoria-metrics-k8s-stack

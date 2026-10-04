@@ -1,0 +1,7 @@
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/external/siderolabs/talos/config.schema.json
+apiVersion: v1alpha1
+kind: KubeTalosAPIAccessConfig
+allowedRoles:
+  - os:admin
+allowedKubernetesNamespaces:
+  - system-upgrade

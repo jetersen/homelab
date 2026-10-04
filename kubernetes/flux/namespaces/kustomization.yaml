@@ -15,5 +15,6 @@ resources:
   - monitoring.yaml
   - openspeedtest.yaml
   - reflector.yaml
+  - system-upgrade.yaml
   - technitium.yaml
   - towonel-system.yaml

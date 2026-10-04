@@ -87,3 +87,31 @@ for `forgejo.jetersen.dev`. Forgejo API authentication alone does not authentica
 Docker lookups. Use the workflow's `dry_run` input to verify dependency lookups
 without creating branches or pull requests. Scheduled runs and manual runs with
 `dry_run` disabled leave `RENOVATE_DRY_RUN` unset so Renovate can apply updates.
+
+## Live upgrade policy
+
+The Forgejo Renovate workflow runs `renovate-upgrade-policy.mjs` before starting
+Renovate. Kromgo at `https://upgrade-versions.lan.jetersen.dev` exposes three
+fixed queries over VictoriaMetrics: the ready node's Talos/Kubernetes versions
+and ready Cilium/Envoy Gateway container image versions. It exposes no arbitrary
+query API and needs no Kubernetes credentials. The runner needs LAN or tailnet
+access to this hostname. No public DNS record is published.
+
+Queries return one version only and include the original scrape timestamp.
+Missing, mixed, or older-than-two-minute results stop the workflow. The script
+fetches compatibility tables from the exact deployed release tags, selects the
+released Envoy row, and intersects their supported Kubernetes minors. Missing
+or unrecognized upstream tables also stop the workflow; there is no stale-policy
+fallback. GitHub access is needed during this CI check, not Flux reconciliation.
+
+The workflow supplies generated rules through `RENOVATE_PACKAGE_RULES`.
+Repository rules merge afterward: do not override the generated version bounds
+or patch automerge rules in presets. The bounds exclude downgrades and skipped
+minor upgrades. Only patches on the live minor auto-merge; the repository adds
+a three-day release age and requires approval/manual merge for minor upgrades.
+If Git is ahead of the node, patches on that future minor require manual merge
+until the live node catches up.
+
+Run `node --test .ci/renovate-upgrade-policy.test.mjs` for policy regression
+checks, or `node .ci/renovate-upgrade-policy.mjs` to read live data and print the
+computed policy without changing the cluster or Renovate.
