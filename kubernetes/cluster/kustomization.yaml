@@ -13,6 +13,7 @@ resources:
   - flux-operator/flux-ks.yaml
   - flux-operator-mcp/flux-ks.yaml
   - grafana/flux-ks.yaml
+  - intel-gpu-plugin/flux-ks.yaml
   - kopiur/flux-ks.yaml
   - local-path-provisioner/flux-ks.yaml
   - kromgo/flux-ks.yaml
