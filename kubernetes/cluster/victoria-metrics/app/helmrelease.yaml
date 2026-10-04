@@ -39,13 +39,10 @@ spec:
           - name: blackhole
           - name: ntfy
             webhook_configs:
-              - url: http://ntfy.monitoring.svc.cluster.local:8080/homelab-alerts?template=homelab
+              # Use ntfy's query parameter: the operator drops custom HTTP headers.
+              - url: http://ntfy.monitoring.svc.cluster.local:8080/homelab-alerts?template=homelab&icon=https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Fhomarr-labs%2Fdashboard-icons%2Fpng%2Fkubernetes.png
                 send_resolved: true
                 http_config:
-                  http_headers:
-                    Icon:
-                      values:
-                        - https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/kubernetes.png
                   authorization:
                     type: Bearer
                     credentials_file: /etc/vm/secrets/ntfy-alertmanager-auth/token
