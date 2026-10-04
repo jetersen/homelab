@@ -19,11 +19,11 @@ end
 echo "=== Cluster Bootstrap ==="
 
 # Select kubernetes context
-run kubectx
+run kubectx homelab
 
 echo ""
-echo "=== Installing Gateway API CRDs ==="
-run kubectl apply --server-side --force-conflicts -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.5.1/experimental-install.yaml
+echo "=== Installing Gateway API and Envoy Gateway CRDs ==="
+run fish $DIR/envoy-gateway/app/bootstrap-crds.fish
 
 echo ""
 echo "=== Installing Cilium CNI ==="
