@@ -1,0 +1,13 @@
+{
+  "domain": "jetersen.dev",
+  "ttl": 300,
+  "gateway": { "namespace": "kube-system", "name": "envoy-proxy" },
+  "envoyIPv4": "192.168.1.20",
+  "envoyIPv6": "fde2:b84e:c4cd:1::1000",
+  "publicTarget": "public.jetersen.dev",
+  "infrastructure": [
+    { "name": "glkvm.jetersen.dev", "ipv4": "192.168.1.142" },
+    { "name": "unifi.lan.jetersen.dev", "ipv4": "192.168.1.1" },
+    { "name": "truenas.lan.jetersen.dev", "ipv4": "192.168.1.2", "unifiManagedElsewhere": true }
+  ]
+}

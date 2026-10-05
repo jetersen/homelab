@@ -1,0 +1,29 @@
+# Add to the runner kustomization when activating DNSControl.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: dnscontrol-route-reader
+  namespace: forgejo-runners
+automountServiceAccountToken: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: dnscontrol-route-reader
+rules:
+  - apiGroups: [gateway.networking.k8s.io]
+    resources: [gateways, httproutes, tcproutes]
+    verbs: [get, list]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: dnscontrol-route-reader
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: dnscontrol-route-reader
+subjects:
+  - kind: ServiceAccount
+    name: dnscontrol-route-reader
+    namespace: forgejo-runners

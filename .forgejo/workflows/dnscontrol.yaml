@@ -1,0 +1,81 @@
+name: DNSControl
+defaults:
+  run:
+    shell: bash
+concurrency:
+  group: dnscontrol
+  cancel-in-progress: false
+on:
+  pull_request:
+    paths: [infrastructure/dns/**, .forgejo/workflows/dnscontrol.yaml]
+  push:
+    branches: [main]
+    paths: [infrastructure/dns/**, kubernetes/**, .forgejo/workflows/dnscontrol.yaml]
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: Apply the previewed DNS changes
+        type: boolean
+        default: false
+jobs:
+  check:
+    runs-on: runner-kubernetes
+    timeout-minutes: 5
+    steps:
+      - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: node --test infrastructure/dns/route-adapter.test.mjs
+      - name: Validate the static DNS views
+        run: |
+          bash infrastructure/dns/install.sh "$RUNNER_TEMP/dnscontrol-tools"
+          "$RUNNER_TEMP/dnscontrol-tools/dnscontrol" check --config infrastructure/dns/dnsconfig.js --variable DNS_VIEW=internal
+  reconcile:
+    needs: check
+    if: forgejo.ref == 'refs/heads/main' && forgejo.event_name != 'pull_request' && vars.DNSCONTROL_ENABLED == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        provider: [cloudflare, technitium, unifi]
+    runs-on: runner-kubernetes
+    timeout-minutes: 5
+    steps:
+      - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Prepare DNSControl
+        run: bash infrastructure/dns/install.sh "$RUNNER_TEMP/dnscontrol-tools"
+      - name: Read public routes
+        if: matrix.provider == 'cloudflare'
+        env:
+          KUBECONFIG_DATA: ${{ secrets.DNSCONTROL_KUBECONFIG }}
+        run: |
+          set -euo pipefail
+          umask 077
+          printf '%s' "$KUBECONFIG_DATA" > "$RUNNER_TEMP/dnscontrol-kubeconfig"
+          kubectl --kubeconfig "$RUNNER_TEMP/dnscontrol-kubeconfig" --context homelab \
+            get httproutes,tcproutes,gateways -A -o json > "$RUNNER_TEMP/dnscontrol-routes.json"
+      - name: Reconcile the DNS view
+        env:
+          DNS_PROVIDER: ${{ matrix.provider }}
+          CF_API_TOKEN: ${{ matrix.provider == 'cloudflare' && secrets.DNSCONTROL_CF_API_TOKEN || '' }}
+          UNIFI_API_KEY: ${{ matrix.provider == 'unifi' && secrets.DNSCONTROL_UNIFI_API_KEY || '' }}
+          TECHNITIUM_TSIG_SECRET: ${{ matrix.provider == 'technitium' && secrets.DNSCONTROL_TECHNITIUM_TSIG_SECRET || '' }}
+          APPLY_DNS: ${{ inputs.apply }}
+        run: |
+          set -euo pipefail
+          view=internal
+          if [ "$DNS_PROVIDER" = cloudflare ]; then view=public; fi
+          args=(--config infrastructure/dns/dnsconfig.js --providers "$DNS_PROVIDER"
+            --creds "!$PWD/infrastructure/dns/creds.mjs" --no-populate
+            --variable "DNS_VIEW=$view" --variable "DNS_PROVIDER=$DNS_PROVIDER"
+            --variable "ROUTES_FILE=$RUNNER_TEMP/dnscontrol-routes.json")
+          "$RUNNER_TEMP/dnscontrol-tools/dnscontrol" preview "${args[@]}"
+          if [ "$APPLY_DNS" = true ]; then
+            "$RUNNER_TEMP/dnscontrol-tools/dnscontrol" push "${args[@]}"
+          fi
+      - name: Remove temporary inputs
+        if: always()
+        run: rm -f -- "$RUNNER_TEMP/dnscontrol-kubeconfig" "$RUNNER_TEMP/dnscontrol-routes.json"
