@@ -70,7 +70,7 @@ spec:
       spec:
         extraArgs:
           external.url: https://grafana.jetersen.dev
-          external.alert.source: 'explore?orgId=1&left={"datasource":"victoriametrics","queries":[{"refId":"A","expr":"{{.Expr|queryEscape}}"}]}'
+          external.alert.source: 'explore?orgId=1&left={"datasource":"P4169E866C3094E38","queries":[{"refId":"A","expr":"{{`{{.Expr|queryEscape}}`}}"}]}'
     # Talos generates localhost serving certificates for these authenticated endpoints.
     kubeControllerManager:
       vmScrape:

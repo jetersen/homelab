@@ -52,7 +52,7 @@ spec:
         apiVersion: 1
         datasources:
           - name: VictoriaMetrics
-            uid: victoriametrics
+            uid: P4169E866C3094E38
             type: prometheus
             url: http://vmsingle-vm:8428
             isDefault: true
