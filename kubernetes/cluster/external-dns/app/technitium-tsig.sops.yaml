@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/core/secret_v1.json
+apiVersion: v1
+kind: Secret
+metadata:
+    name: external-dns-technitium-tsig
+    namespace: external-dns
+type: Opaque
+stringData:
+    EXTERNAL_DNS_RFC2136_TSIG_SECRET: ENC[AES256_GCM,data:1fk85GyQ/Ui/mUxhdlRmWBF3wxR1Gjf4QBAIZWATupas8bJaPQvjsHzZ/OY=,iv:/IuY9c/c1c7sEy3kn7+wSYuEHQ0Bg7UAvshKsm09hfs=,tag:DZRGM/xyHQsksqIamKhy+Q==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBiNFhSek9ZT3FJMU9JS0JX
+            c1Q2VThoTDFySTNpS2VJZWt4ZEl3ZFlBM0JzClgzVVIxRnYrTlN1Y2JXckxCSXVI
+            dDhteWpaYlk4VFF6M1pyY3haTEFlSlUKLS0tIDdZalpIUWRPbmNqcWtWcXBZVjFN
+            Mkg0K2JyL21aTFBWZThjcTVUVmk4VzQKiXcyj7sS1qyi7ID1sOvzKGlmOnnntGGi
+            syxGk9lveYBv1DH6l/T/4EfLcU04Ktrtw5OPghN/iCO34lhKeDhQxQ==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1u0m8ryqg7hfhuykraxe35v4xzw92a03w9jpt75yv3m57g6pvpp0sf24mdy
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-10-05T17:32:03Z"
+    mac: ENC[AES256_GCM,data:KTAR/TysbQVzYTR1O+702Hfj8lfofXlgRat4EP7uV0/zmoYpJ2d9sgZ2N8t7hgiqH+en4iMtV5FoAZMAQOsLUGjzdyEfVfNkdcUoVms+QX33kh7q0N2NNFw9Sa2wme8Xo2U/ZUYfFhhAd1esd/4ovveXwYc5d4e6oaEiDtcLMl8=,iv:TsScrfCEWrCLkzzTh7ypz9AuZwm5mMkXCrGpkT4MUVw=,tag:7mvZau+5d+ELz095fdAeOQ==,type:str]
+    version: 3.13.3
