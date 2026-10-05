@@ -30,6 +30,13 @@ current branch head. Workload images publish immutable SemVer tags and advance
 reuse existing releases before building; they do not publish per-commit tags.
 Keep the workflow path filters and `.ci/image-inputs.sh` in sync.
 
+The runner image uses Debian Trixie and includes Python 3.13, the Go and .NET SDKs,
+GCC for Go race tests, Ruff, Biome, and the
+[DNSControl compatibility build](../infrastructure/dns/README.md). DNSControl source, locked JavaScript dependencies, and `requirements-dev.txt` release a new
+runner image alongside Dockerfile changes. Style jobs use the bundled tools and
+restore only project dependencies. Both Rocket and Kubernetes runner labels pin
+the published SemVer tag and digest.
+
 Forgejo uses an Authorized Integration with `write:package` permission and the
 audience stored in `OCI_PACKAGES_AUDIENCE`. Its claim rules must allow the
 `workflow` values `publish-oci.yaml` and `publish-images.yaml`, restricted to this

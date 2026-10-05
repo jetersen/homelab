@@ -6,6 +6,11 @@ on:
       - infrastructure/backup/image/**
       - infrastructure/forgejo/runner/Dockerfile
       - infrastructure/forgejo/runner/Dockerfile.dockerignore
+      - infrastructure/dns/install.sh
+      - infrastructure/dns/compat/**
+      - package.json
+      - package-lock.json
+      - requirements-dev.txt
       - .ci/actions/publish-images/**
       - .ci/backup-helper-cliff.toml
       - .ci/runner-job-cliff.toml

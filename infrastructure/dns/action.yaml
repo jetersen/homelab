@@ -1,0 +1,23 @@
+name: Set up DNSControl
+description: Install the DNSControl build with Technitium AXFR compatibility
+inputs:
+  directory:
+    description: Directory for the DNSControl binary
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Check bundled DNSControl
+      id: bundled
+      shell: bash
+      run: echo "build=$(bash infrastructure/dns/install.sh --needs-build)" >> "$GITHUB_OUTPUT"
+    - uses: https://github.com/actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      if: steps.bundled.outputs.build == 'true'
+      with:
+        go-version: '1.27.1'
+        cache-dependency-path: infrastructure/dns/compat/go.sum
+    - name: Install DNSControl
+      shell: bash
+      env:
+        DNSCONTROL_DIRECTORY: ${{ inputs.directory }}
+      run: bash infrastructure/dns/install.sh "$DNSCONTROL_DIRECTORY"

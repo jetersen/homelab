@@ -7,10 +7,10 @@ concurrency:
   cancel-in-progress: false
 on:
   pull_request:
-    paths: [infrastructure/dns/**, .forgejo/workflows/dnscontrol.yaml]
+    paths: [infrastructure/dns/**, package.json, package-lock.json, biome.json, .forgejo/workflows/dnscontrol.yaml]
   push:
     branches: [main]
-    paths: [infrastructure/dns/**, .forgejo/workflows/dnscontrol.yaml]
+    paths: [infrastructure/dns/**, package.json, package-lock.json, biome.json, .forgejo/workflows/dnscontrol.yaml]
   schedule:
     - cron: '*/15 * * * *'
   workflow_dispatch:
@@ -27,9 +27,11 @@ jobs:
       - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - uses: ./infrastructure/dns
+        with:
+          directory: ${{ runner.temp }}/dnscontrol-tools
       - name: Validate all DNS views
         run: |
-          bash infrastructure/dns/install.sh "$RUNNER_TEMP/dnscontrol-tools"
           "$RUNNER_TEMP/dnscontrol-tools/dnscontrol" check --config infrastructure/dns/dnsconfig.js
   reconcile:
     needs: check
@@ -44,8 +46,9 @@ jobs:
       - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Prepare DNSControl
-        run: bash infrastructure/dns/install.sh "$RUNNER_TEMP/dnscontrol-tools"
+      - uses: ./infrastructure/dns
+        with:
+          directory: ${{ runner.temp }}/dnscontrol-tools
       - name: Reconcile the DNS view
         env:
           DNS_PROVIDER: ${{ matrix.provider }}

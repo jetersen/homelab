@@ -60,6 +60,17 @@ test('component releases are independent and immutable', t => {
   assert.equal(f.release('backup-helper').values.BACKUP_HELPER_VERSION, '0.2.0');
 });
 
+test('DNSControl and tooling dependency changes release only the runner image', t => {
+  const f = fixture(t);
+  const helper = f.release('backup-helper').values;
+  f.release('runner-job');
+  for (const [index, path] of ['infrastructure/dns/compat/main.go', 'infrastructure/dns/install.sh', 'package.json', 'package-lock.json', 'requirements-dev.txt'].entries()) {
+    f.commit(path, 'dependency update', 'fix: update runner tools');
+    assert.equal(f.release('runner-job').values.RUNNER_JOB_VERSION, `0.1.${index + 1}`);
+    assert.deepEqual(f.release('backup-helper').values, helper);
+  }
+});
+
 test('unreachable latest release fails rather than resetting the version', t => {
   const f = fixture(t);
   f.release('runner-job');

@@ -15,10 +15,23 @@ the corresponding public route. DNSControl does not discover routes or inspect
 Gateway status, so DNS can be published before a route is ready. The workflow
 needs no Kubernetes API credentials, RBAC or manifest rendering.
 
-Install the pinned binary with `bash infrastructure/dns/install.sh /tmp/dnscontrol-tools`.
-DNSControl is pinned to v4.46.0 because v5.3.0 cannot decode Technitium's
-conditional-forwarder records during AXFR. Preserve those records and test both
-internal zones before upgrading DNSControl.
+The configuration uses ES5 syntax for DNSControl's embedded Otto runtime.
+Install the pinned compatibility build with Go 1.27.1:
+
+```sh
+bash infrastructure/dns/install.sh /tmp/dnscontrol-tools
+```
+
+The runner bundles DNSControl v5.3.0 with the Cloudflare, UniFi and AXFRDDNS
+providers. Its compatibility entry point decodes private record type 65281 as
+opaque RFC 3597 data, avoiding a collision between Technitium FWD and DNSControl
+AdGuard AAAA passthrough records. AXFRDDNS skips those forwarders and preserves
+them on the server. The AdGuard provider is not included.
+
+`install.sh` reuses the bundled binary when its source and dependency fingerprint
+matches. Otherwise it builds from the locked Go module. The workflow action
+installs the Go toolchain only when rebuilding is required. Preserve forwarders
+and validate both internal zones before enabling writes.
 Validate all views with:
 
 ```sh

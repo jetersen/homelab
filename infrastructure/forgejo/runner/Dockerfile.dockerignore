@@ -1,1 +1,11 @@
 **
+!infrastructure
+!infrastructure/dns
+!infrastructure/dns/install.sh
+!infrastructure/dns/compat
+!infrastructure/dns/compat/*.go
+!infrastructure/dns/compat/go.mod
+!infrastructure/dns/compat/go.sum
+!package.json
+!package-lock.json
+!requirements-dev.txt
