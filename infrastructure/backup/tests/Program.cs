@@ -13,7 +13,10 @@ Check((string)bucket.Inputs["regionName"] == "DE", "Bucket must use Frankfurt.")
 Check((double)bucket.Inputs["ownerId"] == 1001, "Bucket must belong to the separate owner.");
 Check((bool)bucket.Inputs["hideObjects"], "Repository objects must stay out of infrastructure state.");
 foreach (var key in new[] { "versioning", "objectLock", "replication" })
+{
     Check(!bucket.Inputs.ContainsKey(key), $"Unexpected {key} configuration.");
+}
+
 Check(mocks.Resources.Count(r => r.Type?.EndsWith(":Storage") == true) == 2, "Backup and state require separate buckets.");
 
 var policy = mocks.Resources.Single(r => r.Name == "kopia-policy");
@@ -29,7 +32,10 @@ Check(allows.SelectMany(s => s.GetProperty("Resource").EnumerateArray())
 var allowedActions = allows.SelectMany(s => s.GetProperty("Action").EnumerateArray())
     .Select(a => a.GetString()).ToHashSet();
 foreach (var action in new[] { "s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:ListBucket", "s3:AbortMultipartUpload" })
+{
     Check(allowedActions.Contains(action), $"Kopia requires {action}.");
+}
+
 Check(!allowedActions.Contains("s3:*"), "Wildcard S3 access is forbidden.");
 var deniedActions = statements.Where(s => s.GetProperty("Effect").GetString() == "Deny")
     .SelectMany(s => s.GetProperty("Action").EnumerateArray()).Select(a => a.GetString()).ToHashSet();
@@ -87,15 +93,24 @@ Check(!stateDenies.Contains("s3:DeleteObjectVersion"), "OVH rejects the unsuppor
 Check((string)mocks.Resources.Single(r => r.Name == "pulumi-state-credential").Inputs["userId"] == "3003",
     "State credentials must belong to the state user.");
 foreach (var key in new[] { "stateAccessKeyId", "stateSecretAccessKey" })
+{
     Check(await Output.IsSecretAsync((Output<string>)BackupTestStack.Exports[key]!), "State credentials must be secret.");
+}
+
 Check(BackupTestStack.ResourceOptions.Count == 10, "All ten managed resources must have protection checks.");
 foreach (var options in BackupTestStack.ResourceOptions)
+{
     Check(options.Protect == true && options.RetainOnDelete == true, "Resources must resist deletion and replacement.");
+}
+
 Console.WriteLine("Backup resource, permission, credential, and deletion protection checks passed; no cloud APIs called.");
 
 static void Check(bool condition, string message)
 {
-    if (!condition) throw new InvalidOperationException(message);
+    if (!condition)
+    {
+        throw new InvalidOperationException(message);
+    }
 }
 
 public sealed class BackupTestStack : Stack
@@ -110,13 +125,19 @@ public sealed class BackupTestStack : Stack
             args =>
             {
                 if (args.Resource is CustomResource and not ProviderResource)
+                {
                     ResourceOptions.Add(args.Options);
+                }
+
                 return null;
             },
         },
     })
     {
-        var provider = new Ovh.Provider("ovh-eu", new() { Endpoint = "ovh-eu" });
+        var provider = new Ovh.Provider("ovh-eu", new()
+        {
+            Endpoint = "ovh-eu"
+        });
         Exports = BackupResources.Create("test-project", "test-kopia", "test-pulumi", provider);
     }
 }
@@ -134,7 +155,13 @@ public sealed class BackupMocks : IMocks
             state["accessKeyId"] = "fake-access-key";
             state["secretAccessKey"] = "fake-secret-key";
         }
-        var id = args.Name switch { "bucket-owner" => "1001", "kopia-user" => "2002", "pulumi-state-user" => "3003", _ => args.Name + "-id" };
+        var id = args.Name switch
+        {
+            "bucket-owner" => "1001",
+            "kopia-user" => "2002",
+            "pulumi-state-user" => "3003",
+            _ => args.Name + "-id"
+        };
         return Task.FromResult<(string?, object)>((id, state));
     }
 

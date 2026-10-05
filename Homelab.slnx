@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/infrastructure/" />
+  <Folder Name="/infrastructure/backup/">
+    <Project Path="infrastructure/backup/Homelab.Backup.csproj" />
+  </Folder>
+  <Folder Name="/infrastructure/backup/tests/">
+    <Project Path="infrastructure/backup/tests/Backup.Tests.csproj" />
+  </Folder>
+  <Folder Name="/infrastructure/truenas/">
+    <Project Path="infrastructure/truenas/Homelab.TrueNas.csproj" />
+  </Folder>
+</Solution>

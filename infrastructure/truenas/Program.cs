@@ -8,7 +8,10 @@ return await Deployment.RunAsync(() =>
 {
     var host = new Uri(RequireEnvironment("TRUENAS_HOST"));
     if (host.Scheme != "https")
+    {
         throw new InvalidOperationException("TRUENAS_HOST must use HTTPS with a trusted hostname.");
+    }
+
     var endpoint = new UriBuilder(host) { Scheme = "wss", Path = "/api/current", Query = "" };
     var provider = new TrueNas.Provider("nas", new TrueNas.ProviderArgs
     {
@@ -36,7 +39,10 @@ return await Deployment.RunAsync(() =>
         new JsonSerializerOptions(JsonSerializerDefaults.Web))
         ?? throw new InvalidOperationException("Catalog app configuration is required.");
     foreach (var (name, settings) in catalogApps)
+    {
         outputs[$"{name}AppName"] = CatalogApp(name, settings.Train, settings.Version, provider).Name;
+    }
+
     return outputs;
 });
 

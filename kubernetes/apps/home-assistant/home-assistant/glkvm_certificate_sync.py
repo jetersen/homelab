@@ -5,12 +5,12 @@ import hashlib
 import http.client
 import json
 import os
-from pathlib import Path
 import socket
 import ssl
 import sys
 import time
 import urllib.parse
+from pathlib import Path
 
 HOST = "glkvm.jetersen.dev"
 TLS_DIR = Path("/etc/glkvm/tls")
@@ -24,9 +24,7 @@ def fingerprint(certificate):
 
 def connect():
     """Verify normal PKI, or pin the last verified leaf if it has expired."""
-    connection = http.client.HTTPSConnection(
-        HOST, context=ssl.create_default_context(), timeout=4
-    )
+    connection = http.client.HTTPSConnection(HOST, context=ssl.create_default_context(), timeout=4)
     try:
         connection.connect()
     except ssl.SSLCertVerificationError:
@@ -97,9 +95,7 @@ def sync():
     # Nginx reloads asynchronously; verify the exact installed leaf with normal PKI.
     for _ in range(5):
         time.sleep(2)
-        check = http.client.HTTPSConnection(
-            HOST, context=ssl.create_default_context(), timeout=4
-        )
+        check = http.client.HTTPSConnection(HOST, context=ssl.create_default_context(), timeout=4)
         try:
             check.connect()
             if fingerprint(check.sock.getpeercert(binary_form=True)) == desired:

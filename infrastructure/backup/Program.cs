@@ -21,6 +21,9 @@ static Output<string> SecretEnvironment(string name)
 {
     var value = Environment.GetEnvironmentVariable(name);
     if (string.IsNullOrWhiteSpace(value))
+    {
         throw new InvalidOperationException($"{name} is required. Run Pulumi through Varlock.");
+    }
+
     return Output.CreateSecret(value);
 }

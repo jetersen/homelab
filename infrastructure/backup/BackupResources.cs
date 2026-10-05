@@ -62,7 +62,10 @@ public static class BackupResources
             ["secretAccessKey"] = Output.CreateSecret(credential.SecretAccessKey),
         };
         foreach (var (key, value) in StateResources.Create(projectId, stateBucketName, owner, provider))
+        {
             exports.Add(key, value);
+        }
+
         return exports;
     }
 

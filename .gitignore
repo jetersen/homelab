@@ -1,5 +1,7 @@
 *.decrypted~*
 node_modules/
+.venv/
+.ruff_cache/
 
 # Local environment values managed by Varlock
 .env

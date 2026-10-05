@@ -1,0 +1,79 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "includes": [
+      "**/*.js",
+      "**/*.mjs",
+      "**/*.cjs",
+      "package.json",
+      "biome.json",
+      "infrastructure/dns/*.json",
+      "!!.agents",
+      "!!.codex"
+    ]
+  },
+  "formatter": {
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double",
+      "semicolons": "always"
+    }
+  },
+  "linter": {
+    "rules": {
+      "preset": "recommended",
+      "style": {
+        "useBlockStatements": "error"
+      },
+      "correctness": {
+        "noUndeclaredVariables": "error"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["infrastructure/dns/dnsconfig.js"],
+      "javascript": {
+        "globals": [
+          "require",
+          "DNS_VIEW",
+          "DNS_PROVIDER",
+          "NewRegistrar",
+          "NewDnsProvider",
+          "A",
+          "AAAA",
+          "CNAME",
+          "D",
+          "DnsProvider",
+          "DefaultTTL",
+          "NO_PURGE",
+          "CF_PROXY_ON",
+          "CF_PROXY_OFF"
+        ],
+        "formatter": {
+          "trailingCommas": "none"
+        }
+      },
+      "linter": {
+        "rules": {
+          "style": {
+            "useConst": "off",
+            "useTemplate": "off"
+          },
+          "complexity": {
+            "useArrowFunction": "off"
+          }
+        }
+      }
+    }
+  ]
+}
