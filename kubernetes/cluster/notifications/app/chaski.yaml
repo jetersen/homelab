@@ -9,16 +9,26 @@ spec:
   values:
     fullnameOverride: chaski
     deploymentAnnotations:
-      reloader.stakater.com/auto: "true"
+      reloader.stakater.com/auto: 'true'
     auth:
       existingSecret: chaski-auth
       existingSecretKey: webhook-token
     extraEnv:
-      - name: NTFY_TOKEN
-        valueFrom:
-          secretKeyRef:
-            name: chaski-auth
-            key: ntfy-token
+    - name: HOME_ASSISTANT_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: chaski-auth
+          key: home-assistant-token
+    - name: GOTIFY_ALERTS_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: chaski-auth
+          key: gotify-alerts-token
+    - name: GOTIFY_ACTIVITY_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: chaski-auth
+          key: gotify-activity-token
     resources:
       requests:
         cpu: 10m
@@ -27,21 +37,81 @@ spec:
         memory: 128Mi
     config:
       targets:
-        activity:
+        phone:
           http:
-            url: http://ntfy.monitoring.svc.cluster.local:8080/homelab-activity
+            url: http://home-assistant.home-assistant.svc.cluster.local:8123/api/services/script/homelab_notification
             headers:
-              Authorization: 'Bearer {{ env "NTFY_TOKEN" }}'
-              Content-Type: text/plain
+              Authorization: Bearer {{ env "HOME_ASSISTANT_TOKEN" }}
+              Content-Type: application/json
+        inbox-alerts:
+          http:
+            url: http://gotify.monitoring.svc.cluster.local:8080/message
+            headers:
+              X-Gotify-Key: '{{ env "GOTIFY_ALERTS_TOKEN" }}'
+              Content-Type: application/json
+        inbox-activity:
+          http:
+            url: http://gotify.monitoring.svc.cluster.local:8080/message
+            headers:
+              X-Gotify-Key: '{{ env "GOTIFY_ACTIVITY_TOKEN" }}'
+              Content-Type: application/json
       routes:
+        alertmanager:
+          target:
+          - phone
+          - inbox-alerts
+          whenExpr: payload.commonLabels.severity in ["warning", "critical"] && !(payload.commonLabels.alertname in ["Watchdog",
+            "InfoInhibitor"])
+          message: '{{- $status := .payload.status -}}
+
+            {{- $title := printf "%s: %s (%d)" (ternary "Resolved" "Alert" (eq $status "resolved")) .payload.commonLabels.alertname
+            (len .payload.alerts) -}}
+
+            {{- $priority := ternary 2 (ternary 8 4 (eq .payload.commonLabels.severity "critical")) (eq $status "resolved")
+            -}}
+
+            {{- $url := printf "https://grafana.jetersen.dev/d/homelab-alerts?var-namespace=%s" (.payload.commonLabels.namespace
+            | default ".*" | urlquery) -}}
+
+            {{- $meta := dict "category" "alerts" "status" $status "id" (printf "homelab-alert-%s" (.payload.groupKey | sha256Sum))
+            "icon" "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/kubernetes.png" -}}
+
+            {{- $extras := dict "homelab::notification" $meta "client::display" (dict "contentType" "text/markdown") "client::notification"
+            (dict "click" (dict "url" $url)) -}}
+
+            {{- dict "title" $title "message" (include "alert-text" . | trim) "priority" $priority "extras" $extras | toJSON
+            -}}'
         flux:
-          target: activity
-          # Only completed Helm actions, not every successful reconciliation.
-          whenExpr: >-
-            payload.involvedObject.kind == "HelmRelease" &&
-            payload.reason in ["InstallSucceeded", "UpgradeSucceeded", "RollbackSucceeded"]
-          message: '{{ .payload.message }}'
-          headers:
-            Title: '{{ .payload.involvedObject.namespace }}/{{ .payload.involvedObject.name }}: {{ .payload.reason }}'
-            Priority: "2"
-            Icon: https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/flux-cd.png
+          target:
+          - phone
+          - inbox-activity
+          whenExpr: payload.involvedObject.kind == "HelmRelease" && payload.reason in ["InstallSucceeded", "UpgradeSucceeded",
+            "RollbackSucceeded"]
+          message: '{{- $title := printf "%s/%s: %s" .payload.involvedObject.namespace .payload.involvedObject.name .payload.reason
+            -}}
+
+            {{- $url := printf "https://grafana.jetersen.dev/d/homelab-alerts?var-namespace=%s" (.payload.involvedObject.namespace
+            | urlquery) -}}
+
+            {{- $meta := dict "category" "activity" "status" "succeeded" "id" (printf "homelab-flux-%s-%s" .payload.involvedObject.namespace
+            .payload.involvedObject.name) "icon" "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/flux-cd.png"
+            -}}
+
+            {{- $extras := dict "homelab::notification" $meta "client::display" (dict "contentType" "text/plain") "client::notification"
+            (dict "click" (dict "url" $url)) -}}
+
+            {{- dict "title" $title "message" .payload.message "priority" 2 "extras" $extras | toJSON -}}'
+      templates:
+        alert-text: '{{ range .payload.alerts }}{{ .annotations.summary }}
+
+          {{ if .annotations.description }}{{ .annotations.description }}
+
+          {{ end }}{{ if .labels.namespace }}Namespace: {{ .labels.namespace }}
+
+          {{ end }}{{ if .labels.job_name }}Job: {{ .labels.job_name }}
+
+          {{ end }}{{ if .annotations.runbook_url }}Runbook: {{ .annotations.runbook_url }}
+
+          {{ end }}
+
+          {{ end }}'

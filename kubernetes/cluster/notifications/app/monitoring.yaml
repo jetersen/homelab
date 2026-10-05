@@ -22,7 +22,7 @@ spec:
   targets:
     staticConfig:
       targets:
-        - http://ntfy.monitoring.svc.cluster.local:8080/v1/health
+        - http://gotify.monitoring.svc.cluster.local:8080/health
         - http://chaski.monitoring.svc.cluster.local:8080/readyz
 ---
 apiVersion: operator.victoriametrics.com/v1beta1
@@ -40,4 +40,4 @@ spec:
             severity: warning
           annotations:
             summary: Chaski could not deliver notifications
-            description: Check Chaski target credentials and ntfy availability.
+            description: Check Chaski target credentials, Home Assistant, and Gotify availability.

@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: chaski-alertmanager-auth
+    namespace: monitoring
+type: Opaque
+stringData:
+    token: ENC[AES256_GCM,data:5CvEhkImvjTLdOUw6s8bA/gtNMkm4jFYXdk8aJaZV6oVLnc1wJOslwqcrQ==,iv:XfviZRmSnLg7S4XzZZj96KGTzfn7jEw6ovpFEmAQoB4=,tag:5Vkv+oHQC0yCIyWu0k4CGQ==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBBa3FCOXNQRitIc2JUQTFt
+            K0tlUnRJcTZKL2RseWVvMzdMRVVXbG9rZ0ZZCmllaXhkNGRrODJxN3VpYTlVWW1m
+            TUZlbTZsbnh3TkZTVlQ3Qm5Ralo5aEUKLS0tIDRVNEgxSnhhOFRtN0wzY05teTkw
+            Q3FyRWZCMUpuVHpBNzJzTnJzVys0RjAKuoyk5js6QjDwwnaWhCWbuNvr3nu/rvBl
+            NIP4nA15zRJYKMhLc9o6lK0s2R92bPYZgx/0nVXcF+Mn3elyPC+cng==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1u0m8ryqg7hfhuykraxe35v4xzw92a03w9jpt75yv3m57g6pvpp0sf24mdy
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-10-05T11:54:54Z"
+    mac: ENC[AES256_GCM,data:fvEOK731w1NudnJkZHr8Fon44Z1PgLCV96atw8xXHxZZvBtkI3aWBN2RP0TBK7lUuwrPzrgEPBfbzLF/9o0SXo8UNA711mfqHEQXg9DaTLF5B4tfh48NF3/6sfna7B+rdmmskCle4gw8mSpUDbSxmEDDf+iiGnlhyUbQ6kXCk1k=,iv:xMw+xS5kYyMYwszR/88qy55mRVtacA6/BNctSF7t+fI=,tag:/u4QTTb1SFRZIywp4ZSKYw==,type:str]
+    version: 3.13.3

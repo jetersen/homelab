@@ -8,6 +8,8 @@ resources:
   - chaski.yaml
   - source.yaml
   - auth.sops.yaml
+  - chaski-auth.sops.yaml
+  - chaski-alertmanager-auth.sops.yaml
   - monitoring.yaml
 configMapGenerator:
   - name: ntfy-templates

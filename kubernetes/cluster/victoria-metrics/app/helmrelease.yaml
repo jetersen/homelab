@@ -16,7 +16,7 @@ spec:
     alertmanager:
       spec:
         secrets:
-          - ntfy-alertmanager-auth
+          - chaski-alertmanager-auth
       config:
         route:
           receiver: blackhole
@@ -28,7 +28,7 @@ spec:
             - receiver: blackhole
               matchers:
                 - alertname=~"Watchdog|InfoInhibitor"
-            - receiver: ntfy
+            - receiver: chaski
               matchers:
                 - severity=~"warning|critical"
         inhibit_rules:
@@ -37,15 +37,14 @@ spec:
             equal: [alertname, namespace]
         receivers:
           - name: blackhole
-          - name: ntfy
+          - name: chaski
             webhook_configs:
-              # Use ntfy's query parameter: the operator drops custom HTTP headers.
-              - url: http://ntfy.monitoring.svc.cluster.local:8080/homelab-alerts?template=homelab&icon=https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Fhomarr-labs%2Fdashboard-icons%2Fpng%2Fkubernetes.png
+              - url: http://chaski.monitoring.svc.cluster.local:8080/hooks/alertmanager
                 send_resolved: true
                 http_config:
                   authorization:
                     type: Bearer
-                    credentials_file: /etc/vm/secrets/ntfy-alertmanager-auth/token
+                    credentials_file: /etc/vm/secrets/chaski-alertmanager-auth/token
     grafana:
       enabled: false
     defaultDashboards:
@@ -67,6 +66,11 @@ spec:
           limits:
             cpu: 500m
             memory: 1Gi
+    vmalert:
+      spec:
+        extraArgs:
+          external.url: https://grafana.jetersen.dev
+          external.alert.source: 'explore?orgId=1&left={"datasource":"victoriametrics","queries":[{"refId":"A","expr":"{{.Expr|queryEscape}}"}]}'
     # Talos generates localhost serving certificates for these authenticated endpoints.
     kubeControllerManager:
       vmScrape:
