@@ -185,7 +185,8 @@
           "min": 0,
           "max": 2,
           "color": {
-            "mode": "thresholds"
+            "mode": "fixed",
+            "fixedColor": "red"
           },
           "custom": {
             "axisWidth": 380,
