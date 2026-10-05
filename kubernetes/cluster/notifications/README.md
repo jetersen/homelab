@@ -14,6 +14,11 @@ changes at five-minute intervals, and repeats ongoing alerts every 12 hours.
 A resolved alert means its expression stopped firing; deleting a failed Job can
 also resolve its alert.
 
+Monitoring service outages are critical after two minutes; configuration reloader
+outages warn after five minutes. Error-log and scrape-error rules retain their
+upstream five- and fifteen-minute waiting periods. Brief errors can appear pending
+without generating a notification.
+
 Flux sends HelmRelease events to Chaski. Only successful installs, upgrades, and
 rollbacks produce activity notifications. Routine reconciliations are filtered
 out; deployment failures use the monitoring rules to avoid duplicate messages.

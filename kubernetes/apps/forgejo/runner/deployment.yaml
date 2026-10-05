@@ -32,6 +32,38 @@ spec:
           hostnames: [docker]
       securityContext:
         fsGroup: 1000
+      # Start Docker and pass its startup probe before the runner contacts it.
+      initContainers:
+        - name: docker
+          restartPolicy: Always
+          image: docker.io/library/docker:29.8.2-dind@sha256:7dcdfc4a20246236f558175182ccace1eb15a41bd3eb119dd2284f393498b7c1
+          args: [--tls=false, --storage-driver=overlay2]
+          env:
+            - name: DOCKER_TLS_CERTDIR
+              value: ''
+          securityContext:
+            privileged: true
+          startupProbe:
+            exec:
+              command: [docker, info]
+            timeoutSeconds: 5
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            exec:
+              command: [docker, info]
+            timeoutSeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+            limits:
+              cpu: '2'
+              memory: 3Gi
+          volumeMounts:
+            - name: docker-cache
+              mountPath: /var/lib/docker
       containers:
         - name: runner
           image: data.forgejo.org/forgejo/runner:13@sha256:ca3d5eea46004789a175d1369eec6829d3ea9bfbe2011a06625b4bdaa55f7552
@@ -62,33 +94,6 @@ spec:
               readOnly: true
             - name: data
               mountPath: /data
-        - name: docker
-          image: docker.io/library/docker:29.8.2-dind@sha256:7dcdfc4a20246236f558175182ccace1eb15a41bd3eb119dd2284f393498b7c1
-          args: [--tls=false, --storage-driver=overlay2]
-          env:
-            - name: DOCKER_TLS_CERTDIR
-              value: ''
-          securityContext:
-            privileged: true
-          startupProbe:
-            exec:
-              command: [docker, info]
-            periodSeconds: 5
-            failureThreshold: 60
-          readinessProbe:
-            exec:
-              command: [docker, info]
-            periodSeconds: 10
-          resources:
-            requests:
-              cpu: 100m
-              memory: 512Mi
-            limits:
-              cpu: '2'
-              memory: 3Gi
-          volumeMounts:
-            - name: docker-cache
-              mountPath: /var/lib/docker
       volumes:
         - name: config
           configMap:

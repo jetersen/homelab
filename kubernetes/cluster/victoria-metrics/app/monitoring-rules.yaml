@@ -7,6 +7,15 @@ spec:
   groups:
   - name: homelab.service-health
     rules:
+    - alert: MonitoringConfigReloaderDown
+      expr: up{job=~".*(vmagent|vmalert|vmalertmanager).*",container="config-reloader"} == 0
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: Monitoring configuration reloader is down for {{ $labels.job }}
+        description: The configuration reloader has been unavailable for five minutes.
+          Configuration changes may not take effect even while the main service remains available.
     - alert: ServiceProbeFailed
       expr: probe_success == 0
       for: 5m

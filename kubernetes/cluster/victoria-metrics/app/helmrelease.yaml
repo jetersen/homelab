@@ -18,6 +18,10 @@ spec:
         # CPU quota throttling is expected on this small node; alert on service impact.
         CPUThrottlingHigh:
           enabled: false
+        # Reloaders have a separate warning; keep main-service outages critical.
+        ServiceDown:
+          spec:
+            expr: up{job=~".*(victoriametrics|vmselect|vminsert|vmstorage|vmagent|vmalert|vmsingle|vmalertmanager|vmauth).*",container!="config-reloader"} == 0
         # No down targets is a healthy zero, not a missing recording-rule result.
         count:up0:
           spec:
@@ -74,7 +78,7 @@ spec:
             memory: 256Mi
           limits:
             cpu: 500m
-            memory: 1Gi
+            memory: 2Gi
     vmalert:
       spec:
         extraArgs:

@@ -75,3 +75,8 @@ homelab-backup-helper:recovery --help` to verify it. A Kubernetes recovery job
 needs that image imported into its node runtime or pushed to another reachable
 registry first. Do not rely on the Forgejo registry as the only source of
 recovery tooling.
+# Runner startup
+
+The Kubernetes runner uses Docker as a native sidecar. Docker's startup probe
+must succeed before the runner starts, and Docker stays available while the
+runner shuts down. Its image cache remains on the existing PVC.
