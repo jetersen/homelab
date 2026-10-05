@@ -20,7 +20,7 @@ spec:
       home-assistant:
         strategy: Recreate
         annotations:
-          reloader.stakater.com/auto: "true"
+          configmap.reloader.stakater.com/reload: home-assistant-notifications
         containers:
           app:
             nameOverride: home-assistant

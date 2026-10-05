@@ -13,7 +13,6 @@ spec:
       reflector.v1.k8s.emberstack.com/reflection-auto-namespaces: home-assistant
       reflector.v1.k8s.emberstack.com/reflection-allowed: "true"
       reflector.v1.k8s.emberstack.com/reflection-allowed-namespaces: home-assistant
-      reloader.stakater.com/ignore: "true"
   issuerRef:
     name: letsencrypt-production
     kind: ClusterIssuer
