@@ -20,22 +20,6 @@ spec:
 apiVersion: operator.victoriametrics.com/v1beta1
 kind: VMServiceScrape
 metadata:
-  name: external-dns
-spec:
-  namespaceSelector:
-    matchNames:
-    - external-dns
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: external-dns
-  endpoints:
-  - port: http
-    path: /metrics
----
-# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/operator.victoriametrics.com/vmservicescrape_v1beta1.json
-apiVersion: operator.victoriametrics.com/v1beta1
-kind: VMServiceScrape
-metadata:
   name: envoy-gateway
 spec:
   namespaceSelector:

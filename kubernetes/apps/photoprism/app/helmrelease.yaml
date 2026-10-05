@@ -102,8 +102,6 @@ spec:
             port: 2342
     route:
       app:
-        annotations:
-          public.external-dns.kubernetes.io/enabled: 'false'
         hostnames:
         - photos.jetersen.dev
         parentRefs:

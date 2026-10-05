@@ -26,13 +26,13 @@ The runner bundles DNSControl v5.3.0 with the Cloudflare, UniFi and AXFRDDNS
 providers. Its compatibility entry point decodes private record type 65281 as
 opaque RFC 3597 data, avoiding a collision between Technitium FWD and DNSControl
 AdGuard AAAA passthrough records. The shared DNSControl record model registers
-this decoder even when the AdGuard provider is excluded. AXFRDDNS skips those forwarders and preserves
-them on the server. The AdGuard provider is not included.
+this decoder even when the AdGuard provider is excluded. AXFRDDNS skips those
+forwarders and preserves them on the server. The AdGuard provider is not included.
 
 `install.sh` reuses the bundled binary when its source and dependency fingerprint
 matches. Otherwise it builds from the locked Go module. The workflow action
 installs the Go toolchain only when rebuilding is required. Preserve forwarders
-and validate both internal zones before enabling writes.
+and validate both internal zones when changing the compatibility build.
 Validate all views with:
 
 ```sh
@@ -51,13 +51,18 @@ Job containers clear search suffixes with `--dns-search=.`. Both use `ndots:1`.
 A LAN wildcard must not appear in DNS search suffixes: some resolvers search
 again after an absolute AAAA query returns no data, even when its A query succeeds.
 
-Initially the workflow previews changes; manual dispatch with `apply=true` pushes
-them. Push and scheduled events also preview, so scheduled runs report drift but
-do not yet repair it. Workflow runs are serialized, and an unavailable provider
-does not prevent the other views from being checked.
+Changes to the DNS configuration on `main` preview and apply records. There is
+no scheduled reconciliation. Manual dispatch previews by default; select
+`apply=true` to apply. Workflow runs are serialized, and an unavailable provider
+does not prevent the other views from reconciling.
 
-`NO_PURGE` protects existing records during migration. It also retains records
-removed from the configuration. Import or explicitly exclude records managed
-elsewhere before enabling purging. Test wildcard answers and exceptions on all
-resolvers before retiring ExternalDNS and its ownership TXT records. Preserve
-Technitium catalog replication ACLs and TSIG keys throughout the transition.
+`NO_PURGE` preserves records maintained outside this configuration, including
+mail records, dynamic public addresses and UniFi's Technitium bootstrap record.
+It also retains records removed from the configuration; deleting a declaration
+alone does not delete its DNS record. Preview explicit deletions with retention
+rules for records managed elsewhere before applying them. Technitium forwarders,
+catalog replication ACLs and TSIG keys remain server-managed.
+
+ExternalDNS deployments, webhook, DNSEndpoint resources and ownership TXT records
+are not needed. The workflow is the only DNS reconciler and has no resident
+Kubernetes controller. Wildcards cover new internal routes automatically.

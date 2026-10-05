@@ -4,9 +4,6 @@ apiVersion: gateway.networking.k8s.io/v1
 kind: TCPRoute
 metadata:
   name: mosquitto
-  annotations:
-    internal.external-dns.kubernetes.io/hostname: mqtt.jetersen.dev
-    public.external-dns.kubernetes.io/enabled: "false"
 spec:
   parentRefs:
     - name: envoy-proxy
@@ -22,9 +19,6 @@ apiVersion: gateway.networking.k8s.io/v1
 kind: TCPRoute
 metadata:
   name: mosquitto-websocket
-  annotations:
-    internal.external-dns.kubernetes.io/enabled: "false"
-    public.external-dns.kubernetes.io/enabled: "false"
 spec:
   parentRefs:
     - name: envoy-proxy

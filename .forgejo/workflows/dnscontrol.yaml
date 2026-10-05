@@ -11,8 +11,6 @@ on:
   push:
     branches: [main]
     paths: [infrastructure/dns/**, package.json, package-lock.json, biome.json, .forgejo/workflows/dnscontrol.yaml]
-  schedule:
-    - cron: '*/15 * * * *'
   workflow_dispatch:
     inputs:
       apply:
@@ -59,7 +57,7 @@ jobs:
           CF_API_TOKEN: ${{ matrix.provider == 'cloudflare' && secrets.DNSCONTROL_CF_API_TOKEN || '' }}
           UNIFI_API_KEY: ${{ matrix.provider == 'unifi' && secrets.DNSCONTROL_UNIFI_API_KEY || '' }}
           TECHNITIUM_TSIG_SECRET: ${{ matrix.provider == 'technitium' && secrets.DNSCONTROL_TECHNITIUM_TSIG_SECRET || '' }}
-          APPLY_DNS: ${{ inputs.apply }}
+          APPLY_DNS: ${{ forgejo.event_name == 'push' || inputs.apply }}
         run: |
           set -euo pipefail
           view=internal

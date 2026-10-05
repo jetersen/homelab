@@ -44,7 +44,7 @@ is also advertised by Tailscale, with the same allowed service ports as IPv4.
 
 Include the public Pod subnet in source-IP restrictions for outbound API
 credentials, including the Cloudflare token shared by cert-manager and
-external-dns. IPv6 requests retain the Pod's public source address.
+DNSControl jobs. IPv6 requests retain the Pod's public source address.
 Also add that subnet to Technitium's recursion ACL on the primary DNS server
 and verify replication to the NAS.
 

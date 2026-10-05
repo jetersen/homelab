@@ -45,7 +45,7 @@ function internalZone(zone, provider, skipClientNames) {
     }
     records.push(A(relative(record.name, zone), record.ipv4));
   });
-  // NO_PURGE is a migration guard until the existing unmanaged records are imported.
+  // Preserve records maintained outside this configuration.
   D(
     zone + "!" + provider,
     registrar,

@@ -6,7 +6,6 @@ resources:
   - forgejo-runners.yaml
   - adguard.yaml
   - cert-manager.yaml
-  - external-dns.yaml
   - home-assistant.yaml
   - homepage.yaml
   - konflate.yaml

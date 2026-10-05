@@ -8,7 +8,6 @@ resources:
   - cilium/flux-ks.yaml
   - coredns/flux-ks.yaml
   - envoy-gateway/flux-ks.yaml
-  - external-dns/flux-ks.yaml
   - flux-instance/flux-ks.yaml
   - flux-operator/flux-ks.yaml
   - flux-operator-mcp/flux-ks.yaml

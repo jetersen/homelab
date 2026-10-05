@@ -56,8 +56,6 @@ spec:
             == 1))) == 1)
     httpRoute:
       enabled: true
-      annotations:
-        public.external-dns.kubernetes.io/enabled: 'false'
       hostnames:
         - upgrade-versions.lan.jetersen.dev
       parentRefs:

@@ -53,8 +53,6 @@ spec:
         mountPath: /mnt/nas
     httpRoute:
       enabled: true
-      annotations:
-        public.external-dns.kubernetes.io/enabled: "false"
       hostnames: [forgejo.jetersen.dev]
       parentRefs:
         - name: envoy-proxy
