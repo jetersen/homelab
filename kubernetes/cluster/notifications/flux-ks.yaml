@@ -17,7 +17,7 @@ spec:
   healthChecks:
     - apiVersion: helm.toolkit.fluxcd.io/v2
       kind: HelmRelease
-      name: ntfy
+      name: gotify
       namespace: monitoring
     - apiVersion: helm.toolkit.fluxcd.io/v2
       kind: HelmRelease
