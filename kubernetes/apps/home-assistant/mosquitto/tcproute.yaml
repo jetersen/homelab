@@ -5,7 +5,7 @@ kind: TCPRoute
 metadata:
   name: mosquitto
   annotations:
-    internal.external-dns.kubernetes.io/enabled: "false"
+    internal.external-dns.kubernetes.io/hostname: mqtt.jetersen.dev
     public.external-dns.kubernetes.io/enabled: "false"
 spec:
   parentRefs:

@@ -1,5 +1,14 @@
 # ExternalDNS
 
+Public DNS watches HTTPRoutes. Internal DNS watches HTTPRoutes, TCPRoutes and
+DNSEndpoints for infrastructure outside Kubernetes. Keep DNS annotations on
+routes: controllers do not watch Services, Pods, Nodes or EndpointSlices.
+Enable additional sources only when they need to publish records.
+
+MQTT uses Envoy's shared addresses on TCP ports 1883 and 9001. Its hostname is
+published by the MQTT TCPRoute; the WebSocket route shares that hostname.
+In-cluster clients connect directly to the Mosquitto ClusterIP Service.
+
 The Technitium release uses the native RFC2136 provider with HMAC-SHA256 TSIG
 authentication and authenticated AXFR reads. Its key is stored in a
 SOPS-encrypted Kubernetes Secret. Keep `txtOwnerId` and `txtPrefix` unchanged

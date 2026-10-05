@@ -38,11 +38,7 @@ spec:
     sources:
       - crd
       - gateway-httproute
-      - gateway-grpcroute
-      - gateway-tlsroute
       - gateway-tcproute
-      - gateway-udproute
-      - service
     provider:
       name: rfc2136
     env:
