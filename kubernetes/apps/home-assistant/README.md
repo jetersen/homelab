@@ -30,3 +30,13 @@ the KVM or its controlled computer.
 Run `shell_command.glkvm_sync_certificate` to retry manually. Failures create a
 persistent Home Assistant notification. A powered-off KVM is skipped; its next
 online event retries with the latest certificate.
+
+Folder watcher requires this entry in the persistent `configuration.yaml`:
+
+```yaml
+homeassistant:
+  allowlist_external_dirs:
+    - /etc/glkvm/tls
+```
+
+Keep the existing package configuration under the same `homeassistant` mapping.

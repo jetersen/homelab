@@ -1,7 +1,3 @@
-homeassistant:
-  allowlist_external_dirs:
-    - /etc/glkvm/tls
-
 shell_command:
   glkvm_sync_certificate: python /config/gitops-packages/glkvm_certificate_sync.py
 
