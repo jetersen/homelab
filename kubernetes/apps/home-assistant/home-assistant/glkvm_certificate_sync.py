@@ -1,5 +1,6 @@
 """Install the cert-manager certificate on GLKVM when Home Assistant requests it."""
 
+import errno
 import hashlib
 import http.client
 import json
@@ -118,6 +119,12 @@ if __name__ == "__main__":
     except (ConnectionError, socket.gaierror, TimeoutError):
         print(json.dumps({"status": "offline"}))
     except Exception as error:
+        if isinstance(error, OSError) and error.errno in {
+            errno.EHOSTUNREACH,
+            errno.ENETUNREACH,
+        }:
+            print(json.dumps({"status": "offline"}))
+            sys.exit(0)
         # API bodies, passwords, private keys, and exception text must stay private.
         print(json.dumps({"status": "error", "reason": type(error).__name__}))
         sys.exit(1)
