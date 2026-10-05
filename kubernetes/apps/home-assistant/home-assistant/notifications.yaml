@@ -1,0 +1,57 @@
+script:
+  homelab_notification:
+    alias: Homelab notification
+    description: Receive Chaski messages for Android push and the desktop notification panel.
+    mode: parallel
+    max: 20
+    fields:
+      title:
+        required: true
+      message:
+        required: true
+      priority:
+        required: true
+      extras:
+        required: true
+    sequence:
+      - variables:
+          meta: "{{ extras['homelab::notification'] }}"
+          grafana_url: "{{ extras['client::notification']['click']['url'] }}"
+          quiet: "{{ priority | int < 4 }}"
+          channel: >-
+            {{ 'Homelab activity' if priority | int < 4 else
+               'Homelab critical' if priority | int >= 8 else 'Homelab alerts' }}
+      - action: persistent_notification.create
+        data:
+          notification_id: "{{ meta.id }}"
+          title: "{{ title }}"
+          message: >-
+            {{ message }}
+
+            [Grafana]({{ grafana_url }}) · [Notification inbox](https://gotify.jetersen.dev)
+      - action: notify.mobile_app_oneplus_nord_5
+        data:
+          title: "{{ title }}"
+          message: "{{ message }}"
+          data:
+            tag: "{{ meta.id }}"
+            group: "{{ meta.category }}"
+            channel: "{{ channel }}"
+            importance: "{{ 'low' if quiet else 'high' }}"
+            priority: high
+            ttl: 0
+            alert_once: "{{ quiet }}"
+            color: "{{ '#43A047' if meta.status == 'resolved' else '#D32F2F' if priority | int >= 8 else '#FB8C00' if not quiet else '#326CE5' }}"
+            notification_icon: "{{ 'mdi:check-circle' if meta.status == 'resolved' else 'mdi:kubernetes' if meta.category == 'alerts' else 'mdi:package-variant' }}"
+            icon_url: "{{ meta.icon }}"
+            clickAction: "{{ grafana_url }}"
+            actions:
+              - action: URI
+                title: Grafana
+                uri: "{{ grafana_url }}"
+              - action: URI
+                title: Inbox
+                uri: https://gotify.jetersen.dev
+              - action: URI
+                title: History
+                uri: settings://notification_history

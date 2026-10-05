@@ -8,3 +8,11 @@ resources:
 components:
   - ../../../components/helmrelease-defaults
   - ../../../components/oci-source-defaults
+configMapGenerator:
+  - name: homelab-alerts-dashboard
+    files:
+      - alerts-dashboard.json
+    options:
+      disableNameSuffixHash: true
+      labels:
+        grafana_dashboard: "1"

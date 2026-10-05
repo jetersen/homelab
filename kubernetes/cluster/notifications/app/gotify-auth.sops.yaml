@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: gotify-auth
+    namespace: monitoring
+type: Opaque
+stringData:
+    GOTIFY_DEFAULTUSER_PASS: ENC[AES256_GCM,data:qmxNpLkHz3qxq0Yqvcc3hgZeePCXpPqVImO1h5RO2IsZ6NVXkBtjZxXE2w==,iv:xyHgWQg8pbAJLsG9y2BedGRsBw2pt90+O/ki+kiY9XE=,tag:y3l5evsvDQMHhkNTJ7uMwg==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBDMVVnbDRMaFFZbFdtY3p4
+            ei9FZm5DWm83bEU4ZUswOVRPcEtaZ003eW53ClNnNEk4RUV3a080Tjd4NmYySU1o
+            R3NUTzUvS1k1aFFSdGRZeDhiZ01RRDgKLS0tIHpOcUt5MVJhcEUrY3k1ekp6Q2xk
+            a0U0c05VNWF1Z0Vvbk4vY1BlOEJ1d0kKY2UoTLuBsJOIgk35VU0+ZMXPxXLLSUkM
+            bjDTcY1lucJYRp/jJ2sWpPcMDaI1hSBBXDOnqmYy0zJoNcmFmu5Pig==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1u0m8ryqg7hfhuykraxe35v4xzw92a03w9jpt75yv3m57g6pvpp0sf24mdy
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-10-05T11:49:58Z"
+    mac: ENC[AES256_GCM,data:X9WYlWgp4DtYNM9RzFXhJKked078ZsXsrZ0z3CSa0WarzlFpgQYy9Bnzma8JjC9z9C7O2Hj/ADWYqN2PZTo44GnDPhufBpBxzFV/+H3Pq489Kd5Gd/ZjAUhiVeC/W61NWefp8czZ48wrgZD2vokiS0r2vGRwtAoS5Ypv1rTVmlg=,iv:hCh1dPUDM9+KiXzQ/7yKmY0fa2jd24IA8eNXz9Zz6YA=,tag:QannfoOKMSjw6hhsPZHqAQ==,type:str]
+    version: 3.13.3

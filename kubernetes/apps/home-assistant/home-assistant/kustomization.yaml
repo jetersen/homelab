@@ -8,3 +8,9 @@ resources:
   - secrets.sops.yaml
 components:
   - ../../../components/helmrelease-defaults
+configMapGenerator:
+  - name: home-assistant-notifications
+    files:
+      - homelab_notifications.yaml=notifications.yaml
+    options:
+      disableNameSuffixHash: true

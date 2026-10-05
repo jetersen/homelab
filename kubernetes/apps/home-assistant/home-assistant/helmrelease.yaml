@@ -19,6 +19,8 @@ spec:
     controllers:
       home-assistant:
         strategy: Recreate
+        annotations:
+          reloader.stakater.com/auto: "true"
         containers:
           app:
             nameOverride: home-assistant
@@ -73,3 +75,11 @@ spec:
           home-assistant:
             app:
               - path: /config
+      notifications:
+        type: configMap
+        name: home-assistant-notifications
+        advancedMounts:
+          home-assistant:
+            app:
+              - path: /config/gitops-packages
+                readOnly: true

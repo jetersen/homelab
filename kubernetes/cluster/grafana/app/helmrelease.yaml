@@ -52,10 +52,19 @@ spec:
         apiVersion: 1
         datasources:
           - name: VictoriaMetrics
+            uid: victoriametrics
             type: prometheus
             url: http://vmsingle-vm:8428
             isDefault: true
             access: proxy
+          - name: Alertmanager
+            uid: homelab-alertmanager
+            type: alertmanager
+            url: http://vmalertmanager-vm:9093
+            access: proxy
+            jsonData:
+              implementation: prometheus
+              handleGrafanaManagedAlerts: false
           - name: VictoriaLogs
             type: victoriametrics-logs-datasource
             url: http://victoria-logs-single-server:9428
