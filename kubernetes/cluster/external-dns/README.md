@@ -10,7 +10,8 @@ published by the MQTT TCPRoute; the WebSocket route shares that hostname.
 In-cluster clients connect directly to the Mosquitto ClusterIP Service.
 
 The Technitium release uses the native RFC2136 provider with HMAC-SHA256 TSIG
-authentication and authenticated AXFR reads. Its key is stored in a
+authentication and authenticated AXFR reads. Records without an explicit source
+TTL use 300 seconds. Its key is stored in a
 SOPS-encrypted Kubernetes Secret. Keep `txtOwnerId` and `txtPrefix` unchanged
 when switching providers so existing TXT ownership remains valid.
 
@@ -26,6 +27,10 @@ work. Configure server settings through the primary so they replicate to the
 other Technitium members.
 
 For provider migrations, disable deletions until authenticated transfers and
-the existing ownership records have been checked. The native RFC2136 provider
+the existing ownership records have been checked. Verify that the new provider
+recognizes the TXT owner, including through its DNS wire codec. Webhooks may
+store literal surrounding quotes that need to be removed before RFC2136 can
+recognize ownership. Preserve the labels and retain the original values for
+rollback when correcting these records. The native RFC2136 provider
 supports a read-only dry run; webhook providers require independent verification
 that their dry-run path suppresses writes.

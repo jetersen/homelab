@@ -28,6 +28,8 @@ spec:
       - jetersen.dev
     extraArgs:
       - --annotation-prefix=internal.external-dns.kubernetes.io/
+      # Preserve the previous webhook's fallback for sources without a TTL.
+      - --min-ttl=300s
       - --rfc2136-host=technitium-dns.technitium.svc.cluster.local
       - --rfc2136-port=53
       - --rfc2136-zone=jetersen.dev

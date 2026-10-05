@@ -27,10 +27,7 @@ spec:
     service:
       app:
         controller: mosquitto
-        type: LoadBalancer
-        externalTrafficPolicy: Local
-        annotations:
-          lbipam.cilium.io/ips: 192.168.1.22
+        type: ClusterIP
         ports:
           mqtt: { port: 1883, protocol: TCP, targetPort: 1883 }
           websocket: { port: 9001, protocol: TCP, targetPort: 9001 }
