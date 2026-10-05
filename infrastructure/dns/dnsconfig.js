@@ -37,11 +37,8 @@ if (view === "all" || view === "internal") {
 }
 if ((view === "all" || view === "public") && (provider === "all" || provider === "cloudflare")) {
   var cloudflare = NewDnsProvider("cloudflare", "CLOUDFLAREAPI");
-  if (typeof ROUTES_FILE === "undefined") { throw new Error("ROUTES_FILE must point to a complete Kubernetes snapshot"); }
-  require("./route-adapter.js");
-  var snapshot = require(ROUTES_FILE);
-  var records = publicRouteRecords(snapshot, settings).map(function (record) {
-    return CNAME(relative(record.name, settings.domain), record.target + ".", TTL(record.ttl), record.proxied ? CF_PROXY_ON : CF_PROXY_OFF);
+  var records = settings.publicRecords.map(function (record) {
+    return CNAME(relative(record.name, settings.domain), record.target + ".", record.proxied ? CF_PROXY_ON : CF_PROXY_OFF);
   });
   D(settings.domain + "!public", registrar, DnsProvider(cloudflare, 0), DefaultTTL(settings.ttl), NO_PURGE, records);
 }

@@ -1,10 +1,11 @@
 {
   "domain": "jetersen.dev",
   "ttl": 300,
-  "gateway": { "namespace": "kube-system", "name": "envoy-proxy" },
   "envoyIPv4": "192.168.1.20",
   "envoyIPv6": "fde2:b84e:c4cd:1::1000",
-  "publicTarget": "public.jetersen.dev",
+  "publicRecords": [
+    { "name": "webhook.jetersen.dev", "target": "public.jetersen.dev", "proxied": true }
+  ],
   "infrastructure": [
     { "name": "glkvm.jetersen.dev", "ipv4": "192.168.1.142" },
     { "name": "unifi.lan.jetersen.dev", "ipv4": "192.168.1.1" },
