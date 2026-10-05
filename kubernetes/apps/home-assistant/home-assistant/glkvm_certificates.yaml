@@ -1,0 +1,39 @@
+homeassistant:
+  allowlist_external_dirs:
+    - /etc/glkvm/tls
+
+shell_command:
+  glkvm_sync_certificate: python /config/gitops-packages/glkvm_certificate_sync.py
+
+automation:
+  - id: glkvm_sync_certificate
+    alias: GLKVM certificate sync
+    mode: single
+    max_exceeded: silent
+    triggers:
+      - trigger: state
+        entity_id: device_tracker.glkvm
+        to: home
+        for: "00:00:10"
+      - trigger: homeassistant
+        event: start
+      - trigger: state
+        entity_id: event.glkvm_certificate_changed
+    conditions:
+      - condition: state
+        entity_id: device_tracker.glkvm
+        state: home
+    actions:
+      - delay: "00:00:02"
+      - action: shell_command.glkvm_sync_certificate
+        response_variable: result
+      - if: "{{ result.returncode != 0 }}"
+        then:
+          - action: persistent_notification.create
+            data:
+              notification_id: glkvm_certificate_sync
+              title: GLKVM certificate sync failed
+              message: >-
+                The KVM certificate could not be synchronized. Check the KVM
+                connection and its saved administrator credentials, then run
+                shell_command.glkvm_sync_certificate again.

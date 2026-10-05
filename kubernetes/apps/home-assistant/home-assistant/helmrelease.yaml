@@ -83,3 +83,19 @@ spec:
             app:
               - path: /config/gitops-packages
                 readOnly: true
+      glkvm-tls:
+        type: secret
+        name: glkvm-production-tls
+        advancedMounts:
+          home-assistant:
+            app:
+              - path: /etc/glkvm/tls
+                readOnly: true
+      glkvm-auth:
+        type: secret
+        name: glkvm-auth
+        advancedMounts:
+          home-assistant:
+            app:
+              - path: /etc/glkvm/auth
+                readOnly: true

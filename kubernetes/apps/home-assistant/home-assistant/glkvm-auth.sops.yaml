@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: glkvm-auth
+    namespace: home-assistant
+    annotations:
+        reloader.stakater.com/ignore: "true"
+type: Opaque
+stringData:
+    password: ENC[AES256_GCM,data:tHPDvWSJqBjewz/GngJTr1qIbgCtU3W4Ko0HOl6BfbPf0He4GMCc87+82gUMK+KditU=,iv:xJn01M/tk7Q7Xqm5f1wUvBOKyqlD2wqdwdkLoaEKK1w=,tag:NmayKO3qSj3Vu27wmWLIEQ==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSAzMUxSL3NmaWZNT2V4UXRB
+            UlNNWWZ3QVFZbi9hWkk0aGFHOGFWZktVdXpjCk1jMEphOGZPb0NkMXZpblgvZ3Vk
+            S3I5cGJLMURUajV4YzlHUGFnd2pHRkkKLS0tIDJNRUJwdTNBNXoxMDJaVEVqTzR2
+            Mkw3MU9udHZZWnNmK0pPNko3K1BWMmMK6QxYwDdgQw+ET6/R8b76U06AdUAL6hvZ
+            CnX62CzpFCypRnHCYILSYpvn/3sRzShK3TCN4kVf3uA8FeCCTTCadQ==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1u0m8ryqg7hfhuykraxe35v4xzw92a03w9jpt75yv3m57g6pvpp0sf24mdy
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-10-05T13:44:45Z"
+    mac: ENC[AES256_GCM,data:RjTEt88MDKnd0z8NtZNF2zbZpemA3QZvhGeBdsadnNsFJFJ/XfJ6bW0qOvBYPRTwOnuoS2bVCem1OTiI6fovjUpeim1opLPFeM31FYGwQDn5mEBm+K+ulQ6UXikouPlWhPKF177r5k7WJJk80A40oOyiHOmEHkXbYBcBHlzni0k=,iv:XBYykOKUKGjsxvtWjlyrsIJ1ZiGsYrjDIJ4+i4ZNNvs=,tag:jpy544TEN56zOapPXU9fjw==,type:str]
+    version: 3.13.3

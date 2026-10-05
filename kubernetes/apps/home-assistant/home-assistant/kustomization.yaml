@@ -6,11 +6,14 @@ resources:
   - helmrelease.yaml
   - httproute.yaml
   - secrets.sops.yaml
+  - glkvm-auth.sops.yaml
 components:
   - ../../../components/helmrelease-defaults
 configMapGenerator:
   - name: home-assistant-notifications
     files:
       - homelab_notifications.yaml=notifications.yaml
+      - glkvm_certificates.yaml
+      - glkvm_certificate_sync.py
     options:
       disableNameSuffixHash: true
