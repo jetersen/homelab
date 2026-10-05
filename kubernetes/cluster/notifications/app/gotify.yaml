@@ -84,7 +84,6 @@ spec:
           timeouts:
             request: 0s
             backendRequest: 0s
-        apiVersion: gateway.networking.k8s.io/v1
     persistence:
       data:
         type: persistentVolumeClaim
