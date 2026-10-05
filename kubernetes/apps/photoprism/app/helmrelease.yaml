@@ -103,7 +103,7 @@ spec:
     route:
       app:
         annotations:
-          public.external-dns.alpha.kubernetes.io/enabled: 'false'
+          public.external-dns.kubernetes.io/enabled: 'false'
         hostnames:
         - photos.jetersen.dev
         parentRefs:

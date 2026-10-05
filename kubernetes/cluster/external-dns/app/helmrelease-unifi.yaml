@@ -23,11 +23,11 @@ spec:
     triggerLoopOnEvent: true
     txtOwnerId: homelab-unifi
     txtPrefix: "_owner_"
-    annotationFilter: internal.external-dns.alpha.kubernetes.io/enabled notin (false)
+    annotationFilter: internal.external-dns.kubernetes.io/enabled notin (false)
     domainFilters:
       - jetersen.dev
     extraArgs:
-      - --annotation-prefix=internal.external-dns.alpha.kubernetes.io/
+      - --annotation-prefix=internal.external-dns.kubernetes.io/
       # UniFi already owns this name through the NAS client's local DNS entry.
       # A duplicate DNS policy is rejected and stops the remaining record sync.
       - --exclude-domains=truenas.lan.jetersen.dev

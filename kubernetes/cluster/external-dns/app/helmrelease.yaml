@@ -1,7 +1,7 @@
 ---
 # yaml-language-server: $schema=https://k8s-schemas.home-operations.com/helm.toolkit.fluxcd.io/helmrelease_v2.json
 # Public DNS tier. Opt-in only: a resource must carry
-# public.external-dns.alpha.kubernetes.io/enabled: "true" to be published to
+# public.external-dns.kubernetes.io/enabled: "true" to be published to
 # Cloudflare. Manages CNAMEs exclusively; every other record in the Cloudflare
 # zone (apex Worker, MX, SPF/DMARC, CAA, DS, DKIM) is hand-maintained and stays
 # unowned, which external-dns never touches.
@@ -22,7 +22,7 @@ spec:
     triggerLoopOnEvent: true
     txtOwnerId: homelab
     txtPrefix: "_owner_"
-    annotationFilter: public.external-dns.alpha.kubernetes.io/enabled in (true)
+    annotationFilter: public.external-dns.kubernetes.io/enabled in (true)
     domainFilters:
       - jetersen.dev
     excludeDomains:
@@ -34,7 +34,7 @@ spec:
             name: cloudflare-api-token-secret
             key: api-token
     extraArgs:
-      - --annotation-prefix=public.external-dns.alpha.kubernetes.io/
+      - --annotation-prefix=public.external-dns.kubernetes.io/
       - --cloudflare-proxied
     sources:
       - gateway-httproute

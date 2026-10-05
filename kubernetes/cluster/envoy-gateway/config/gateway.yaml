@@ -7,7 +7,7 @@ metadata:
   annotations:
     # Public tier must override: this Gateway's own address is private and must
     # never be published. Routes opt in via public.external-dns.../enabled.
-    public.external-dns.alpha.kubernetes.io/target: public.jetersen.dev
+    public.external-dns.kubernetes.io/target: public.jetersen.dev
     # Internal providers derive both LAN VIPs from .status.addresses. Tailnet
     # clients reach them through Talos's native Tailscale host routes.
     towonel.io/gateway-service: kube-system/envoy-proxy:443

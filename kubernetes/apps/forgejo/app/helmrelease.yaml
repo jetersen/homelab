@@ -54,7 +54,7 @@ spec:
     httpRoute:
       enabled: true
       annotations:
-        public.external-dns.alpha.kubernetes.io/enabled: "false"
+        public.external-dns.kubernetes.io/enabled: "false"
       hostnames: [forgejo.jetersen.dev]
       parentRefs:
         - name: envoy-proxy

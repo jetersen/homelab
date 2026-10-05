@@ -6,7 +6,7 @@ metadata:
   name: flux-webhook
   namespace: flux-system
   annotations:
-    public.external-dns.alpha.kubernetes.io/enabled: "true"
+    public.external-dns.kubernetes.io/enabled: "true"
     towonel.io/tunnel: enabled
     towonel.io/tunnel-ref: towonel-system/homelab
 spec:
