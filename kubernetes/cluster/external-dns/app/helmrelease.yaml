@@ -18,7 +18,7 @@ spec:
     interval: 1440m0s
     managedRecordTypes:
       - CNAME
-    policy: upsert-only
+    policy: sync
     triggerLoopOnEvent: true
     txtOwnerId: homelab
     txtPrefix: "_owner_"
