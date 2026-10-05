@@ -19,7 +19,7 @@ spec:
     managedRecordTypes:
       - A
       - AAAA
-    policy: upsert-only
+    policy: sync
     triggerLoopOnEvent: true
     txtOwnerId: homelab-technitium
     txtPrefix: "_owner_"
