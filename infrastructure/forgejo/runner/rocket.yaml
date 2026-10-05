@@ -13,7 +13,7 @@ cache:
   enabled: false
 container:
   docker_host: tcp://docker:2375
-  options: --add-host=docker:host-gateway
+  options: --add-host=docker:host-gateway --dns-option=ndots:1
   privileged: false
   valid_volumes: []
   force_pull: true

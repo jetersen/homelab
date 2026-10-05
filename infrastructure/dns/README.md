@@ -25,7 +25,8 @@ bash infrastructure/dns/install.sh /tmp/dnscontrol-tools
 The runner bundles DNSControl v5.3.0 with the Cloudflare, UniFi and AXFRDDNS
 providers. Its compatibility entry point decodes private record type 65281 as
 opaque RFC 3597 data, avoiding a collision between Technitium FWD and DNSControl
-AdGuard AAAA passthrough records. AXFRDDNS skips those forwarders and preserves
+AdGuard AAAA passthrough records. The shared DNSControl record model registers
+this decoder even when the AdGuard provider is excluded. AXFRDDNS skips those forwarders and preserves
 them on the server. The AdGuard provider is not included.
 
 `install.sh` reuses the bundled binary when its source and dependency fingerprint
@@ -44,6 +45,11 @@ The workflow is gated by `DNSCONTROL_ENABLED=true`. It requires repository secre
 matches the Technitium TSIG ACL and Cloudflare token restrictions. Keep TLS
 verification enabled and provide both AXFR and update keys. Each job receives
 only its provider's credentials.
+
+The runner Pod and its job containers use `ndots:1`. This resolves dotted names
+before adding search suffixes, so the LAN wildcard cannot redirect an
+infrastructure hostname or public API name to Envoy. Use the DNS defaults
+component for Kubernetes workloads that resolve dotted external hostnames.
 
 Initially the workflow previews changes; manual dispatch with `apply=true` pushes
 them. Push and scheduled events also preview, so scheduled runs report drift but
