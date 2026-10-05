@@ -13,6 +13,15 @@ spec:
     name: victoria-metrics-k8s-stack
   values:
     fullnameOverride: vm
+    defaultRules:
+      rules:
+        # CPU quota throttling is expected on this small node; alert on service impact.
+        CPUThrottlingHigh:
+          enabled: false
+        # No down targets is a healthy zero, not a missing recording-rule result.
+        count:up0:
+          spec:
+            expr: count(up == 0) without(instance,pod,node) or vector(0)
     alertmanager:
       spec:
         secrets:

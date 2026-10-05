@@ -49,6 +49,48 @@
           "value": "$__all"
         },
         "multi": false
+      },
+      {
+        "name": "alert",
+        "label": "Alert",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "P4169E866C3094E38"
+        },
+        "query": "label_values(ALERTS, alertname)",
+        "refresh": 1,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "multi": false
+      },
+      {
+        "name": "history_state",
+        "label": "History states",
+        "type": "custom",
+        "query": "Firing only : firing, Pending and firing : pending|firing",
+        "current": {
+          "text": "Firing only",
+          "value": "firing"
+        },
+        "options": [
+          {
+            "text": "Firing only",
+            "value": "firing",
+            "selected": true
+          },
+          {
+            "text": "Pending and firing",
+            "value": "pending|firing",
+            "selected": false
+          }
+        ],
+        "multi": false,
+        "includeAll": false
       }
     ]
   },
@@ -70,7 +112,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(ALERTS{alertstate=\"firing\",namespace=~\"$namespace\",alertname!~\"Watchdog|InfoInhibitor\"}) or vector(0)",
+          "expr": "sum(ALERTS{alertstate=\"firing\",namespace=~\"$namespace\",alertname=~\"$alert\",alertname!~\"Watchdog|InfoInhibitor\"}) or vector(0)",
           "legendFormat": "{{alertname}} \u00b7 {{namespace}} \u00b7 {{alertstate}}",
           "instant": true,
           "range": false,
@@ -100,7 +142,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(ALERTS{alertstate=\"pending\",namespace=~\"$namespace\"}) or vector(0)",
+          "expr": "sum(ALERTS{alertstate=\"pending\",namespace=~\"$namespace\",alertname=~\"$alert\",alertname!~\"Watchdog|InfoInhibitor\"}) or vector(0)",
           "legendFormat": "{{alertname}} \u00b7 {{namespace}} \u00b7 {{alertstate}}",
           "instant": true,
           "range": false,
@@ -125,37 +167,47 @@
         "x": 0,
         "y": 4,
         "w": 24,
-        "h": 14
+        "h": 16
       },
       "targets": [
         {
           "refId": "A",
-          "expr": "ALERTS{namespace=~\"$namespace\",alertname!~\"Watchdog|InfoInhibitor\"}",
-          "legendFormat": "{{alertname}} \u00b7 {{namespace}} \u00b7 {{alertstate}}",
+          "expr": "max by (alertname, namespace, severity) ((ALERTS{namespace=~\"$namespace\",alertname=~\"$alert\",alertstate=~\"$history_state\",alertname!~\"Watchdog|InfoInhibitor\",alertstate=\"firing\"} * 2) or ALERTS{namespace=~\"$namespace\",alertname=~\"$alert\",alertstate=~\"$history_state\",alertname!~\"Watchdog|InfoInhibitor\",alertstate=\"pending\"})",
+          "legendFormat": "{{alertname}} \u00b7 {{namespace}} \u00b7 {{severity}}",
           "instant": false,
           "range": true,
-          "format": "time_series"
+          "format": "time_series",
+          "interval": "30s"
         }
       ],
       "fieldConfig": {
         "defaults": {
           "min": 0,
-          "max": 1,
+          "max": 2,
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "axisWidth": 380,
+            "spanNulls": false,
+            "lineWidth": 0,
+            "fillOpacity": 90
+          },
           "mappings": [
             {
               "type": "value",
               "options": {
                 "1": {
-                  "text": "Active",
+                  "text": "Pending",
+                  "color": "yellow"
+                },
+                "2": {
+                  "text": "Firing",
                   "color": "red"
                 }
               }
             }
-          ],
-          "color": {
-            "mode": "fixed",
-            "fixedColor": "red"
-          }
+          ]
         },
         "overrides": []
       },
@@ -165,8 +217,14 @@
         "showValue": "never",
         "legend": {
           "showLegend": false
+        },
+        "perPage": 12,
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
         }
-      }
+      },
+      "description": "One row per alert, namespace and severity. Shows the highest active state across instances: pending (yellow) or firing (red). Gaps mean no active state. Firing only by default; include pending with History states. Use Alert and Namespace to focus the history. Instance details are in Current alerts."
     },
     {
       "id": 4,
@@ -178,14 +236,14 @@
       },
       "gridPos": {
         "x": 0,
-        "y": 18,
+        "y": 20,
         "w": 24,
         "h": 10
       },
       "targets": [
         {
           "refId": "A",
-          "expr": "ALERTS{namespace=~\"$namespace\",alertname!~\"Watchdog|InfoInhibitor\"}",
+          "expr": "ALERTS{namespace=~\"$namespace\",alertname=~\"$alert\",alertname!~\"Watchdog|InfoInhibitor\"}",
           "legendFormat": "{{alertname}} \u00b7 {{namespace}} \u00b7 {{alertstate}}",
           "instant": true,
           "range": false,

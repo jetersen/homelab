@@ -37,7 +37,12 @@ Grafana and Gotify links require LAN/Tailscale access away from home; Google pus
 delivery itself does not require a connection to the cluster from the phone.
 
 Grafana's **Homelab alerts** dashboard shows current alerts and their historical
-states from VictoriaMetrics, with a namespace filter. Its Alertmanager data
+states from VictoriaMetrics, with namespace and alert filters. History defaults
+to firing states and groups instances by alert, namespace and severity. Select
+Pending and firing to investigate brief conditions that cleared before their
+rule's waiting period elapsed. The timeline uses pagination to keep labels readable.
+CPU quota throttling alerts are disabled on the small single node; node saturation
+and service health alerts remain enabled. Its Alertmanager data
 source provides active notification groups and silences. Rules, routing and
 templates remain managed through manifests. State history follows VictoriaMetrics
 retention; it is different from Gotify's archive of message text. Gotify messages
