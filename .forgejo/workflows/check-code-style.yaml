@@ -1,0 +1,70 @@
+name: Code style
+on:
+  push:
+    paths: ['**/*.js', '**/*.mjs', '**/*.cjs', '**/*.cs', '**/*.py', '**/*.csproj', '**/*.go', '**/go.mod', '**/go.sum', '**/global.json', '**/packages.lock.json', 'infrastructure/dns/**', 'infrastructure/forgejo/runner/Dockerfile*', '.ci/image-inputs.sh', '.ci/publish-image.sh', 'package*.json', 'biome.json', 'ruff.toml', '.editorconfig', 'requirements-dev.txt', '*.slnx', '.forgejo/workflows/check-code-style.yaml']
+  pull_request:
+    paths: ['**/*.js', '**/*.mjs', '**/*.cjs', '**/*.cs', '**/*.py', '**/*.csproj', '**/*.go', '**/go.mod', '**/go.sum', '**/global.json', '**/packages.lock.json', 'infrastructure/dns/**', 'infrastructure/forgejo/runner/Dockerfile*', '.ci/image-inputs.sh', '.ci/publish-image.sh', 'package*.json', 'biome.json', 'ruff.toml', '.editorconfig', 'requirements-dev.txt', '*.slnx', '.forgejo/workflows/check-code-style.yaml']
+concurrency:
+  group: code-style-${{ forgejo.ref }}
+  cancel-in-progress: true
+jobs:
+  javascript:
+    runs-on: runner-kubernetes
+    timeout-minutes: 5
+    steps:
+      - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: npm run check:javascript
+      - run: node --test .ci/renovate-upgrade-policy.test.mjs
+  python:
+    runs-on: runner-kubernetes
+    timeout-minutes: 5
+    steps:
+      - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: npm run check:python
+  csharp:
+    runs-on: runner-kubernetes
+    timeout-minutes: 10
+    steps:
+      - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Restore projects
+        run: |
+          python3 infrastructure/truenas/restore-provider.py
+          dotnet restore Homelab.slnx --locked-mode
+      - run: npm run check:csharp
+      - name: Validate C# changes
+        run: |
+          dotnet build infrastructure/truenas/Homelab.TrueNas.csproj --no-restore
+          dotnet run --project infrastructure/backup/tests/Backup.Tests.csproj --no-restore
+  dnscontrol:
+    runs-on: runner-kubernetes
+    timeout-minutes: 10
+    steps:
+      - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check compatibility build
+        run: |
+          test -z "$(gofmt -l infrastructure/dns/compat)"
+          go -C infrastructure/dns/compat test -race ./...
+          bash infrastructure/dns/install.sh "$RUNNER_TEMP/dnscontrol-tools"
+          "$RUNNER_TEMP/dnscontrol-tools/dnscontrol" check --config infrastructure/dns/dnsconfig.js
+  runner-image:
+    runs-on: oci-build
+    timeout-minutes: 15
+    steps:
+      - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build and validate Trixie runner
+        run: |
+          image="homelab-runner:validate-${GITHUB_SHA}-${GITHUB_RUN_ID}"
+          trap 'docker image rm "$image" > /dev/null 2>&1 || true' EXIT
+          docker build -f infrastructure/forgejo/runner/Dockerfile -t "$image" .
+          docker run --rm --network none --read-only --cap-drop ALL --security-opt no-new-privileges "$image" \
+            bash -euc 'source /etc/os-release; test "$VERSION_CODENAME" = trixie; python3 --version; dnscontrol version; go version; dotnet --version; ruff --version; biome --version; gcc --version; node --version; docker --version; docker buildx version; kubectl version --client'

@@ -7,8 +7,8 @@ runner:
   envs:
     DOCKER_HOST: tcp://docker:2375
   labels:
-    - oci-build:docker://forgejo.jetersen.dev/jetersen/homelab/runner-job:0.1.0@sha256:362b607c8d9ba639c1c0972cde430cf122323763cff691c31d472128e30a82f5
-    - runner-kubernetes:docker://forgejo.jetersen.dev/jetersen/homelab/runner-job:0.1.0@sha256:362b607c8d9ba639c1c0972cde430cf122323763cff691c31d472128e30a82f5
+    - oci-build:docker://forgejo.jetersen.dev/jetersen/homelab/runner-job:0.2.0@sha256:1b5bc2dee2192645d729b1be9a1d6f42a7720972c1a1c2e0d13f3498207f1ed5
+    - runner-kubernetes:docker://forgejo.jetersen.dev/jetersen/homelab/runner-job:0.2.0@sha256:1b5bc2dee2192645d729b1be9a1d6f42a7720972c1a1c2e0d13f3498207f1ed5
 cache:
   enabled: false
 container:
