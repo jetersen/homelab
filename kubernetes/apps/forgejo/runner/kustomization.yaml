@@ -10,5 +10,3 @@ configMapGenerator:
   - name: forgejo-runner-config
     files:
       - runner.yaml
-components:
-  - ../../../components/dns-defaults

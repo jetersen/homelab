@@ -46,10 +46,10 @@ matches the Technitium TSIG ACL and Cloudflare token restrictions. Keep TLS
 verification enabled and provide both AXFR and update keys. Each job receives
 only its provider's credentials.
 
-The runner Pod and its job containers use `ndots:1`. This resolves dotted names
-before adding search suffixes, so the LAN wildcard cannot redirect an
-infrastructure hostname or public API name to Envoy. Use the DNS defaults
-component for Kubernetes workloads that resolve dotted external hostnames.
+The Kubernetes runner uses cluster DNS with only Kubernetes search suffixes.
+Job containers clear search suffixes with `--dns-search=.`. Both use `ndots:1`.
+A LAN wildcard must not appear in DNS search suffixes: some resolvers search
+again after an absolute AAAA query returns no data, even when its A query succeeds.
 
 Initially the workflow previews changes; manual dispatch with `apply=true` pushes
 them. Push and scheduled events also preview, so scheduled runs report drift but
