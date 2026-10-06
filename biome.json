@@ -57,7 +57,11 @@
           "DefaultTTL",
           "NO_PURGE",
           "CF_PROXY_ON",
-          "CF_PROXY_OFF"
+          "CF_PROXY_OFF",
+          "CAA",
+          "MX",
+          "TXT",
+          "TTL"
         ],
         "formatter": {
           "trailingCommas": "none"

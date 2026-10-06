@@ -32,12 +32,32 @@ function relative(name, zone) {
   return name.slice(0, -(zone.length + 1));
 }
 
+function publicRecord(record) {
+  var name = relative(record.name, settings.domain);
+  var ttl = TTL(record.ttl || settings.ttl);
+  switch (record.type) {
+    case "CAA":
+      return CAA(name, record.tag, record.target, ttl);
+    case "CNAME":
+      return CNAME(name, record.target + ".", ttl, record.proxied ? CF_PROXY_ON : CF_PROXY_OFF);
+    case "MX":
+      return MX(name, record.priority, record.target + ".", ttl);
+    case "TXT":
+      return TXT(name, record.target, ttl);
+    default:
+      throw new Error("Unknown public record type: " + record.type);
+  }
+}
+
 function internalZone(zone, provider, skipClientNames) {
   var records = [A("*", settings.envoyIPv4), AAAA("*", settings.envoyIPv6)];
   settings.infrastructure.forEach(function (record) {
     var isLan =
       record.name.slice(-(".lan." + settings.domain).length) === ".lan." + settings.domain;
     if (isLan !== (zone === "lan." + settings.domain)) {
+      return;
+    }
+    if (record.providers && record.providers.indexOf(provider) === -1) {
       return;
     }
     if (skipClientNames && record.unifiManagedElsewhere) {
@@ -71,13 +91,7 @@ if (view === "all" || view === "internal") {
 
 if ((view === "all" || view === "public") && (provider === "all" || provider === "cloudflare")) {
   cloudflare = NewDnsProvider("cloudflare", "CLOUDFLAREAPI");
-  publicRecords = settings.publicRecords.map(function (record) {
-    return CNAME(
-      relative(record.name, settings.domain),
-      record.target + ".",
-      record.proxied ? CF_PROXY_ON : CF_PROXY_OFF
-    );
-  });
+  publicRecords = settings.publicRecords.map(publicRecord);
   D(
     settings.domain + "!public",
     registrar,

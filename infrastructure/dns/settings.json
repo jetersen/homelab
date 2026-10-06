@@ -4,11 +4,119 @@
   "envoyIPv4": "192.168.1.20",
   "envoyIPv6": "fde2:b84e:c4cd:1::1000",
   "publicRecords": [
-    { "name": "webhook.jetersen.dev", "target": "public.jetersen.dev", "proxied": true }
+    {
+      "name": "jetersen.dev",
+      "type": "CAA",
+      "ttl": 1,
+      "tag": "issue",
+      "target": "letsencrypt.org"
+    },
+    {
+      "name": "jetersen.dev",
+      "type": "CAA",
+      "ttl": 1,
+      "tag": "issuewild",
+      "target": "letsencrypt.org"
+    },
+    {
+      "name": "protonmail2._domainkey.jetersen.dev",
+      "type": "CNAME",
+      "ttl": 1,
+      "target": "protonmail2.domainkey.dwuzc3d33jc2dnib63qgxhwdyc3a7lzjhbn7i5ajnv5yzxzw4hota.domains.proton.ch",
+      "proxied": false
+    },
+    {
+      "name": "protonmail3._domainkey.jetersen.dev",
+      "type": "CNAME",
+      "ttl": 1,
+      "target": "protonmail3.domainkey.dwuzc3d33jc2dnib63qgxhwdyc3a7lzjhbn7i5ajnv5yzxzw4hota.domains.proton.ch",
+      "proxied": false
+    },
+    {
+      "name": "protonmail._domainkey.jetersen.dev",
+      "type": "CNAME",
+      "ttl": 1,
+      "target": "protonmail.domainkey.dwuzc3d33jc2dnib63qgxhwdyc3a7lzjhbn7i5ajnv5yzxzw4hota.domains.proton.ch",
+      "proxied": false
+    },
+    {
+      "name": "public.jetersen.dev",
+      "type": "CNAME",
+      "ttl": 1,
+      "target": "edge-eu.towonel.dev",
+      "proxied": true
+    },
+    {
+      "name": "webhook.jetersen.dev",
+      "type": "CNAME",
+      "ttl": 1,
+      "target": "public.jetersen.dev",
+      "proxied": true
+    },
+    {
+      "name": "www.jetersen.dev",
+      "type": "CNAME",
+      "ttl": 1,
+      "target": "jetersen.dev",
+      "proxied": true
+    },
+    {
+      "name": "jetersen.dev",
+      "type": "MX",
+      "ttl": 1,
+      "priority": 20,
+      "target": "mailsec.protonmail.ch"
+    },
+    {
+      "name": "jetersen.dev",
+      "type": "MX",
+      "ttl": 1,
+      "priority": 10,
+      "target": "mail.protonmail.ch"
+    },
+    {
+      "name": "_dmarc.jetersen.dev",
+      "type": "TXT",
+      "ttl": 1,
+      "target": "v=DMARC1; p=quarantine"
+    },
+    {
+      "name": "jetersen.dev",
+      "type": "TXT",
+      "ttl": 1,
+      "target": "v=spf1 include:_spf.protonmail.ch ~all"
+    },
+    {
+      "name": "jetersen.dev",
+      "type": "TXT",
+      "ttl": 1,
+      "target": "keybase-site-verification=Fz4RhJ2pYxsKe4y0jHpJytijPWZKK674bkmF5UPU5Cg"
+    },
+    {
+      "name": "jetersen.dev",
+      "type": "TXT",
+      "ttl": 1,
+      "target": "protonmail-verification=6cb8d97c03bfbe2ab526dbbec7ba59cfa4fb7faa"
+    }
   ],
   "infrastructure": [
-    { "name": "glkvm.jetersen.dev", "ipv4": "192.168.1.142" },
-    { "name": "unifi.lan.jetersen.dev", "ipv4": "192.168.1.1" },
-    { "name": "truenas.lan.jetersen.dev", "ipv4": "192.168.1.2", "unifiManagedElsewhere": true }
+    {
+      "name": "glkvm.jetersen.dev",
+      "ipv4": "192.168.1.142"
+    },
+    {
+      "name": "unifi.lan.jetersen.dev",
+      "ipv4": "192.168.1.1"
+    },
+    {
+      "name": "truenas.lan.jetersen.dev",
+      "ipv4": "192.168.1.2",
+      "unifiManagedElsewhere": true
+    },
+    {
+      "name": "dns.technitium.lan.jetersen.dev",
+      "ipv4": "192.168.1.21",
+      "providers": ["unifi"]
+    }
   ]
 }
