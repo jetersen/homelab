@@ -15,9 +15,8 @@ Kopia's pruning from competing with Kopiur's retention.
 
 Use [the Pulumi project](/infrastructure/backup/README.md) for S3 setup.
 
-Keep credentials and the Kopia repository password in Proton Pass, resolve them
-through Varlock, and encrypt Secret payloads with SOPS. Keep recovery material
-outside the cluster. `create.enabled: false` requires an existing repository and
+Resolve credentials and the Kopia repository password through Varlock, and
+encrypt Secret payloads with SOPS. Keep recovery material outside the cluster. `create.enabled: false` requires an existing repository and
 prevents silently initializing an empty replacement. For a new, reviewed backend,
 use `create.enabled: true` for its first initialization.
 

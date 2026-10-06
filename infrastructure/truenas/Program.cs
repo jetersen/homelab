@@ -49,7 +49,7 @@ return await Deployment.RunAsync(() =>
 static string RequireEnvironment(string name) =>
     Environment.GetEnvironmentVariable(name) is { Length: > 0 } value
         ? value
-        : throw new InvalidOperationException($"{name} is required. Run Pulumi through Varlock.");
+        : throw new InvalidOperationException($"{name} is required.");
 
 static TrueNas.App CatalogApp(string name, string train, string version, TrueNas.Provider provider) =>
     new(name, new TrueNas.AppArgs

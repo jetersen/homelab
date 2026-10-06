@@ -20,6 +20,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Install runtime prerequisites
         run: |
           apt-get update
@@ -32,7 +34,6 @@ jobs:
           pulumi-version: '3.267.0'
       - name: Restore and build
         run: |
-          npm ci --ignore-scripts
           python3 infrastructure/truenas/restore-provider.py
           dotnet restore infrastructure/truenas/Homelab.TrueNas.csproj --locked-mode
           dotnet build infrastructure/truenas/Homelab.TrueNas.csproj --no-restore
@@ -43,7 +44,8 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.PULUMI_STATE_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.PULUMI_STATE_SECRET_ACCESS_KEY }}
           PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
-        run: npm exec -- varlock run --path infrastructure/truenas -- pulumi -C infrastructure/truenas preview --stack homelab --refresh --non-interactive
+        run: |
+          pulumi -C infrastructure/truenas preview --stack homelab --refresh --non-interactive
       - name: Apply
         if: forgejo.ref == 'refs/heads/main' && forgejo.event_name != 'pull_request'
         env:
@@ -52,4 +54,5 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.PULUMI_STATE_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.PULUMI_STATE_SECRET_ACCESS_KEY }}
           PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
-        run: npm exec -- varlock run --path infrastructure/truenas -- pulumi -C infrastructure/truenas up --stack homelab --refresh --yes --non-interactive
+        run: |
+          pulumi -C infrastructure/truenas up --stack homelab --refresh --yes --non-interactive

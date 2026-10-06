@@ -1,4 +1,4 @@
-# DNS
+# CoreDNS
 
 Talos bootstraps CoreDNS's Deployment, Service, and RBAC. Flux manages its
 Corefile; Talos leaves existing bootstrap resources intact during upgrades.
@@ -10,7 +10,7 @@ Technitium hosts `lan.jetersen.dev` as a Primary zone in the cluster catalog.
 The NAS subscribes to the catalog and serves its replicated Secondary zone.
 Keep both Technitium members on the same version so configuration sync remains
 compatible. Create and edit zones through the primary API so changes replicate.
-ExternalDNS manages service addresses and their ownership records.
+[DNSControl](../../../infrastructure/dns/README.md) manages service records.
 
 Kubernetes masquerades outbound DNS notifications to the Talos node address.
 Include that address as a single-host entry in Technitium's cluster-wide

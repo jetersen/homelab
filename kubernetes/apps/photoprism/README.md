@@ -2,9 +2,9 @@
 
 PhotoPrism uses SQLite on local SSD storage and reads NAS originals without write
 access. Envoy serves `https://photos.jetersen.dev` to LAN, Tailscale, and cluster
-clients only. Public DNS publication is disabled. The administrator login is in
-`Personal/PhotoPrism` in Proton Pass; Varlock resolves the initial password for
-the SOPS-encrypted Secret. Changing that Secret does not reset an existing account.
+clients only. Public DNS publication is disabled. Varlock resolves the initial
+administrator password for the SOPS-encrypted Secret. Changing that Secret does
+not reset an existing account.
 
 Syncthing delivers Android camera files to the originals folder. Use send-only
 on Android and receive-only on the NAS, with staggered versioning on the NAS.
@@ -13,11 +13,10 @@ devices; Android keeps deleted camera files in the camera directory until its
 trash expires. Kopiur also excludes these files. Syncthing can connect through
 LAN discovery or the NAS's published TCP port over Tailscale.
 
-PhotoPrism indexes every 15 minutes with one worker. Start manual scans through
-Library > Index so they share the server's worker lock with scheduled scans.
-Albums, labels, face recognition, and metadata changes live in its storage volume. File uploads, deletion, and other
-operations that require writing originals are disabled. Add Google Takeout files
-and their JSON sidecars to the originals folder, then index them.
+Start manual scans through Library > Index so they share the server's worker lock
+with scheduled scans. Albums, labels, face recognition, and metadata changes live
+in the storage volume; operations that write originals are disabled. Add Google
+Takeout files and their JSON sidecars to the originals folder, then index them.
 Keep the original Takeout metadata. For exports using
 `photo.jpg.supplemental-metadata.json`, add a matching `photo.jpg.json` copy so
 PhotoPrism reads it. Resolve duplicate filename suffixes against the actual media
@@ -25,10 +24,9 @@ file before adding a sidecar. Google album membership needs a separate import.
 
 ## Backups and recovery
 
-Kopiur snapshots state daily at 02:00 UTC and originals at 02:30 UTC, retaining
-3 latest, 14 daily, 8 weekly, and 12 monthly recovery points. Both policies use
-an encrypted NAS repository, replicated hourly to OVH. NAS originals and the
-NAS repository share a failure domain; completed offsite replication is essential.
+State and originals use an encrypted NAS repository replicated to OVH. See the
+[backup manifests](backup/) for schedules and retention. Originals and the
+repository share a failure domain; completed offsite replication is essential.
 
 The state policy runs `photoprism backup --database --albums --force` first.
 Snapshots exclude the live SQLite database, its journal files, caches, and logs.

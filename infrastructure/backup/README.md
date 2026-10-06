@@ -10,16 +10,14 @@ remain billable and require import if removed from state.
 
 ## Credentials
 
-Resolve credentials from these Proton Pass items through Varlock:
-
-- `Personal/OVHcloud Homelab API`: custom fields `application-key`,
-  `application-secret`, and `consumer-key` for the OVH control plane.
-- `Personal/Homelab Pulumi`: a separate encryption passphrase in the password field.
+Configure Varlock to resolve the OVH application key, application secret, and
+consumer key, plus a separate Pulumi encryption passphrase.
 
 Create API credentials through [the European token page](https://api.ovh.com/createToken/).
 Scope GET, POST, and PUT rights to `/cloud/project/PROJECT_ID` and its child paths.
 The retained-resource setup does not require DELETE or account-wide rights.
-Set `BACKUP_IAC_CONFIGURED=true` in local Varlock overrides once the items exist.
+Once credentials are configured, set `BACKUP_IAC_CONFIGURED=true` in local
+Varlock overrides.
 Keep `BACKUP_S3_CONFIGURED=false` until the generated S3 credentials are stored.
 
 Transfer decrypted credential outputs in memory through stdin. Keep decrypted
@@ -35,7 +33,7 @@ when secret values are encrypted. Keep recovery copies of state and stack settin
 in protected storage outside the repository, with the passphrase stored separately.
 
 For a first deployment, set `PULUMI_STATE_CONFIGURED=false` in local Varlock
-overrides and run from the repository root after configuring Proton Pass:
+overrides and run from the repository root after configuring credentials:
 
 ```bash
 npm exec -- varlock load --agent
@@ -60,14 +58,14 @@ Keep `PULUMI_STATE_CONFIGURED=false` until the state bucket and credential exist
 Provision them against the local backend. Superseded state bucket versions expire
 after 90 days; keep independent recovery copies for longer retention.
 
-Store Pulumi's `stateAccessKeyId` and `stateSecretAccessKey` outputs in
-`Personal/OVHcloud Homelab Pulumi S3`, with the access key in username and secret
-key in password. Transfer through Varlock with `BACKUP_IAC_CONFIGURED=true` and
-`PULUMI_STATE_CONFIGURED=false`. Preserve existing logins.
+Store Pulumi's `stateAccessKeyId` and `stateSecretAccessKey` outputs securely and
+configure Varlock to resolve them for the state backend. Transfer with
+`BACKUP_IAC_CONFIGURED=true` and `PULUMI_STATE_CONFIGURED=false`. Preserve existing
+credentials.
 
 Before migrating, pause Pulumi updates and copy the entire local backend and
 `Pulumi.homelab.yaml` to protected storage outside the repository. Keep the current
-`Personal/Homelab Pulumi` passphrase. Set `PULUMI_STATE_CONFIGURED=true` and
+Pulumi encryption passphrase. Set `PULUMI_STATE_CONFIGURED=true` and
 `BACKUP_IAC_CONFIGURED=true` in local Varlock overrides, then run:
 
 ```bash
@@ -79,8 +77,9 @@ npm exec -- varlock run -- pulumi -C infrastructure/backup preview --stack homel
 ```
 
 The S3 backend uses `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` resolved by
-Varlock from the dedicated state login. Remove inherited `AWS_SESSION_TOKEN` or
-AWS credential overrides when using these long-lived OVH credentials.
+Varlock from the dedicated state credentials. Remove inherited
+`AWS_SESSION_TOKEN` or AWS credential overrides when using these long-lived
+OVH credentials.
 
 Verify resource URNs and IDs, secret outputs, and a no-change refreshed preview
 before treating OVH as authoritative. Move the retired local backend to protected
@@ -96,14 +95,13 @@ encryption passphrase outside the cluster.
 
 ## S3 credentials and Kubernetes connections
 
-Store Pulumi's `accessKeyId` and `secretAccessKey` outputs in
-`Personal/OVHcloud Homelab S3`, with the access key in username and secret key in
-password. Create `Personal/Homelab Kopia` with a separate generated repository
-password. Transfer through Varlock with `BACKUP_IAC_CONFIGURED=true`. Preserve
-existing logins and repository passwords.
+Store Pulumi's `accessKeyId` and `secretAccessKey` outputs securely, along with a
+separate generated Kopia repository password. Configure Varlock to resolve them.
+Transfer with `BACKUP_IAC_CONFIGURED=true`; preserve existing credentials and
+repository passwords.
 
-After storing the items, set `BACKUP_S3_CONFIGURED=true` in local Varlock overrides,
-confirm `BACKUP_S3_BUCKET`, and validate Varlock. Use the existing application
+After storing the credentials, set `BACKUP_S3_CONFIGURED=true` in local Varlock
+overrides, confirm `BACKUP_S3_BUCKET`, and validate Varlock. Use the existing application
 Secret manifests as the schema for new connections and encrypt payloads with
 SOPS using the destination filename and the repository's `.sops.yaml` rules.
 See [application backup setup](../../kubernetes/cluster/kopiur/README.md) for

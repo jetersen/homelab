@@ -1,36 +1,16 @@
 # TrueNAS applications
 
-Pulumi manages the NAS Technitium custom Compose app and the Syncthing and
-Tailscale catalog apps. Flux manages the Kubernetes Technitium instance. Renovate
-groups the Technitium container image updates; deployments run independently.
-DNS settings continue to replicate through Technitium's existing
-cluster configuration, and ExternalDNS retains ownership of service records.
+Pulumi manages the NAS Technitium Compose app and the Syncthing and Tailscale
+catalog apps. Flux manages Kubernetes Technitium independently. DNSControl writes
+records to the primary, which replicates to the NAS through Technitium's catalog.
 
-The `homelab-truenas/homelab` stack shares the existing OVH Pulumi state bucket
-with the backup project, using a separate project namespace and the same
-passphrase secret provider. Do not initialize this project against local state.
+The `homelab-truenas/homelab` stack uses the shared OVH Pulumi state bucket with
+its own project namespace and the same passphrase provider. Do not initialize
+it against local state.
 
-The provider is maintained at [jetersen/pulumi-truenas](https://github.com/jetersen/pulumi-truenas).
-`restore-provider.py` downloads its NuGet release asset and verifies the published
-checksum. The same package is published to GitHub Packages. Using release assets
-avoids an additional package registry credential. NuGet source mapping restricts
-this package to the downloaded feed, preventing fallback to nuget.org.
-To upgrade the provider, update its project package reference, download that
-release, and run `dotnet restore` without locked mode to refresh the lockfile.
-Renovate's automatic updates cover the Technitium images. Provider SDK upgrades
-require this reviewed lockfile update. Renovate reads catalog chart versions
-from `catalog-apps.json` and checks the official TrueNAS `app_versions.json` feeds
-with a JSONata manager and custom datasource. It updates the catalog chart version,
-which also selects the container image; catalog images are not overridden.
-`syncthing.json` and `tailscale.json` contain the catalog settings without generated
-`ix_*` metadata. Keep credentials out of
-these files; inject credentials through Pulumi secret configuration when needed.
+## Local use
 
-The pinned `0.2.0-rc.1` prerelease comes from provider PR #1 and includes structured
-Compose diffs. It is published without merging the PR or changing the stable
-provider release.
-
-From the repository root:
+Run from the repository root:
 
 ```sh
 python3 infrastructure/truenas/restore-provider.py
@@ -40,24 +20,35 @@ npm exec -- varlock run -- pulumi -C infrastructure/truenas preview --stack home
 npm exec -- varlock run -- pulumi -C infrastructure/truenas up --stack homelab
 ```
 
-Local credentials come from the root Varlock schema. `TRUENAS_HOST` must use
-HTTPS with a trusted hostname. Pulumi connects over `wss://HOST/api/current`.
-The project schema validates credentials injected by Forgejo Actions.
+Varlock resolves local credentials. `TRUENAS_HOST` must use
+HTTPS with a trusted hostname; the provider connects over `wss://HOST/api/current`.
 
-The Forgejo workflow previews same-repository PRs and applies changes to `main`.
-It requires the `TRUENAS_HOST` repository variable and these Actions secrets:
-`TRUENAS_TOKEN`, `PULUMI_STATE_ACCESS_KEY_ID`, `PULUMI_STATE_SECRET_ACCESS_KEY`,
-and `PULUMI_CONFIG_PASSPHRASE`. Keep them synchronized with the corresponding
-Proton Pass items. Runs are serialized; there is no cross-platform deployment
-sequencing or post-deployment health check.
+The [provider](https://github.com/jetersen/pulumi-truenas) is restored from a
+checksum-verified release asset, avoiding a GitHub Packages credential. To upgrade
+it, update the package reference, rerun `restore-provider.py`, and restore without
+locked mode to refresh the lockfile. Renovate manages application versions;
+provider upgrades need a reviewed lockfile update.
 
-Adopt existing apps by name with Pulumi import before enabling deployment. Keep
-the existing app name and Compose volume keys to retain storage. The resource
-uses `Protect` and `RetainOnDelete`; removing it requires explicit review.
-Technitium reads `compose.yaml` into the provider's structured Compose input, so
-`preview --refresh --diff` shows live changes while Renovate can still read image
-versions directly from the Compose file. Declare empty volume definitions as `{}`;
-Pulumi omits map entries with null values. Catalog settings remain a secret JSON
-value in Pulumi previews and state. The immutable `catalogApp` selector is ignored
-after creation because upstream does not populate it during import; train,
-version, running state, and configuration remain managed.
+## Forgejo deployment
+
+The workflow previews same-repository PRs and applies changes on `main`. Set the
+`TRUENAS_HOST` repository variable and these secrets:
+
+- `TRUENAS_TOKEN`
+- `PULUMI_STATE_ACCESS_KEY_ID`
+- `PULUMI_STATE_SECRET_ACCESS_KEY`
+- `PULUMI_CONFIG_PASSPHRASE`
+
+Forgejo injects these directly into Pulumi. Keep them synchronized with local
+credentials. Runs are serialized and deploy independently of Flux.
+
+## Managing apps
+
+Import existing apps by name before enabling deployment. Preserve app names and
+Compose volume keys to retain storage. Resources use `Protect` and `RetainOnDelete`.
+
+Declare empty Compose volumes as `{}`; Pulumi omits null map entries. Keep
+credentials out of catalog JSON files and inject them through Pulumi secrets.
+Catalog values remain secret in previews and state. The create-only `catalogApp`
+selector is ignored after import because upstream does not return it; other
+settings remain managed. Catalog versions select their own container images.

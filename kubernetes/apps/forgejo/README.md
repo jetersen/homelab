@@ -11,12 +11,8 @@ For Git SSH, add an account SSH key and use
 `git@forgejo.jetersen.dev:owner/repository.git`. Tailscale grants must allow TCP 22
 to the gateway host route.
 
-Envoy serves a self-contained mascot error page for gateway-generated HTTP
-502–504 responses, including backup downtime. It preserves the error status,
-disables caching, and suggests retrying after 30 seconds. The route policy merges
-with the gateway defaults; Forgejo's own responses pass through unchanged.
-Edit `app/error-page.html` to change the page. Its embedded mascot comes from the
-Forgejo website, by David Revoy under CC BY 4.0.
+Edit [app/error-page.html](app/error-page.html) for gateway error responses,
+including backup downtime. The embedded mascot is by David Revoy, CC BY 4.0.
 
 The bootstrap administrator is `jetersen`; its initial password is the `password`
 key in the `forgejo-admin` Secret. Change it at first login. The chart creates the
@@ -26,9 +22,6 @@ once. Keep the local administrator login available for recovery.
 
 Application and chart major upgrades require Renovate dashboard approval and
 manual merge because upgrades can change the database schema.
-
-Pull requests default to rebase for merging and updating an outdated branch.
-Existing repositories with explicit settings retain their own defaults.
 
 ## Storage
 
@@ -43,9 +36,6 @@ The backup job briefly stops Forgejo to stage a consistent copy of both stores,
 validates SQLite on local storage, and resumes Forgejo before Kopiur uploads the
 staged copy to S3. Staging is not an independent backup. A watchdog resumes a
 pause older than 25 minutes, including after an abruptly terminated backup pod.
-The five-minute recovery CronJob retains up to four failed Jobs, enough for the
-15-minute failed-Job alert to fire during repeated failures. Completed Jobs
-expire after 24 hours; successful history is limited to one Job.
 
 Provision a separate staging dataset with room for both stores. See the
 [shared backup setup](../../cluster/kopiur/README.md#storage-and-credentials)
@@ -75,8 +65,3 @@ homelab-backup-helper:recovery --help` to verify it. A Kubernetes recovery job
 needs that image imported into its node runtime or pushed to another reachable
 registry first. Do not rely on the Forgejo registry as the only source of
 recovery tooling.
-# Runner startup
-
-The Kubernetes runner uses Docker as a native sidecar. Docker's startup probe
-must succeed before the runner starts, and Docker stays available while the
-runner shuts down. Its image cache remains on the existing PVC.
