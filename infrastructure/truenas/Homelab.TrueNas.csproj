@@ -8,7 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Pulumi" Version="3.114.1" />
-    <PackageReference Include="Jetersen.Pulumi.TrueNas" Version="0.2.0-rc.1" />
+    <PackageReference Include="Jetersen.Pulumi.TrueNas" Version="0.2.0" />
     <PackageReference Include="OpenTelemetry.Api" Version="1.19.1" />
     <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.19.1" />
     <None Update="catalog-apps.json;syncthing.json;tailscale.json" CopyToOutputDirectory="PreserveNewest" />
