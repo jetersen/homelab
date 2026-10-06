@@ -22,5 +22,3 @@ configMapGenerator:
       - 'proxmox.yaml={}'
       - 'custom.css='
       - 'custom.js='
-components:
-  - ../../../components/dns-defaults

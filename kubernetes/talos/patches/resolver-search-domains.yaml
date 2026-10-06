@@ -1,0 +1,6 @@
+apiVersion: v1alpha1
+kind: ResolverConfig
+searchDomains:
+  # Do not inherit DHCP search domains backed by wildcard DNS records.
+  domains: []
+  disableDefault: true

@@ -4,8 +4,6 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: victoria-metrics-k8s-stack
-  labels:
-    homelab.jetersen.dev/dns-profile: victoria-metrics
 spec:
   releaseName: vm
   chartRef:

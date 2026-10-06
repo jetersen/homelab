@@ -4,8 +4,6 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: home-assistant
-  labels:
-    homelab.jetersen.dev/dns-profile: app-template
 spec:
   upgrade:
     force: true

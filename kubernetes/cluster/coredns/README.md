@@ -18,6 +18,8 @@ Include that address as a single-host entry in Technitium's cluster-wide
 restricted by the catalog ACL and TSIG key.
 
 Keep Talos's host resolvers independent of workloads on the same node: use NAS
-Technitium and UniFi. The [DNS defaults component](../../components/dns-defaults/README.md)
-sets `ndots:1` for opted-in workloads, trying dotted names before search suffixes
-while retaining short service lookup.
+Technitium and UniFi. The [Talos resolver patch](../../talos/patches/resolver-search-domains.yaml)
+clears DHCP search domains and disables hostname-derived search domains. Pods
+retain Kubernetes service search domains and the default `ndots:5`; LAN names
+must be fully qualified so wildcard records cannot capture search-expanded names.
+Recreate existing pods after changing the node resolver search configuration.

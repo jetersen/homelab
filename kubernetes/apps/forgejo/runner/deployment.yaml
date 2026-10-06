@@ -24,14 +24,6 @@ spec:
       labels:
         app.kubernetes.io/name: forgejo-runner
     spec:
-      # A LAN wildcard must not answer search-expanded external hostnames.
-      dnsPolicy: None
-      dnsConfig:
-        nameservers: [172.23.0.10, fde2:b84e:c4cd:2300::a]
-        searches: [forgejo-runners.svc.cluster.local, svc.cluster.local, cluster.local]
-        options:
-          - name: ndots
-            value: "1"
       serviceAccountName: forgejo-runner
       automountServiceAccountToken: false
       terminationGracePeriodSeconds: 600

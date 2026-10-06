@@ -109,6 +109,12 @@ interface after changing native Tailscale networking.
 
 ## DNS and access
 
+[Resolver configuration](patches/resolver-search-domains.yaml) explicitly clears
+DHCP search domains and disables hostname-derived search domains. Kubernetes
+adds its own service search domains; workloads use the default `ndots:5`.
+Use fully qualified LAN names. After applying this patch without reboot,
+recreate existing pods to refresh their resolver configuration.
+
 LAN and tailnet clients use the Gateway's LAN VIP; Technitium must not translate
 it to an operator proxy address.
 

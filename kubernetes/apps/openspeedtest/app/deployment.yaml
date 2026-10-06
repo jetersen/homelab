@@ -3,8 +3,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: openspeedtest
-  labels:
-    homelab.jetersen.dev/dns-profile: pod
 spec:
   replicas: 1
   selector:

@@ -4,8 +4,6 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: grafana
-  labels:
-    homelab.jetersen.dev/dns-profile: pod
 spec:
   releaseName: grafana
   chartRef:
