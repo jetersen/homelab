@@ -40,7 +40,7 @@ spec:
       capacity: 1Gi
       metadataCacheSizeMb: 64
       contentCacheSizeMb: 128
-    ttlSecondsAfterFinished: 3600
+    ttlSecondsAfterFinished: 1200
   maintenance:
     enabled: true
     takeoverPolicy: Force
@@ -98,7 +98,7 @@ spec:
       capacity: 1Gi
       metadataCacheSizeMb: 64
       contentCacheSizeMb: 128
-    ttlSecondsAfterFinished: 3600
+    ttlSecondsAfterFinished: 1200
   maintenance:
     enabled: false
 ---
@@ -197,7 +197,7 @@ spec:
                   sizeLimit: 256Mi
               imagePullSecrets:
               - name: homelab-oci-auth
-          ttlSecondsAfterFinished: 3600
+          ttlSecondsAfterFinished: 1200
   verification:
     verifyFilesPercent: 100
     quick:
@@ -293,7 +293,7 @@ spec:
       capacity: 1Gi
       metadataCacheSizeMb: 64
       contentCacheSizeMb: 128
-    ttlSecondsAfterFinished: 3600
+    ttlSecondsAfterFinished: 1200
   maintenance:
     enabled: true
     takeoverPolicy: Force
@@ -351,7 +351,7 @@ spec:
       capacity: 1Gi
       metadataCacheSizeMb: 64
       contentCacheSizeMb: 128
-    ttlSecondsAfterFinished: 3600
+    ttlSecondsAfterFinished: 1200
   maintenance:
     enabled: false
 ---
@@ -486,7 +486,7 @@ spec:
                   claimName: zigbee-backup-exports
               imagePullSecrets:
               - name: homelab-oci-auth
-          ttlSecondsAfterFinished: 3600
+          ttlSecondsAfterFinished: 1200
   verification:
     verifyFilesPercent: 100
     quick:

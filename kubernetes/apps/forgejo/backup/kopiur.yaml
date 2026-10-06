@@ -43,7 +43,7 @@ spec:
       capacity: 1Gi
       metadataCacheSizeMb: 64
       contentCacheSizeMb: 128
-    ttlSecondsAfterFinished: 3600
+    ttlSecondsAfterFinished: 1200
     podSecurityContext:
       fsGroup: 1000
       fsGroupChangePolicy: OnRootMismatch
@@ -172,7 +172,7 @@ spec:
                 persistentVolumeClaim:
                   claimName: forgejo-backup-staging
                   readOnly: false
-          ttlSecondsAfterFinished: 3600
+          ttlSecondsAfterFinished: 1200
   verification:
     verifyFilesPercent: 100
     quick:

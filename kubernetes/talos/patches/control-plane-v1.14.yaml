@@ -5,6 +5,7 @@ apiVersion: v1alpha1
 kind: KubeControllerManagerConfig
 extraArgs:
   bind-address: 0.0.0.0
+  terminated-pod-gc-threshold: "10"
 ---
 # yaml-language-server: $schema=https://k8s-schemas.home-operations.com/external/siderolabs/talos/config.schema.json
 apiVersion: v1alpha1
