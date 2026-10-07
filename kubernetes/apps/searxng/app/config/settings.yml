@@ -1,0 +1,12 @@
+use_default_settings: true
+
+server:
+  # The upstream entrypoint replaces this on first boot. configure.py preserves
+  # the generated value on subsequent starts; never put a real secret here.
+  secret_key: ultrasecretkey
+  image_proxy: true
+
+search:
+  autocomplete: ""
+  suspended_times:
+    SearxEngineTooManyRequests: 3600

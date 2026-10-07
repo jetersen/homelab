@@ -27,7 +27,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: searxng
-          image: ghcr.io/searxng/searxng:2026.10.7-6671d89be@sha256:cc026dbee25b864d7f9731957cd5ef36ba2e2d61abd2996d57f1b863483e7409
+          image: &image ghcr.io/searxng/searxng:2026.10.7-6671d89be@sha256:cc026dbee25b864d7f9731957cd5ef36ba2e2d61abd2996d57f1b863483e7409
           env:
             - name: TZ
               value: Europe/Copenhagen
@@ -69,13 +69,41 @@ spec:
             limits:
               memory: 1Gi
           volumeMounts:
+            - name: defaults
+              mountPath: /usr/local/searxng/settings.template.yml
+              subPath: settings.yml
+              readOnly: true
             - name: config
               mountPath: /etc/searxng
             - name: cache
               mountPath: /var/cache/searxng
             - name: tmp
               mountPath: /tmp
+      initContainers:
+        - name: configure
+          image: *image
+          command: [/usr/local/searxng/.venv/bin/python, /config/configure.py]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+          volumeMounts:
+            - name: defaults
+              mountPath: /config
+              readOnly: true
+            - name: config
+              mountPath: /etc/searxng
       volumes:
+        - name: defaults
+          configMap:
+            name: searxng-config
         - name: config
           persistentVolumeClaim:
             claimName: searxng-config
