@@ -18,6 +18,13 @@ This pool is for trusted repository checks; its processes can read the shared
 runner credential and dependency caches. Keep deployment and image-build jobs
 on their existing runner labels.
 
+Network policy denies inbound connections and permits outbound DNS through
+CoreDNS, public HTTP/HTTPS for source and dependencies, and Envoy HTTPS for
+Forgejo and its registry. It excludes private networks and the homelab's public
+IPv6 allocation. The shared Envoy listener serves other applications too;
+this is not a Forgejo-only hostname restriction. Internal deployment API
+exceptions belong only to the separate deployment/build runner.
+
 Workspaces and temporary files use per-job `emptyDir` volumes. Go build/module
 and NuGet caches share a local-path PVC, including NuGet's scratch directory for
 cross-process locking. This pins workers to the cache's node. Local-path storage

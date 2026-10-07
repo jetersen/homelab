@@ -104,11 +104,23 @@ direct Pod or Service access from other workloads is intentionally blocked.
 These policies preserve node-originated health checks and do not isolate
 host-networked processes from workloads on the same node.
 
-SearXNG egress permits CoreDNS over UDP/TCP and public HTTP/HTTPS destinations,
-excluding private networks and the homelab's public IPv6 allocation. This limits
-the search service and image proxy's access to internal services. Keep the
-exclusions aligned with address changes. Jellyfin and PhotoPrism egress remains
-unrestricted pending a separate dependency review.
+SearXNG, Jellyfin, and PhotoPrism egress permits their configured DNS resolvers
+over UDP/TCP and public HTTP/HTTPS destinations, excluding private networks and
+the homelab's public IPv6 allocation. Jellyfin queries Technitium directly;
+the others use CoreDNS. Keep the exclusions aligned with address changes.
+This permits metadata, geocoding, and plugin downloads while limiting access to
+internal services. NFS-backed files remain accessible through node-mounted
+volumes; pod egress policy does not restrict that storage path. New local media
+sources or integration callbacks need an explicit exception.
+
+Both Forgejo runner pools deny ingress and restrict egress to CoreDNS, public
+HTTP/HTTPS, and Envoy's HTTPS listener for Forgejo and its registry. The
+deployment/build runner additionally permits the TrueNAS and UniFi HTTPS APIs
+and Technitium DNS updates. CI workers do not receive those exceptions.
+The shared Envoy listener also serves other applications: these L3/L4 policies
+do not distinguish HTTPS hostnames. The privileged Docker sidecar remains a
+separate trust consideration; network policy does not make untrusted workflows
+safe to execute there.
 
 Mosquitto requires password authentication on both its MQTT and WebSocket
 listeners. Home Assistant, Rocket's pc2mqtt, Zigbee2MQTT, and backup helpers
