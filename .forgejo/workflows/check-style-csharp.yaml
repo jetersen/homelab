@@ -1,0 +1,27 @@
+name: Code style (csharp)
+on:
+  push:
+    paths: ['**/*.cs', '**/*.csproj', '**/*.props', '**/*.targets', '**/global.json', '**/packages.lock.json', '**/NuGet.Config', '*.slnx', 'infrastructure/truenas/restore-provider.py', '.editorconfig', 'infrastructure/forgejo/runner/Dockerfile', '.forgejo/workflows/check-style-csharp.yaml']
+  pull_request:
+    paths: ['**/*.cs', '**/*.csproj', '**/*.props', '**/*.targets', '**/global.json', '**/packages.lock.json', '**/NuGet.Config', '*.slnx', 'infrastructure/truenas/restore-provider.py', '.editorconfig', 'infrastructure/forgejo/runner/Dockerfile', '.forgejo/workflows/check-style-csharp.yaml']
+  workflow_dispatch:
+concurrency:
+  group: code-style-csharp-${{ forgejo.ref }}
+  cancel-in-progress: true
+jobs:
+  csharp:
+    runs-on: ci-kubernetes
+    timeout-minutes: 10
+    steps:
+      - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Restore projects
+        run: |
+          python3 infrastructure/truenas/restore-provider.py
+          dotnet restore Homelab.slnx --locked-mode
+      - run: npm run check:csharp
+      - name: Validate C# changes
+        run: |
+          dotnet build infrastructure/truenas/Homelab.TrueNas.csproj --no-restore
+          dotnet run --project infrastructure/backup/tests/Backup.Tests.csproj --no-restore

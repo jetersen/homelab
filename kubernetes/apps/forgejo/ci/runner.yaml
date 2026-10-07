@@ -1,0 +1,21 @@
+log:
+  level: info
+runner:
+  capacity: 1
+  timeout: 12m
+  shutdown_timeout: 1m
+  labels:
+    - ci-kubernetes:host
+  envs:
+    GOCACHE: /cache/go/build
+    GOMODCACHE: /cache/go/mod
+    NUGET_PACKAGES: /cache/nuget/packages
+    NUGET_HTTP_CACHE_PATH: /cache/nuget/http
+    NUGET_SCRATCH: /cache/nuget/scratch
+    DOTNET_CLI_HOME: /data/dotnet
+    NPM_CONFIG_CACHE: /data/npm
+    XDG_CACHE_HOME: /data/cache
+cache:
+  enabled: false
+host:
+  workdir_parent: /data/workspace

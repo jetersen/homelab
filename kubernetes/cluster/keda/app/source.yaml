@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/source.toolkit.fluxcd.io/ocirepository_v1.json
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: OCIRepository
+metadata:
+  name: keda
+spec:
+  ref:
+    tag: 2.21.0
+  url: oci://ghcr.io/home-operations/charts-mirror/keda

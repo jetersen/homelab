@@ -1,0 +1,138 @@
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/core/serviceaccount_v1.json
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: forgejo-ci
+automountServiceAccountToken: false
+---
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: forgejo-ci
+spec:
+  secretTargetRef:
+    - parameter: token
+      name: forgejo-ci-credentials
+      key: scaler-token
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledJob
+metadata:
+  name: forgejo-ci
+spec:
+  pollingInterval: 10
+  minReplicaCount: 0
+  maxReplicaCount: 2
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 2
+  rollout:
+    strategy: gradual
+  jobTargetRef:
+    backoffLimit: 0
+    activeDeadlineSeconds: 900
+    ttlSecondsAfterFinished: 300
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/name: forgejo-ci
+      spec:
+        restartPolicy: Never
+        serviceAccountName: forgejo-ci
+        automountServiceAccountToken: false
+        terminationGracePeriodSeconds: 75
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+          runAsNonRoot: true
+          fsGroup: 1000
+          fsGroupChangePolicy: OnRootMismatch
+          seccompProfile:
+            type: RuntimeDefault
+        initContainers:
+          - name: runner-binary
+            image: data.forgejo.org/forgejo/runner:13@sha256:ca3d5eea46004789a175d1369eec6829d3ea9bfbe2011a06625b4bdaa55f7552
+            command: [/bin/sh, -ec]
+            args: [cp /bin/forgejo-runner /runner/forgejo-runner]
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop: [ALL]
+            resources:
+              requests:
+                cpu: 10m
+                memory: 32Mi
+              limits:
+                memory: 128Mi
+            volumeMounts:
+              - name: binary
+                mountPath: /runner
+        containers:
+          - name: runner
+            image: forgejo.jetersen.dev/jetersen/homelab/runner-job:0.3.0@sha256:fe6cbc1e84f52d08c41b68d21d5eabcfeed9292c282ff19955a9b4aa7dd05a14
+            command: [/bin/bash, -ec]
+            args:
+              - exec /runner/forgejo-runner --config /config/runner.yaml one-job --url https://forgejo.jetersen.dev --uuid "$(cat /registration/uuid)" --token-url file:/registration/token
+            workingDir: /data
+            env:
+              - name: XDG_CACHE_HOME
+                value: /data/cache
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop: [ALL]
+            resources:
+              requests:
+                cpu: 200m
+                memory: 1Gi
+              limits:
+                cpu: '1'
+                memory: 3Gi
+            volumeMounts:
+              - name: binary
+                mountPath: /runner
+                readOnly: true
+              - name: config
+                mountPath: /config
+                readOnly: true
+              - name: registration
+                mountPath: /registration
+                readOnly: true
+              - name: data
+                mountPath: /data
+              - name: tmp
+                mountPath: /tmp
+              - name: cache
+                mountPath: /cache
+        volumes:
+          - name: binary
+            emptyDir: {}
+          - name: data
+            emptyDir: {}
+          - name: tmp
+            emptyDir: {}
+          - name: config
+            configMap:
+              name: forgejo-ci-config
+          - name: registration
+            secret:
+              secretName: forgejo-ci-credentials
+              defaultMode: 0440
+              items:
+                - key: runner-uuid
+                  path: uuid
+                - key: runner-token
+                  path: token
+          - name: cache
+            persistentVolumeClaim:
+              claimName: forgejo-ci-cache
+  triggers:
+    - type: forgejo-runner
+      metadata:
+        address: https://forgejo.jetersen.dev
+        owner: jetersen
+        repo: homelab
+        labels: ci-kubernetes
+      authenticationRef:
+        name: forgejo-ci

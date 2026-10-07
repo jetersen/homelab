@@ -39,6 +39,12 @@ own pinned job container. Docker builds and smoke tests remain for published
 images; runner validation has its own workflow so unrelated code changes do not
 rebuild it. Registry login and logout use `docker/login-action` in each publisher.
 
+Code-style workflows have separate language path filters and use `ci-kubernetes`.
+KEDA scales that repository-scoped pool from zero to two one-job workers. Each
+worker runs in the bundled tool image without Docker or Kubernetes API access;
+Docker builds and deployment workflows continue to use the persistent runners.
+See the [CI worker configuration](../kubernetes/apps/forgejo/ci/README.md).
+
 ## Forgejo integrations
 
 Configure Authorized Integrations with these repository variables:

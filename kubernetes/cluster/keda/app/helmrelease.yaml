@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: keda
+spec:
+  releaseName: keda
+  chartRef:
+    kind: OCIRepository
+    name: keda
+  values:
+    watchNamespace: forgejo-runners
+    rbac:
+      enabledCustomScaledRefKinds: false
+    resources:
+      operator:
+        requests:
+          cpu: 50m
+          memory: 100Mi
+        limits:
+          cpu: '1'
+          memory: 512Mi
+      metricServer:
+        requests:
+          cpu: 50m
+          memory: 100Mi
+        limits:
+          cpu: '1'
+          memory: 512Mi
+      webhooks:
+        requests:
+          cpu: 50m
+          memory: 100Mi
+        limits:
+          cpu: '1'
+          memory: 512Mi

@@ -1,0 +1,19 @@
+name: Code style (python)
+on:
+  push:
+    paths: ['**/*.py', 'ruff.toml', 'requirements-dev.txt', '.editorconfig', 'infrastructure/forgejo/runner/Dockerfile', '.forgejo/workflows/check-style-python.yaml']
+  pull_request:
+    paths: ['**/*.py', 'ruff.toml', 'requirements-dev.txt', '.editorconfig', 'infrastructure/forgejo/runner/Dockerfile', '.forgejo/workflows/check-style-python.yaml']
+  workflow_dispatch:
+concurrency:
+  group: code-style-python-${{ forgejo.ref }}
+  cancel-in-progress: true
+jobs:
+  python:
+    runs-on: ci-kubernetes
+    timeout-minutes: 5
+    steps:
+      - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: npm run check:python

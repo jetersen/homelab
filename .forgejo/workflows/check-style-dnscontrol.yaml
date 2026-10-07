@@ -1,0 +1,25 @@
+name: Code style (dnscontrol)
+on:
+  push:
+    paths: ['infrastructure/dns/compat/**', 'infrastructure/dns/install.sh', '.ci/actions/check-go/**', '.editorconfig', 'infrastructure/forgejo/runner/Dockerfile', '.forgejo/workflows/check-style-dnscontrol.yaml']
+  pull_request:
+    paths: ['infrastructure/dns/compat/**', 'infrastructure/dns/install.sh', '.ci/actions/check-go/**', '.editorconfig', 'infrastructure/forgejo/runner/Dockerfile', '.forgejo/workflows/check-style-dnscontrol.yaml']
+  workflow_dispatch:
+concurrency:
+  group: code-style-dnscontrol-${{ forgejo.ref }}
+  cancel-in-progress: true
+jobs:
+  dnscontrol:
+    runs-on: ci-kubernetes
+    timeout-minutes: 10
+    steps:
+      - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.ci/actions/check-go
+        with:
+          directory: infrastructure/dns/compat
+      - name: Check compatibility build
+        run: |
+          bash infrastructure/dns/install.sh "$RUNNER_TEMP/dnscontrol-tools"
+          "$RUNNER_TEMP/dnscontrol-tools/dnscontrol" check --config infrastructure/dns/dnsconfig.js
