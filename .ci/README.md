@@ -4,8 +4,8 @@ Forgejo publishes workload images and deploys DNS and TrueNAS changes. Forgejo
 and GitHub both publish the Flux OCI artifact and run Go checks. See the
 [Forgejo workflows](../.forgejo/workflows) for triggers and runner selection.
 
-Forgejo jobs receive repository secrets or short-lived Authorized Integration
-tokens. Varlock resolves credentials for local commands.
+Jobs use Forgejo secrets or short-lived Authorized Integration tokens directly.
+Varlock resolves credentials for local commands.
 
 ## Publication
 
@@ -30,8 +30,14 @@ Renovate updates them. The `main` image tag advances only while component inputs
 are still current.
 
 The [runner image](../infrastructure/forgejo/runner/Dockerfile) bundles build and
-style tools and the [DNSControl compatibility build](../infrastructure/dns/README.md).
-Both runner labels pin its published version and digest.
+style tools, Pulumi, Flux, and git-cliff. `setup-tool` reads versions from its
+Dockerfile and uses upstream setup actions only when the bundled version differs.
+This lets workflows run before a new runner image reaches both runners.
+
+Go checks run directly through the shared `check-go` action. Renovate runs in its
+own pinned job container. Docker builds and smoke tests remain for published
+images; runner validation has its own workflow so unrelated code changes do not
+rebuild it. Registry login and logout use `docker/login-action` in each publisher.
 
 ## Forgejo integrations
 
@@ -49,6 +55,8 @@ Publishers need `push` and `workflow_dispatch`; Renovate needs `schedule` and
 `workflow_dispatch`. Renovate's Forgejo API token does not authenticate Docker
 lookups, which use the separate package integration through `hostRules`.
 Use Renovate's `dry_run` input to inspect updates without writing branches or PRs.
+Token requests use `actions/github-script` with `core.getIDToken(audience)`, which
+also masks the token in runner logs.
 
 See [DNS setup](../infrastructure/dns/README.md) and
 [TrueNAS setup](../infrastructure/truenas/README.md) for their deployment credentials.
@@ -84,7 +92,7 @@ or patch automerge rules in repository presets.
 ## Local checks
 
 ```sh
-node --test .ci/renovate-upgrade-policy.test.mjs
+node --test .ci/renovate-upgrade-policy.test.mjs .ci/setup-tool.test.mjs
 node --test .ci/image-publishing.test.mjs
 go -C infrastructure/backup/image test -race ./...
 go -C infrastructure/backup/image vet ./...
