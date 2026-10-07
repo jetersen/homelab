@@ -4,11 +4,13 @@ on:
     paths:
       - infrastructure/truenas/**
       - .forgejo/workflows/truenas.yaml
+      - .ci/actions/setup-tool/**
   push:
     branches: [main]
     paths:
       - infrastructure/truenas/**
       - .forgejo/workflows/truenas.yaml
+      - .ci/actions/setup-tool/**
   workflow_dispatch:
 concurrency:
   group: truenas-pulumi
@@ -16,22 +18,15 @@ concurrency:
 jobs:
   deploy:
     if: forgejo.event_name != 'pull_request' || forgejo.event.pull_request.head.repo.full_name == forgejo.repository
-    runs-on: oci-build
+    runs-on: runner-kubernetes
     timeout-minutes: 20
     steps:
       - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Install runtime prerequisites
-        run: |
-          apt-get update
-          apt-get install --no-install-recommends -y python3 libicu-dev
-      - uses: https://github.com/actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+      - uses: ./.ci/actions/setup-tool
         with:
-          global-json-file: infrastructure/truenas/global.json
-      - uses: https://github.com/pulumi/actions@8e5e406f4007fca908480587cb9893c07090f58d # v7.0.0
-        with:
-          pulumi-version: '3.267.0'
+          tool: pulumi
       - name: Restore and build
         run: |
           python3 infrastructure/truenas/restore-provider.py

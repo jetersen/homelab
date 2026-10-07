@@ -8,27 +8,9 @@ inputs:
   repository:
     description: Owner and repository name
     required: true
-  username:
-    description: Registry login user
-    required: true
-  token:
-    description: Short-lived registry credential
-    required: true
 runs:
   using: composite
   steps:
-    - name: Prepare registry credentials
-      shell: bash
-      run: echo "DOCKER_CONFIG=$(mktemp -d "$RUNNER_TEMP/homelab-auth.XXXXXX")" >> "$GITHUB_ENV"
-    - name: Log in to the registry
-      shell: bash
-      env:
-        REGISTRY: ${{ inputs.registry }}
-        USERNAME: ${{ inputs.username }}
-        TOKEN: ${{ inputs.token }}
-      run: |
-        set -euo pipefail
-        printf '%s' "$TOKEN" | docker login "$REGISTRY" --username "$USERNAME" --password-stdin
     - name: Publish the backup helper release
       shell: bash
       env:
@@ -41,13 +23,3 @@ runs:
         REGISTRY: ${{ inputs.registry }}
         REPOSITORY: ${{ inputs.repository }}
       run: bash .ci/publish-image.sh runner-job
-    - name: Remove registry credentials
-      if: always()
-      shell: bash
-      env:
-        REGISTRY: ${{ inputs.registry }}
-      run: |
-        if [ -n "${DOCKER_CONFIG:-}" ]; then
-          docker logout "$REGISTRY"
-          rm -rf -- "$DOCKER_CONFIG"
-        fi

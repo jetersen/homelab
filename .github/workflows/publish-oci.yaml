@@ -20,9 +20,12 @@ jobs:
       - uses: fluxcd/flux2/action@dd233c4fadef306a62b7893204f8e3817fecc2b2 # v2.9.5
         with:
           version: 2.9.5
-      - uses: ./.ci/actions/publish-oci
+      - uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: ./.ci/actions/publish-oci
+        with:
+          registry: ghcr.io
           repository: ${{ github.repository }}

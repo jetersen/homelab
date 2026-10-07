@@ -20,25 +20,24 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: https://github.com/fluxcd/flux2/action@dd233c4fadef306a62b7893204f8e3817fecc2b2 # v2.9.5
+      - uses: ./.ci/actions/setup-tool
         with:
-          version: 2.9.5
+          tool: flux
       - name: Authenticate with the package integration
         id: auth
-        shell: bash
+        uses: https://github.com/actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           AUDIENCE: ${{ vars.OCI_PACKAGES_AUDIENCE }}
-        run: |
-          set -euo pipefail
-          : "${AUDIENCE:?Configure OCI_PACKAGES_AUDIENCE for the Authorized Integration}"
-          token=$(printf 'Authorization: bearer %s\n' "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            | curl --fail --silent --show-error --header @- \
-            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$AUDIENCE" | jq -er '.value')
-          echo "::add-mask::$token"
-          echo "token=$token" >> "$GITHUB_OUTPUT"
-      - uses: ./.ci/actions/publish-oci
+        with:
+          script: |
+            if (!process.env.AUDIENCE) throw new Error('Configure the Authorized Integration audience');
+            core.setOutput('token', await core.getIDToken(process.env.AUDIENCE));
+      - uses: https://github.com/docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
         with:
           registry: forgejo.jetersen.dev
           username: ${{ forgejo.repository_owner }}
-          token: ${{ steps.auth.outputs.token }}
+          password: ${{ steps.auth.outputs.token }}
+      - uses: ./.ci/actions/publish-oci
+        with:
+          registry: forgejo.jetersen.dev
           repository: ${{ forgejo.repository }}

@@ -8,12 +8,6 @@ inputs:
   repository:
     description: Owner and repository name
     required: true
-  username:
-    description: Registry login user
-    required: true
-  token:
-    description: Short-lived registry credential
-    required: true
 runs:
   using: composite
   steps:
@@ -38,16 +32,6 @@ runs:
         done < <(find "$directory/kubernetes/apps" "$directory/kubernetes/cluster" \
           "$directory/kubernetes/flux" -name kustomization.yaml | sort)
         echo "OCI_DIRECTORY=$directory" >> "$GITHUB_ENV"
-        echo "DOCKER_CONFIG=$(mktemp -d "$RUNNER_TEMP/homelab-auth.XXXXXX")" >> "$GITHUB_ENV"
-    - name: Log in to the registry
-      shell: bash
-      env:
-        REGISTRY: ${{ inputs.registry }}
-        USERNAME: ${{ inputs.username }}
-        TOKEN: ${{ inputs.token }}
-      run: |
-        set -euo pipefail
-        printf '%s' "$TOKEN" | docker login "$REGISTRY" --username "$USERNAME" --password-stdin
     - name: Publish and verify the revision
       shell: bash
       env:
@@ -71,13 +55,3 @@ runs:
           exit 0
         fi
         flux tag artifact "oci://$package/flux:sha-$revision" --tag=main
-    - name: Remove registry credentials
-      if: always()
-      shell: bash
-      env:
-        REGISTRY: ${{ inputs.registry }}
-      run: |
-        if [ -n "${DOCKER_CONFIG:-}" ]; then
-          docker logout "$REGISTRY"
-          rm -rf -- "$DOCKER_CONFIG"
-        fi

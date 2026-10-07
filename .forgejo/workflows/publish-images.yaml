@@ -12,6 +12,8 @@ on:
       - package-lock.json
       - requirements-dev.txt
       - .ci/actions/publish-images/**
+      - .ci/actions/setup-tool/**
+      - .ci/check-runner.sh
       - .ci/backup-helper-cliff.toml
       - .ci/runner-job-cliff.toml
       - .ci/image-inputs.sh
@@ -38,32 +40,20 @@ jobs:
     steps:
       - name: Authenticate release tags
         id: release
-        shell: bash
+        uses: https://github.com/actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           AUDIENCE: ${{ vars.IMAGE_RELEASE_AUDIENCE }}
-        run: |
-          set -euo pipefail
-          : "${AUDIENCE:?Configure IMAGE_RELEASE_AUDIENCE for the repository integration}"
-          token=$(printf 'Authorization: bearer %s\n' "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            | curl --fail --silent --show-error --header @- \
-            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$AUDIENCE" | jq -er '.value')
-          echo "::add-mask::$token"
-          echo "token=$token" >> "$GITHUB_OUTPUT"
+        with:
+          script: |
+            if (!process.env.AUDIENCE) throw new Error('Configure the Authorized Integration audience');
+            core.setOutput('token', await core.getIDToken(process.env.AUDIENCE));
       - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           token: ${{ steps.release.outputs.token }}
-      - name: Install git-cliff
-        shell: bash
-        run: |
-          set -euo pipefail
-          directory=$(mktemp -d "$RUNNER_TEMP/git-cliff.XXXXXX")
-          archive=git-cliff-2.14.2-x86_64-unknown-linux-gnu.tar.gz
-          curl --fail --silent --show-error --location \
-            "https://github.com/orhun/git-cliff/releases/download/v2.14.2/$archive" -o "$directory/$archive"
-          echo "26d1f7c8ea2400f2ccb0b2e7f321635f600b583bf4cd1f7afaa5e8c24068ad1088a2504e0a4d9f4333d4bb20a80329327d9462634343ee3af91e1a7fbdc6f18a  $directory/$archive" | sha512sum --check
-          tar -xzf "$directory/$archive" -C "$directory"
-          echo "$directory/git-cliff-2.14.2" >> "$GITHUB_PATH"
+      - uses: ./.ci/actions/setup-tool
+        with:
+          tool: git-cliff
       - name: Test image publication
         run: node --test .ci/image-publishing.test.mjs
       - name: Allocate image releases
@@ -73,20 +63,19 @@ jobs:
           bash .ci/image-release.sh runner-job
       - name: Authenticate with the package integration
         id: auth
-        shell: bash
+        uses: https://github.com/actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           AUDIENCE: ${{ vars.OCI_PACKAGES_AUDIENCE }}
-        run: |
-          set -euo pipefail
-          : "${AUDIENCE:?Configure OCI_PACKAGES_AUDIENCE for the Authorized Integration}"
-          token=$(printf 'Authorization: bearer %s\n' "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            | curl --fail --silent --show-error --header @- \
-            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$AUDIENCE" | jq -er '.value')
-          echo "::add-mask::$token"
-          echo "token=$token" >> "$GITHUB_OUTPUT"
-      - uses: ./.ci/actions/publish-images
+        with:
+          script: |
+            if (!process.env.AUDIENCE) throw new Error('Configure the Authorized Integration audience');
+            core.setOutput('token', await core.getIDToken(process.env.AUDIENCE));
+      - uses: https://github.com/docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
         with:
           registry: forgejo.jetersen.dev
           username: ${{ forgejo.repository_owner }}
-          token: ${{ steps.auth.outputs.token }}
+          password: ${{ steps.auth.outputs.token }}
+      - uses: ./.ci/actions/publish-images
+        with:
+          registry: forgejo.jetersen.dev
           repository: ${{ forgejo.repository }}
