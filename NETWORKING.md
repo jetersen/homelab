@@ -110,6 +110,12 @@ the search service and image proxy's access to internal services. Keep the
 exclusions aligned with address changes. Jellyfin and PhotoPrism egress remains
 unrestricted pending a separate dependency review.
 
+Mosquitto requires password authentication on both its MQTT and WebSocket
+listeners. Home Assistant, Rocket's pc2mqtt, Zigbee2MQTT, and backup helpers
+must supply credentials from their existing configuration or Secrets. A TCP
+monitoring probe only checks listener availability; validate MQTT authentication
+separately after broker changes.
+
 Home Assistant uses `hostNetwork`, sharing the node's network namespace. Ordinary
 Pod policies cannot give it an independent network boundary. Cilium host policies
 cover the host namespace, including host-networked workloads, and require a

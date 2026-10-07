@@ -61,7 +61,7 @@ spec:
             persistence true
             persistence_location /mosquitto/data
             log_dest stdout
-            allow_anonymous true
+            allow_anonymous false
             password_file /mosquitto/secrets/passwd
             listener 1883
             listener 9001
