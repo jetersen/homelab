@@ -15,7 +15,9 @@ concurrency:
 jobs:
   renovate:
     if: forgejo.ref == 'refs/heads/main'
-    runs-on: oci-build
+    runs-on: runner-kubernetes
+    container:
+      image: ghcr.io/renovatebot/renovate:44.132.2@sha256:0191afbc3937e5316263426fc0ce1450f5c143d42e3f91da8c6f771e317fae51
     timeout-minutes: 45
     steps:
       - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -23,17 +25,13 @@ jobs:
           persist-credentials: false
       - name: Authenticate with the Renovate integration
         id: auth
-        shell: bash
+        uses: https://github.com/actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           AUDIENCE: ${{ vars.RENOVATE_AUDIENCE }}
-        run: |
-          set -euo pipefail
-          : "${AUDIENCE:?Configure RENOVATE_AUDIENCE for the Authorized Integration}"
-          token=$(printf 'Authorization: bearer %s\n' "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            | curl --fail --silent --show-error --header @- \
-            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$AUDIENCE" | jq -er '.value')
-          echo "::add-mask::$token"
-          echo "token=$token" >> "$GITHUB_OUTPUT"
+        with:
+          script: |
+            if (!process.env.AUDIENCE) throw new Error('Configure the Authorized Integration audience');
+            core.setOutput('token', await core.getIDToken(process.env.AUDIENCE));
       - name: Verify live upgrade compatibility
         shell: bash
         env:
@@ -45,17 +43,13 @@ jobs:
           echo "RENOVATE_PACKAGE_RULES=$(cat "$RUNNER_TEMP/upgrade-package-rules.json")" >> "$GITHUB_ENV"
       - name: Authenticate package lookups
         id: packages
-        shell: bash
+        uses: https://github.com/actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           AUDIENCE: ${{ vars.RENOVATE_PACKAGES_AUDIENCE }}
-        run: |
-          set -euo pipefail
-          : "${AUDIENCE:?Configure RENOVATE_PACKAGES_AUDIENCE for the read-only package integration}"
-          token=$(printf 'Authorization: bearer %s\n' "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            | curl --fail --silent --show-error --header @- \
-            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$AUDIENCE" | jq -er '.value')
-          echo "::add-mask::$token"
-          echo "token=$token" >> "$GITHUB_OUTPUT"
+        with:
+          script: |
+            if (!process.env.AUDIENCE) throw new Error('Configure the Authorized Integration audience');
+            core.setOutput('token', await core.getIDToken(process.env.AUDIENCE));
       - name: Authenticate GitHub dependency lookups
         id: github
         uses: https://github.com/actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
@@ -97,9 +91,5 @@ jobs:
             password: env.REGISTRY_TOKEN
           }]')
           export RENOVATE_HOST_RULES
-          docker run --rm --pull always \
-            -e RENOVATE_TOKEN -e RENOVATE_GITHUB_COM_TOKEN -e RENOVATE_HOST_RULES \
-            -e RENOVATE_PACKAGE_RULES \
-            -e RENOVATE_PLATFORM -e RENOVATE_ENDPOINT -e RENOVATE_REPOSITORIES \
-            -e RENOVATE_CONFIG_FILE_NAMES -e RENOVATE_ONBOARDING -e RENOVATE_GIT_AUTHOR -e RENOVATE_DRY_RUN \
-            ghcr.io/renovatebot/renovate:44.132.2@sha256:0191afbc3937e5316263426fc0ce1450f5c143d42e3f91da8c6f771e317fae51
+          # Job containers bypass the image entrypoint that initializes its tools.
+          renovate-entrypoint.sh renovate
