@@ -28,6 +28,11 @@ the link present on the node when it builds its datapath; keep `bpf.vlanBypass`
 limited to the required tag. Multus delegates the primary network to Cilium and
 installs only the additional macvlan and tuning plugins.
 
+The tuning plugin pins the secondary interface's MAC so UniFi retains its client
+alias (`wol-relay-iot`) across pod replacements. The CNI network name is internal
+to Kubernetes; host-local IPAM does not send a DHCP hostname. Keep this attachment
+exclusive to the single relay replica, since its IP and MAC are fixed.
+
 After changes, verify primary-network DNS, denied relay access from unrelated
 pods, disabled forwarding, and wake after sustained TV standby. Allow at least a
 minute for the TV to become available in Home Assistant. WiFi isolation or

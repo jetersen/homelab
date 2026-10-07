@@ -26,6 +26,7 @@ spec:
         },
         {
           "type": "tuning",
+          "mac": "2e:1a:7d:fd:b4:76",
           "sysctl": {
             "net.ipv4.ip_forward": "0",
             "net.ipv6.conf.all.forwarding": "0"
