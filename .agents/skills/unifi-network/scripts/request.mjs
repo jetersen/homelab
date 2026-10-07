@@ -7,14 +7,18 @@ function usage(message) {
   process.stderr.write(`Usage:
   node request.mjs METHOD /v1/path
   node request.mjs --write METHOD /v1/path < body.json
+  node request.mjs --openapi
 
 GET and HEAD are read-only. POST, PATCH, PUT, and DELETE require --write.
+--openapi fetches the controller's OpenAPI document and checks its version.
 Send JSON request bodies on stdin; never pass secrets as arguments.
 `);
   process.exit(2);
 }
 
 const args = process.argv.slice(2);
+const openapi = args.length === 1 && args[0] === '--openapi';
+if (openapi) args.splice(0, 1, 'GET', '/v1/info');
 const allowWrite = args[0] === '--write';
 if (allowWrite) args.shift();
 if (args.length !== 2) usage();
@@ -110,6 +114,32 @@ async function readStdin() {
 
 const api = await discoverApi();
 process.stderr.write(`unifi-api: version=${api.version} base=${api.base} tls=${api.tls.name}\n`);
+
+if (openapi) {
+  const docsPath = api.base.replace(/\/integration$/, '/api-docs/integration.json');
+  const response = await send({ url: `${host}${docsPath}`, tls: api.tls.options });
+  if (response.status < 200 || response.status >= 300) {
+    process.stderr.write(`unifi-api: OpenAPI HTTP ${response.status}\n`);
+    process.exit(1);
+  }
+  let spec;
+  try {
+    spec = JSON.parse(response.body.toString('utf8'));
+  } catch {
+    process.stderr.write('unifi-api: OpenAPI response is not JSON.\n');
+    process.exit(1);
+  }
+  if (!/^3\./.test(spec?.openapi) || spec?.info?.title !== 'UniFi Network API' ||
+      spec.info.version !== api.version || !spec.paths || typeof spec.paths !== 'object' ||
+      Array.isArray(spec.paths) || Object.keys(spec.paths).length === 0) {
+    process.stderr.write('unifi-api: Invalid OpenAPI document or Network version mismatch.\n');
+    process.exit(1);
+  }
+  await new Promise((resolve, reject) => {
+    process.stdout.write(`${JSON.stringify(spec)}\n`, (error) => error ? reject(error) : resolve());
+  });
+  process.exit(0);
+}
 
 const sendsBody = ['POST', 'PATCH', 'PUT'].includes(method);
 const body = sendsBody ? await readStdin() : undefined;
