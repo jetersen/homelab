@@ -6,6 +6,7 @@ on:
     paths:
       - infrastructure/backup/image/**
       - .github/workflows/check-go.yaml
+      - .ci/actions/check-go/**
   workflow_dispatch:
 permissions:
   contents: read
@@ -20,5 +21,12 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Check the backup helper
-        run: docker build --target check -f infrastructure/backup/image/Dockerfile .
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: infrastructure/backup/image/go.mod
+          cache-dependency-path: infrastructure/backup/image/go.sum
+      - uses: ./.ci/actions/check-go
+        with:
+          directory: infrastructure/backup/image

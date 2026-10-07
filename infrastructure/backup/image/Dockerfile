@@ -6,14 +6,6 @@ COPY infrastructure/backup/image/go.mod infrastructure/backup/image/go.sum /src/
 RUN --mount=type=cache,target=/go/pkg/mod go -C /src mod download
 COPY infrastructure/backup/image/*.go /src/
 
-FROM source AS check
-RUN --mount=type=cache,target=/go/pkg/mod \
-    --mount=type=cache,target=/root/.cache/go-build \
-    go -C /src test ./...
-RUN --mount=type=cache,target=/go/pkg/mod \
-    --mount=type=cache,target=/root/.cache/go-build \
-    go -C /src vet ./...
-
 FROM source AS build
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \

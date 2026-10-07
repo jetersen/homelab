@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=https://www.schemastore.org/github-action.json
+name: Check Go
+description: Check formatting, run race tests, and vet a Go module
+inputs:
+  directory:
+    description: Go module directory
+    required: true
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        MODULE_DIRECTORY: ${{ inputs.directory }}
+      run: |
+        set -euo pipefail
+        unformatted=$(gofmt -l "$MODULE_DIRECTORY")
+        if [ -n "$unformatted" ]; then
+          printf 'Run gofmt on:\n%s\n' "$unformatted" >&2
+          exit 1
+        fi
+        go -C "$MODULE_DIRECTORY" test -race ./...
+        go -C "$MODULE_DIRECTORY" vet ./...

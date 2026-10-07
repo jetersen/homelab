@@ -26,9 +26,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Check JavaScript style
-        run: |
-          npm ci --ignore-scripts
-          npm run check:javascript
+        run: npm run check:javascript
       - uses: ./infrastructure/dns
         with:
           directory: ${{ runner.temp }}/dnscontrol-tools
