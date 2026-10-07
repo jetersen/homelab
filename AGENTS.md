@@ -16,6 +16,8 @@
 ## Git
 
 - Use conventional commits.
+- Keep history linear: rebase onto upstream and never create merge commits.
+- Amending local commits and force-pushing amended or rebased commits are permitted. Fetch and inspect remote changes first, preserve unrelated work, and use `--force-with-lease` for force pushes.
 - Keep one-off setup, migration, inspection, and recovery helpers outside the repository. Commit scripts only when maintained automation or deployed workloads require them.
 
 ## Documentation and operational records
