@@ -1,0 +1,38 @@
+name: Runner image
+on:
+  push:
+    paths:
+      - infrastructure/forgejo/runner/Dockerfile*
+      - infrastructure/dns/install.sh
+      - infrastructure/dns/compat/**
+      - package*.json
+      - requirements-dev.txt
+      - .ci/check-runner.sh
+      - .forgejo/workflows/check-runner.yaml
+  pull_request:
+    paths:
+      - infrastructure/forgejo/runner/Dockerfile*
+      - infrastructure/dns/install.sh
+      - infrastructure/dns/compat/**
+      - package*.json
+      - requirements-dev.txt
+      - .ci/check-runner.sh
+      - .forgejo/workflows/check-runner.yaml
+concurrency:
+  group: runner-image-${{ forgejo.ref }}
+  cancel-in-progress: true
+jobs:
+  check:
+    runs-on: oci-build
+    timeout-minutes: 15
+    steps:
+      - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build and validate runner
+        run: |
+          image="homelab-runner:validate-${GITHUB_SHA}-${GITHUB_RUN_ID}"
+          trap 'docker image rm "$image" > /dev/null 2>&1 || true' EXIT
+          docker build -f infrastructure/forgejo/runner/Dockerfile -t "$image" .
+          docker run --rm -i --network none --read-only --cap-drop ALL --security-opt no-new-privileges \
+            "$image" bash -s < .ci/check-runner.sh

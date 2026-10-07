@@ -35,9 +35,9 @@ elif grep -Eqi 'manifest unknown|MANIFEST_UNKNOWN|: not found|no such manifest' 
     docker run --rm --network none --read-only --user 1000:1000 \
       --cap-drop ALL --security-opt no-new-privileges "$release" --help
   else
-    docker run --rm --network none --read-only --cap-drop ALL \
+    docker run --rm -i --network none --read-only --cap-drop ALL \
       --security-opt no-new-privileges "$release" \
-      bash -euc 'node --version; git --version; docker --version; docker buildx version; kubectl version --client; curl --version; jq --version; python3 --version; dnscontrol version; go version; dotnet --version; ruff --version; biome --version; gcc --version'
+      bash -s < .ci/check-runner.sh
   fi
   docker push "$release"
 else

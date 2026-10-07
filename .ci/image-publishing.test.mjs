@@ -48,6 +48,7 @@ function fixture(t) {
     "image-inputs.sh",
     "image-release.sh",
     "publish-image.sh",
+    "check-runner.sh",
     "backup-helper-cliff.toml",
     "runner-job-cliff.toml",
   ]) {

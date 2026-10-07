@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=https://www.schemastore.org/github-action.json
+name: Set up runner tool
+description: Reuse the bundled tool or install the version pinned in the runner Dockerfile
+inputs:
+  tool:
+    description: pulumi, flux, or git-cliff
+    required: true
+runs:
+  using: composite
+  steps:
+    - id: bundled
+      shell: bash
+      env:
+        TOOL: ${{ inputs.tool }}
+      run: bash "$GITHUB_ACTION_PATH/check.sh"
+    - uses: https://github.com/pulumi/actions@8e5e406f4007fca908480587cb9893c07090f58d # v7.0.0
+      if: inputs.tool == 'pulumi' && steps.bundled.outputs.installed != 'true'
+      with:
+        pulumi-version: ${{ steps.bundled.outputs.version }}
+    - uses: https://github.com/fluxcd/flux2/action@dd233c4fadef306a62b7893204f8e3817fecc2b2 # v2.9.5
+      if: inputs.tool == 'flux' && steps.bundled.outputs.installed != 'true'
+      with:
+        version: ${{ steps.bundled.outputs.version }}
+    - uses: https://github.com/taiki-e/install-action@183e4297cca2404691e9380e1307288dced5c82a # v2
+      if: inputs.tool == 'git-cliff' && steps.bundled.outputs.installed != 'true'
+      with:
+        tool: git-cliff@${{ steps.bundled.outputs.version }}
+        fallback: none
