@@ -72,7 +72,7 @@ spec:
             image: forgejo.jetersen.dev/jetersen/homelab/runner-job:0.3.0@sha256:fe6cbc1e84f52d08c41b68d21d5eabcfeed9292c282ff19955a9b4aa7dd05a14
             command: [/bin/bash, -ec]
             args:
-              - exec /runner/forgejo-runner --config /config/runner.yaml one-job --url https://forgejo.jetersen.dev --uuid "$(cat /registration/uuid)" --token-url file:/registration/token
+              - exec flock --shared --no-fork /cache/.cleanup.lock /runner/forgejo-runner --config /config/runner.yaml one-job --url https://forgejo.jetersen.dev --uuid "$(cat /registration/uuid)" --token-url file:/registration/token
             workingDir: /data
             env:
               - name: XDG_CACHE_HOME
