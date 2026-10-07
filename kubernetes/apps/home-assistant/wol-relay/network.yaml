@@ -1,0 +1,35 @@
+---
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: wol-iot
+spec:
+  # Reserve this single address outside the IoT DHCP pool.
+  config: |-
+    {
+      "cniVersion": "0.3.1",
+      "name": "wol-iot",
+      "plugins": [
+        {
+          "type": "macvlan",
+          "master": "enp1s0.20",
+          "mode": "bridge",
+          "ipam": {
+            "type": "host-local",
+            "ranges": [[{
+              "subnet": "192.168.20.0/24",
+              "rangeStart": "192.168.20.10",
+              "rangeEnd": "192.168.20.10"
+            }]],
+            "dataDir": "/run/cni"
+          }
+        },
+        {
+          "type": "tuning",
+          "sysctl": {
+            "net.ipv4.ip_forward": "0",
+            "net.ipv6.conf.all.forwarding": "0"
+          }
+        }
+      ]
+    }

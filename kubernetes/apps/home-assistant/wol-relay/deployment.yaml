@@ -1,0 +1,95 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wol-relay
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: wol-relay
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: wol-relay
+      annotations:
+        k8s.v1.cni.cncf.io/networks: wol-iot@iot0
+    spec:
+      automountServiceAccountToken: false
+      nodeSelector:
+        kubernetes.io/hostname: talos01
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: relay
+          image: docker.io/library/python:3.14.0-alpine3.22@sha256:8373231e1e906ddfb457748bfc032c4c06ada8c759b7b62d9c73ec2a3c56e710
+          command: [python, -B, /app/relay.py]
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: TARGET_MAC
+              valueFrom:
+                secretKeyRef:
+                  name: wol-relay-target
+                  key: mac
+            - name: IOT_SOURCE_IP
+              value: 192.168.20.10
+            - name: IOT_BROADCAST
+              value: 192.168.20.255
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: wol
+              containerPort: 8089
+              protocol: UDP
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+          resources:
+            requests:
+              cpu: 5m
+              memory: 16Mi
+            limits:
+              memory: 64Mi
+          volumeMounts:
+            - name: code
+              mountPath: /app
+              readOnly: true
+      volumes:
+        - name: code
+          configMap:
+            name: wol-relay
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wol-relay
+spec:
+  selector:
+    app.kubernetes.io/name: wol-relay
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+    - name: wol
+      port: 9
+      targetPort: wol
+      protocol: UDP

@@ -45,6 +45,21 @@ spec:
       allowedRoutes:
         namespaces:
           from: All
+    - name: jellyfin-iot
+      hostname: jellyfin-iot.lan.jetersen.dev
+      protocol: HTTPS
+      port: 8443
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              kubernetes.io/metadata.name: media
+      tls:
+        certificateRefs:
+          - kind: Secret
+            name: lan-jetersen-dev-production-tls
+            namespace: kube-system
     - name: https
       protocol: HTTPS
       port: 443

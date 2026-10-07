@@ -1,0 +1,31 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kube-multus-ds
+  namespace: kube-system
+spec:
+  template:
+    spec:
+      priorityClassName: system-node-critical
+      containers:
+        - name: kube-multus
+          resources:
+            requests:
+              cpu: 100m
+              memory: 100Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+      initContainers:
+        - name: install-secondary-plugins
+          image: ghcr.io/siderolabs/install-cni:v1.9.0@sha256:53bdeb6c8d238dd593ee75f265baf4625925a034d8d18f10ffeae88d7fcf2c3e
+          # Add only secondary plugins; retain Talos and Cilium's existing binaries.
+          command: [/bin/sh, -ec]
+          args:
+            - for plugin in macvlan tuning; do cp /opt/cni/bin/$plugin /host/opt/cni/bin/$plugin.tmp; mv /host/opt/cni/bin/$plugin.tmp /host/opt/cni/bin/$plugin; done
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - name: cnibin
+              mountPath: /host/opt/cni/bin

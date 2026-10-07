@@ -1,0 +1,12 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - https://raw.githubusercontent.com/k8snetworkplumbingwg/multus-cni/v4.3.1/deployments/multus-daemonset-thick.yml
+images:
+  - name: ghcr.io/k8snetworkplumbingwg/multus-cni
+    newTag: v4.3.1-thick
+    digest: sha256:a357a79359b80ddd5f4699117946cacf3b54f5baecf7944535594863e875fc25
+patches:
+  - path: daemonset.yaml
+  - path: config.yaml

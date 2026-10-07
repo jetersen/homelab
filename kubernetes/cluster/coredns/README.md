@@ -5,6 +5,9 @@ Corefile; Talos leaves existing bootstrap resources intact during upgrades.
 
 CoreDNS retries another upstream on connection failure, `SERVFAIL`, or `REFUSED`.
 Negative answers remain authoritative and do not trigger fallback.
+Fallback preserves availability, not necessarily identical DNS blocking. Keep
+client-facing resolvers consistent when filtering must survive an upstream
+failure; see the [networking overview](../../../NETWORKING.md).
 
 Technitium hosts `lan.jetersen.dev` as a Primary zone in the cluster catalog.
 The NAS subscribes to the catalog and serves its replicated Secondary zone.

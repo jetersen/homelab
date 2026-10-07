@@ -5,5 +5,6 @@ kind: Kustomization
 namespace: media
 resources:
   - helmrelease.yaml
+  - iot-route.yaml
 components:
   - ../../../components/helmrelease-defaults

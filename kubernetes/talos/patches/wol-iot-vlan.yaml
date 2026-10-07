@@ -1,0 +1,11 @@
+---
+machine:
+  sysctls:
+    net/ipv6/conf/enp1s0.20/disable_ipv6: "1"
+---
+apiVersion: v1alpha1
+kind: VLANConfig
+name: enp1s0.20
+parent: enp1s0
+vlanID: 20
+# No node addresses or routes: only the Multus relay attaches to this LAN.

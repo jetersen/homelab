@@ -117,6 +117,10 @@
       "name": "dns.technitium.lan.jetersen.dev",
       "ipv4": "192.168.1.21",
       "providers": ["unifi"]
+    },
+    {
+      "name": "jellyfin-iot.lan.jetersen.dev",
+      "ipv4": "192.168.1.22"
     }
   ]
 }

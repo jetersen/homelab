@@ -43,6 +43,7 @@ nodes:
       - "@./patches/resolver-search-domains.yaml"
       - "@./patches/tailscale-service.yaml"
       - "@./patches/tuppr-api-access.yaml"
+      - "@./patches/wol-iot-vlan.yaml"
     userVolumes:
       - name: local-path-provisioner
         provisioning:

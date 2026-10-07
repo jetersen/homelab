@@ -5,3 +5,4 @@ kind: Kustomization
 resources:
   - envoy.yaml
   - gateway.yaml
+  - jellyfin-iot-service.yaml

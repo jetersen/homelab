@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: wol-relay-target
+    namespace: home-assistant
+stringData:
+    mac: ENC[AES256_GCM,data:cYia4ug/14Yy8FcP5sLlIMY=,iv:T34WJuI3NPI017H+S1D1OVVYZrIAs3iqLuZU1aRLB3A=,tag:HBbz6XYwDz5o3q5ErIEyAQ==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSA4c0xEc0VBZTNTbkpnOHhx
+            dmdMZHh1VmM5OFBoT1VnNXVaV1dPSENBV2xzCnFnVHBHN0NnYTQ5SEhieFI0aHFH
+            eEZlSHBqSStNZHdvRFJkY2ZKNC9jSWsKLS0tIEQxS3A1Tm9pU2JYbElDRHJFNlZ5
+            dVBBK1lRQ3BaRUIwTUJoemozdVl3c00KHwYNVOVD9HScrvi618ugOkfwnRkpP9xS
+            8Z5NiAHFRW5GDUvaEqQwOn6Z8f+V8u8hr3tVhswnUFYtHgD5wE9Hew==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1u0m8ryqg7hfhuykraxe35v4xzw92a03w9jpt75yv3m57g6pvpp0sf24mdy
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-10-07T19:39:58Z"
+    mac: ENC[AES256_GCM,data:nhPEQmWORq7pEbNwqzXVGw8LprkjcasIwHRF4aBpHEPW1YEwQem6xH3xnzNKzBFP0R3PVj9EXPKqm/4vqHXWtskJcYPR8H3jOFckzh5dcsmMJ4fU5S5aN2ZA43QVPKiGaOS8fxGZOrINGiHTUNj6Er/+7gwKDwzEYR1ID7MBuMo=,iv:ZKOk/fq7WfsXdS9cuazEzx4VfnFV1LpxAA9zyNbeeUo=,tag:qhG0Uhc3ZFn54Da0Q3FJFw==,type:str]
+    version: 3.13.3

@@ -13,3 +13,14 @@ PVC; they are separate from the HelmRelease.
 
 Verify hardware acceleration with a forced video transcode and inspect its
 FFmpeg log for the QSV hardware encoder. Direct Play does not use the transcoder.
+
+## IoT access
+
+Use `https://jellyfin-iot.lan.jetersen.dev` for the TV. DNSControl maps this name
+to a dedicated IPv4 LoadBalancer Service. It forwards standard HTTPS to a
+separate Envoy listener that accepts only the Jellyfin hostname and route.
+The existing Jellyfin endpoint remains available for other clients.
+
+Permit the TV to reach only this Service address on TCP 443 through UniFi.
+Keep DNS access to Technitium. A firewall rule allowing the shared ingress
+address would also expose other applications on that listener.
