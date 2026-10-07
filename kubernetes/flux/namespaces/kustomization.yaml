@@ -15,6 +15,7 @@ resources:
   - openspeedtest.yaml
   - photoprism.yaml
   - reflector.yaml
+  - searxng.yaml
   - system-upgrade.yaml
   - technitium.yaml
   - towonel-system.yaml

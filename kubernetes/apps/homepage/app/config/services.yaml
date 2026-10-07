@@ -1,4 +1,10 @@
 - Home:
+  - SearXNG:
+      href: https://search.jetersen.dev
+      description: Private web search
+      icon: searxng.png
+      namespace: searxng
+      app: searxng
   - Home Assistant:
       href: https://homeassistant.jetersen.dev
       description: Home automation

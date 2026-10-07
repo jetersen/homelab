@@ -12,6 +12,7 @@ resources:
   - photoprism/flux-ks.yaml
   - reflector/flux-ks.yaml
   - reloader/flux-ks.yaml
+  - searxng/flux-ks.yaml
 components:
   - ../components/flux-kustomization-defaults
   - ../components/flux-homelab-source-defaults
