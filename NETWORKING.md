@@ -97,6 +97,19 @@ allowing its gateway, DNS, dependencies, monitoring, and required external acces
 Inspect actual flows before enforcement. See
 [Cilium policy enforcement](https://docs.cilium.io/en/stable/security/policy/intro/).
 
+Jellyfin, PhotoPrism, and SearXNG accept application traffic from the Envoy
+gateway pods on their HTTP ports. Jellyfin also permits the monitoring
+blackbox exporter. Use their gateway URLs for clients and integrations;
+direct Pod or Service access from other workloads is intentionally blocked.
+These policies preserve node-originated health checks and do not isolate
+host-networked processes from workloads on the same node.
+
+SearXNG egress permits CoreDNS over UDP/TCP and public HTTP/HTTPS destinations,
+excluding private networks and the homelab's public IPv6 allocation. This limits
+the search service and image proxy's access to internal services. Keep the
+exclusions aligned with address changes. Jellyfin and PhotoPrism egress remains
+unrestricted pending a separate dependency review.
+
 Home Assistant uses `hostNetwork`, sharing the node's network namespace. Ordinary
 Pod policies cannot give it an independent network boundary. Cilium host policies
 cover the host namespace, including host-networked workloads, and require a
@@ -125,6 +138,14 @@ also enables local discovery, but its device traffic then bypasses UniFi's route
 firewall, and listeners bound to all addresses may become reachable from IoT.
 Ordinary routed device control and TV access to Jellyfin need narrow firewall
 rules, not additional pod interfaces. Continue using Technitium for DNS.
+
+IoT firewall validation must include the gateway itself as well as other VLANs:
+blocking IoT-to-LAN traffic does not restrict gateway management or gateway DNS.
+Keep DHCP and required discovery available while restricting management and
+requiring clients to use the filtered resolvers. Port-based DNS restrictions do
+not prevent DNS over HTTPS. Test exceptions from the intended device and deny
+cases from a different IoT client; a TV-specific allowance should not admit
+every device on its network.
 
 ## Discovery and wake-on-LAN
 

@@ -6,5 +6,6 @@ resources:
 - nas-storage.sops.yaml
 - admin-secret.sops.yaml
 - access-policy.yaml
+- networkpolicy.yaml
 components:
 - ../../../components/helmrelease-defaults
