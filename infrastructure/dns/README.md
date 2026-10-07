@@ -9,6 +9,11 @@ routes automatically; add public aliases alongside their routes. DNSControl does
 not discover routes or wait for them to become ready. Both `jetersen.dev` and
 `lan.jetersen.dev` need wildcards because Technitium serves them as separate zones.
 
+Validate both address families for explicit IPv4-only names. Technitium suppresses
+the wildcard AAAA at an existing name, while UniFi can still return its wildcard
+IPv6 address. Keep IPv4-only isolated endpoints on Technitium DNS; UniFi's fallback
+view is not equivalent for those names.
+
 ## Validation
 
 Run from the repository root with the Go version pinned in [compat/go.mod](compat/go.mod):
