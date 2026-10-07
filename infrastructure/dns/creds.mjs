@@ -9,11 +9,15 @@ function required(name) {
   return value;
 }
 
-const provider = required("DNS_PROVIDER");
+const provider = process.env.DNS_PROVIDER || "all";
+if (!["all", "cloudflare", "technitium", "unifi"].includes(provider)) {
+  throw new Error("Unknown DNS_PROVIDER");
+}
 const credentials = {};
-if (provider === "cloudflare") {
+if (provider === "all" || provider === "cloudflare") {
   credentials.cloudflare = { TYPE: "CLOUDFLAREAPI", apitoken: required("CF_API_TOKEN") };
-} else if (provider === "technitium") {
+}
+if (provider === "all" || provider === "technitium") {
   const key = `hmac-sha256:external-dns-technitium:${required("TECHNITIUM_TSIG_SECRET")}`;
   credentials.technitium = {
     TYPE: "AXFRDDNS",
@@ -21,7 +25,8 @@ if (provider === "cloudflare") {
     "transfer-key": key,
     "update-key": key,
   };
-} else if (provider === "unifi") {
+}
+if (provider === "all" || provider === "unifi") {
   credentials.unifi = {
     TYPE: "UNIFI",
     host: "https://unifi.lan.jetersen.dev",
@@ -30,7 +35,5 @@ if (provider === "cloudflare") {
     api_version: "new",
     skip_tls_verify: "false",
   };
-} else {
-  throw new Error("Unknown DNS_PROVIDER");
 }
 process.stdout.write(JSON.stringify(credentials));

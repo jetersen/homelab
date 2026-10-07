@@ -18,7 +18,7 @@ on:
         type: boolean
         default: false
 jobs:
-  check:
+  reconcile:
     runs-on: runner-kubernetes
     timeout-minutes: 5
     steps:
@@ -27,43 +27,25 @@ jobs:
           persist-credentials: false
       - name: Check JavaScript style
         run: npm run check:javascript
+      - name: Test DNS credentials
+        run: node --test infrastructure/dns/creds.test.mjs
       - uses: ./infrastructure/dns
         with:
           directory: ${{ runner.temp }}/dnscontrol-tools
       - name: Validate all DNS views
         run: |
           "$RUNNER_TEMP/dnscontrol-tools/dnscontrol" check --config infrastructure/dns/dnsconfig.js
-  reconcile:
-    needs: check
-    if: forgejo.ref == 'refs/heads/main' && forgejo.event_name != 'pull_request' && vars.DNSCONTROL_ENABLED == 'true'
-    strategy:
-      fail-fast: false
-      matrix:
-        provider: [cloudflare, technitium, unifi]
-    runs-on: runner-kubernetes
-    timeout-minutes: 5
-    steps:
-      - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: ./infrastructure/dns
-        with:
-          directory: ${{ runner.temp }}/dnscontrol-tools
-      - name: Reconcile the DNS view
+      - name: Reconcile all DNS views
+        if: forgejo.ref == 'refs/heads/main' && forgejo.event_name != 'pull_request' && vars.DNSCONTROL_ENABLED == 'true'
         env:
-          DNS_PROVIDER: ${{ matrix.provider }}
-          CF_API_TOKEN: ${{ matrix.provider == 'cloudflare' && secrets.DNSCONTROL_CF_API_TOKEN || '' }}
-          UNIFI_API_KEY: ${{ matrix.provider == 'unifi' && secrets.DNSCONTROL_UNIFI_API_KEY || '' }}
-          TECHNITIUM_TSIG_SECRET: ${{ matrix.provider == 'technitium' && secrets.DNSCONTROL_TECHNITIUM_TSIG_SECRET || '' }}
+          CF_API_TOKEN: ${{ secrets.DNSCONTROL_CF_API_TOKEN }}
+          UNIFI_API_KEY: ${{ secrets.DNSCONTROL_UNIFI_API_KEY }}
+          TECHNITIUM_TSIG_SECRET: ${{ secrets.DNSCONTROL_TECHNITIUM_TSIG_SECRET }}
           APPLY_DNS: ${{ forgejo.event_name == 'push' || inputs.apply }}
         run: |
           set -euo pipefail
-          view=internal
-          if [ "$DNS_PROVIDER" = cloudflare ]; then view=public; fi
-          args=(--config infrastructure/dns/dnsconfig.js --providers "$DNS_PROVIDER"
+          command=preview
+          if [ "$APPLY_DNS" = true ]; then command=push; fi
+          "$RUNNER_TEMP/dnscontrol-tools/dnscontrol" "$command" \
+            --config infrastructure/dns/dnsconfig.js \
             --creds "!$PWD/infrastructure/dns/creds.mjs" --no-populate
-            --variable "DNS_VIEW=$view" --variable "DNS_PROVIDER=$DNS_PROVIDER")
-          "$RUNNER_TEMP/dnscontrol-tools/dnscontrol" preview "${args[@]}"
-          if [ "$APPLY_DNS" = true ]; then
-            "$RUNNER_TEMP/dnscontrol-tools/dnscontrol" push "${args[@]}"
-          fi

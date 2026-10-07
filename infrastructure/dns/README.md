@@ -38,12 +38,14 @@ Set the repository variable `DNSCONTROL_ENABLED=true` and configure these secret
 - `DNSCONTROL_TECHNITIUM_TSIG_SECRET`
 
 Use the Kubernetes runner so source addresses match the provider ACLs. Keep TLS
-verification enabled and configure Technitium's AXFR and update keys. Each job
-receives only its provider's credentials.
+verification enabled and configure Technitium's AXFR and update keys. One job
+validates the configuration, then reconciles all three providers in a single
+DNSControl invocation. Only the reconciliation step receives provider credentials.
 
-Changes on `main` preview and apply records. Manual dispatch previews unless
-`apply=true`; there is no scheduled reconciliation. Runs are serialized, and a
-failed provider does not block the other views.
+Changes on `main` run `push`, which prints and applies corrections. Manual dispatch
+runs `preview` unless `apply=true`; there is no scheduled reconciliation. Pull
+requests only run local validation. Runs are serialized. Provider initialization
+must succeed before DNSControl can reconcile the views.
 
 Keep LAN wildcard domains out of runner DNS search suffixes. Some resolvers
 retry through search domains after an absolute AAAA query returns no data, even
