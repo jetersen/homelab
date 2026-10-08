@@ -1,0 +1,143 @@
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: Repository
+metadata:
+  name: paperless-backup
+spec:
+  backend:
+    s3:
+      bucket: jetersen-homelab-kopia
+      prefix: applications/paperless/
+      endpoint: s3.de.io.cloud.ovh.net
+      region: de
+      auth:
+        secretRef:
+          name: paperless-kopia
+  encryption:
+    passwordSecretRef:
+      name: paperless-kopia
+      key: KOPIA_PASSWORD
+  create:
+    enabled: true
+  mode: ReadWrite
+  catalog:
+    adoption: Ignore
+    periodicRefresh: true
+    refreshInterval: 1h
+  scheduleDefaults:
+    timezone: Etc/UTC
+  concurrency:
+    maxConcurrentJobs: 1
+  moverDefaults:
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      runAsNonRoot: true
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        memory: 1Gi
+    cache:
+      capacity: 1Gi
+      metadataCacheSizeMb: 64
+      contentCacheSizeMb: 128
+    ttlSecondsAfterFinished: 1200
+    podSecurityContext:
+      fsGroup: 1000
+      fsGroupChangePolicy: OnRootMismatch
+  maintenance:
+    enabled: true
+    takeoverPolicy: Force
+    schedule:
+      quick:
+        cron: 20 */6 * * *
+        jitter: 0s
+      full:
+        cron: 20 10 * * *
+        jitter: 0s
+      timezone: Etc/UTC
+---
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotPolicy
+metadata:
+  name: paperless-export
+spec:
+  repository:
+    kind: Repository
+    name: paperless-backup
+  identity:
+    username: paperless
+    hostname: homelab
+  sources:
+  - pvc:
+      name: paperless
+    sourcePathOverride: /storage
+  copyMethod: Direct
+  defaultDeletionPolicy: Delete
+  adoption: Ignore
+  retention:
+    keepLatest: 3
+    keepHourly: 0
+    keepDaily: 14
+    keepWeekly: 8
+    keepMonthly: 12
+    keepAnnual: 0
+  extraArgs:
+  - --inherit=false
+  - --clear-dot-ignore
+  - --keep-latest=2147483647
+  - --keep-hourly=0
+  - --keep-daily=0
+  - --keep-weekly=0
+  - --keep-monthly=0
+  - --keep-annual=0
+  errorHandling:
+    failFast: true
+  hooks:
+    beforeSnapshot:
+    - workloadExec:
+        podSelector:
+          matchLabels:
+            app.kubernetes.io/name: paperless
+            app.kubernetes.io/instance: paperless
+        container: app
+        command:
+        - python3
+        - /usr/src/paperless/src/manage.py
+        - document_exporter
+        - /storage/export
+        - --compare-checksums
+        - --delete
+        timeout: 10m
+  verification:
+    quick:
+      schedule:
+        cron: 20 9 * * *
+        jitter: 0s
+    successExpr: stats.files > 0 && stats.errors == 0
+    verifyFilesPercent: 100
+  files:
+    ignoreCacheDirs: false
+    ignoreRules:
+    - /data/
+    - /media/
+    - /consume/
+    - /broker/
+    - /tessdata/
+---
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: SnapshotSchedule
+metadata:
+  name: paperless-export
+spec:
+  deletion:
+    onScheduleDelete: Retain
+  failedJobsHistoryLimit: 2
+  policyRef:
+    name: paperless-export
+  schedule:
+    concurrencyPolicy: Forbid
+    cron: 0 3 * * *
+    startingDeadlineSeconds: 3600
+    timezone: Etc/UTC

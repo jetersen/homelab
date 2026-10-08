@@ -1,4 +1,10 @@
 - Home:
+  - Paperless:
+      href: https://paperless.jetersen.dev
+      description: Letters and documents
+      icon: paperless-ngx.png
+      namespace: paperless
+      app: paperless
   - SearXNG:
       href: https://search.jetersen.dev
       description: Private web search

@@ -1,0 +1,31 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: paperless
+  namespace: flux-system
+  labels:
+    homelab.jetersen.dev/flux-defaults: enabled
+    homelab.jetersen.dev/flux-homelab-source: enabled
+    homelab.jetersen.dev/flux-wait: disabled
+spec:
+  targetNamespace: paperless
+  path: ./kubernetes/apps/paperless/app
+  dependsOn:
+    - name: app-template
+    - name: envoy-gateway-config
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: paperless-backup
+  namespace: flux-system
+  labels:
+    homelab.jetersen.dev/flux-defaults: enabled
+    homelab.jetersen.dev/flux-homelab-source: enabled
+    homelab.jetersen.dev/flux-wait: disabled
+spec:
+  targetNamespace: paperless
+  path: ./kubernetes/apps/paperless/backup
+  dependsOn:
+    - name: paperless
+    - name: kopiur

@@ -1,0 +1,173 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: paperless
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+    namespace: flux-system
+  values:
+    defaultPodOptions:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+    controllers:
+      paperless:
+        strategy: Recreate
+        initContainers:
+          language:
+            image:
+              repository: ghcr.io/paperless-ngx/paperless-ngx
+              tag: 3.3.0@sha256:6b94799bc769a063b3340cc5847402e626d4d91d29a295a8e747f8e9bead4207
+            command: [python3, -c]
+            args:
+              - |
+                import hashlib
+                import pathlib
+                import shutil
+                import urllib.request
+
+                root = pathlib.Path('/storage')
+                for name in ('data', 'media', 'consume', 'export', 'broker', 'tessdata'):
+                    (root / name).mkdir(exist_ok=True)
+                tessdata = root / 'tessdata'
+                shutil.copytree('/usr/share/tesseract-ocr/5/tessdata', tessdata, dirs_exist_ok=True)
+                model = tessdata / 'dan.traineddata'
+                digest = 'acb1fd074487a31d1294fcdfd7d7c673467ffd8aeacb2ccd61ebcbf04eb4e2fa'
+                if not model.exists() or hashlib.sha256(model.read_bytes()).hexdigest() != digest:
+                    url = 'https://raw.githubusercontent.com/tesseract-ocr/tessdata_fast/87416418657359cb625c412a48b6e1d6d41c29bd/dan.traineddata'
+                    with urllib.request.urlopen(url, timeout=60) as response:
+                        data = response.read()
+                    if hashlib.sha256(data).hexdigest() != digest:
+                        raise RuntimeError('Danish OCR model checksum mismatch')
+                    model.write_bytes(data)
+                print('Danish and English OCR models ready')
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop: [ALL]
+        containers:
+          app:
+            image:
+              repository: ghcr.io/paperless-ngx/paperless-ngx
+              tag: 3.3.0@sha256:6b94799bc769a063b3340cc5847402e626d4d91d29a295a8e747f8e9bead4207
+            env:
+              TZ: Europe/Copenhagen
+              PAPERLESS_TIME_ZONE: Europe/Copenhagen
+              PAPERLESS_URL: https://paperless.jetersen.dev
+              PAPERLESS_DBENGINE: sqlite
+              PAPERLESS_REDIS: redis://localhost:6379
+              PAPERLESS_DATA_DIR: /storage/data
+              PAPERLESS_MEDIA_ROOT: /storage/media
+              PAPERLESS_CONSUMPTION_DIR: /storage/consume
+              PAPERLESS_OCR_LANGUAGE: dan+eng
+              PAPERLESS_SEARCH_LANGUAGE: da
+              TESSDATA_PREFIX: /storage/tessdata
+              PAPERLESS_TASK_WORKERS: '1'
+              PAPERLESS_THREADS_PER_WORKER: '2'
+              PAPERLESS_EMAIL_TASK_CRON: disable
+              PAPERLESS_ACCOUNT_ALLOW_SIGNUPS: 'false'
+              PAPERLESS_ADMIN_USER: joseph
+              PAPERLESS_ADMIN_MAIL: me@jetersen.dev
+            envFrom:
+              - secretRef:
+                  name: paperless
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop: [ALL]
+            probes:
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet: {path: /accounts/login/, port: 8000}
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 90
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet: {path: /accounts/login/, port: 8000}
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 6
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet: {path: /accounts/login/, port: 8000}
+                  periodSeconds: 20
+                  timeoutSeconds: 5
+                  failureThreshold: 6
+            resources:
+              requests: {cpu: 100m, memory: 512Mi}
+              limits: {cpu: '2', memory: 3Gi}
+          broker:
+            image:
+              repository: docker.io/valkey/valkey
+              tag: 9.0.3-alpine@sha256:e1095c6c76ee982cb2d1e07edbb7fb2a53606630a1d810d5a47c9f646b708bf5
+            command: [valkey-server]
+            args: [--bind, '127.0.0.1', --dir, /storage/broker, --appendonly, 'yes', --save, '']
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop: [ALL]
+            probes:
+              readiness:
+                enabled: true
+                custom: true
+                spec:
+                  exec: {command: [valkey-cli, ping]}
+                  periodSeconds: 10
+              liveness:
+                enabled: true
+                custom: true
+                spec:
+                  exec: {command: [valkey-cli, ping]}
+                  periodSeconds: 20
+            resources:
+              requests: {cpu: 10m, memory: 32Mi}
+              limits: {memory: 256Mi}
+    service:
+      app:
+        controller: paperless
+        ports:
+          http: {port: 8000}
+    route:
+      app:
+        hostnames: [paperless.jetersen.dev]
+        parentRefs:
+          - name: envoy-proxy
+            namespace: kube-system
+            sectionName: https
+        rules:
+          - backendRefs:
+              - identifier: app
+                port: 8000
+            timeouts:
+              request: 0s
+              backendRequest: 0s
+    persistence:
+      storage:
+        type: persistentVolumeClaim
+        accessMode: ReadWriteOnce
+        storageClass: local-path
+        size: 20Gi
+        retain: true
+        globalMounts:
+          - path: /storage
+      export:
+        type: emptyDir
+        advancedMounts:
+          paperless:
+            app:
+              - path: /usr/src/paperless/export
