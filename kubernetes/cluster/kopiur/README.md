@@ -6,6 +6,8 @@ separate schedules from snapshots and maintenance. Offsite recovery depends on
 a successful replication after the selected snapshot. The read-only
 `APPLICATION-offsite` repositories support S3 discovery and recovery. Forgejo
 stages both stores on the NAS and writes its Kopia repository directly to S3.
+Paperless backs up native document exports directly to S3, excluding its live
+SQLite database and working directories.
 
 Kopiur owns snapshot retention and repository maintenance. Native application
 archive retention is separate. The source-scoped keep-latest policy flag prevents
@@ -21,9 +23,10 @@ prevents silently initializing an empty replacement. For a new, reviewed backend
 use `create.enabled: true` for its first initialization.
 
 See [Home Assistant and Zigbee backups](/kubernetes/apps/home-assistant/backup/README.md),
-[Sonarr backups](/kubernetes/apps/media/backup/README.md), and
-[Forgejo recovery](/kubernetes/apps/forgejo/README.md#backup-and-recovery), and
-[PhotoPrism recovery](/kubernetes/apps/photoprism/README.md#backups-and-recovery).
+[Sonarr backups](/kubernetes/apps/media/backup/README.md),
+[Forgejo recovery](/kubernetes/apps/forgejo/README.md#backup-and-recovery),
+[PhotoPrism recovery](/kubernetes/apps/photoprism/README.md#backups-and-recovery), and
+[Paperless recovery](/kubernetes/apps/paperless/README.md#backups-and-recovery).
 PVC backups do not recover Talos configuration, SOPS keys, unrelated NAS data,
 Pulumi state, or secrets outside those volumes.
 
