@@ -55,6 +55,8 @@ spec:
             url: http://vmsingle-vm:8428
             isDefault: true
             access: proxy
+            jsonData:
+              timeInterval: 30s
           - name: Alertmanager
             uid: homelab-alertmanager
             type: alertmanager

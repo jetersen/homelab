@@ -95,6 +95,20 @@ spec:
   podMetricsEndpoints:
   - port: http-metrics
     path: /metrics
+    metricRelabelConfigs:
+    - action: drop
+      source_labels: [__name__]
+      regex: 'certmanager_certificate_(expiration|renewal)_timestamp_seconds'
+  - port: http-metrics
+    path: /metrics
+    interval: 5m
+    relabelConfigs:
+    - target_label: job
+      replacement: cert-manager-certificates
+    metricRelabelConfigs:
+    - action: keep
+      source_labels: [__name__]
+      regex: 'certmanager_certificate_(expiration|renewal)_timestamp_seconds'
 ---
 # yaml-language-server: $schema=https://k8s-schemas.home-operations.com/operator.victoriametrics.com/vmpodscrape_v1beta1.json
 apiVersion: operator.victoriametrics.com/v1beta1

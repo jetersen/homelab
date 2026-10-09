@@ -87,7 +87,7 @@ spec:
         description: '{{ $labels.kind }} in {{ $labels.namespace }} remains unready
           after fifteen minutes.'
     - alert: CertificateExpiresSoon
-      expr: certmanager_certificate_expiration_timestamp_seconds - time() < 7 * 24
+      expr: last_over_time(certmanager_certificate_expiration_timestamp_seconds[15m]) - time() < 7 * 24
         * 3600
       for: 1h
       labels:

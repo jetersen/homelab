@@ -53,6 +53,7 @@ class DashboardTests(unittest.TestCase):
             0
         ]["regex"]
         for metric in [
+            "apiserver_request_duration_seconds",
             "etcd_request_duration_seconds",
             "apiserver_request_body_size_bytes",
             "apiserver_watch_list_duration_seconds",
@@ -66,7 +67,6 @@ class DashboardTests(unittest.TestCase):
         for metric in [
             "apiserver_request_sli_duration_seconds_bucket",
             "apiserver_client_certificate_expiration_seconds_bucket",
-            "apiserver_request_duration_seconds_bucket",
         ]:
             self.assertIsNone(re.fullmatch(regex, metric))
 
@@ -76,6 +76,50 @@ class DashboardTests(unittest.TestCase):
         self.assertIsNone(re.fullmatch(regex, "prober_probe_total"))
         for suffix in ["bucket", "sum", "count"]:
             self.assertIsNotNone(re.fullmatch(regex, "prober_probe_duration_seconds_" + suffix))
+
+    def test_slow_scrapes_do_not_duplicate_metrics_or_delay_status(self):
+        endpoints = VALUES["kube-state-metrics"]["vmScrape"]["spec"]["endpoints"]
+        fast, slow = endpoints
+        fast_filter = next(
+            r["regex"] for r in fast["metricRelabelConfigs"] if r["action"] == "drop"
+        )
+        slow_filter = next(
+            r["regex"] for r in slow["metricRelabelConfigs"] if r["action"] == "keep"
+        )
+        self.assertEqual(fast_filter, slow_filter)
+        for metric in [
+            "kube_namespace_created",
+            "kube_deployment_created",
+            "kube_endpointslice_info",
+        ]:
+            self.assertIsNotNone(re.fullmatch(slow_filter, metric))
+        for metric in [
+            "kube_pod_info",
+            "kube_node_info",
+            "kube_pod_status_ready",
+            "kube_deployment_status_replicas_available",
+        ]:
+            self.assertIsNone(re.fullmatch(fast_filter, metric))
+        scrapes = list(
+            yaml.safe_load_all(
+                (ROOT.parents[2] / "victoria-metrics/app/infrastructure-scrapes.yaml").read_text()
+            )
+        )
+        cert = next(r for r in scrapes if r["metadata"]["name"] == "cert-manager")
+        fast, slow = cert["spec"]["podMetricsEndpoints"]
+        self.assertEqual(
+            fast["metricRelabelConfigs"][0]["regex"], slow["metricRelabelConfigs"][0]["regex"]
+        )
+        regex = slow["metricRelabelConfigs"][0]["regex"]
+        self.assertIsNotNone(
+            re.fullmatch(regex, "certmanager_certificate_expiration_timestamp_seconds")
+        )
+        self.assertIsNone(re.fullmatch(regex, "certmanager_certificate_ready_status"))
+        self.assertIsNone(re.fullmatch(regex, "controller_runtime_reconcile_errors_total"))
+        self.assertNotEqual(
+            endpoints[1]["relabelConfigs"][0]["replacement"],
+            slow["relabelConfigs"][0]["replacement"],
+        )
 
     def test_default_dashboard_replacements_are_disabled(self):
         expected = {
