@@ -23,12 +23,15 @@ spec:
       name: photoprism-kopia
   maintenance:
     enabled: true
+    mover:
+      cache:
+        mode: Persistent
     schedule:
       full:
-        cron: 40 10 * * *
+        cron: 50 4 * * 0
         jitter: 0s
       quick:
-        cron: 40 */6 * * *
+        cron: 50 4 * * *
         jitter: 0s
       timezone: Etc/UTC
     takeoverPolicy: Force

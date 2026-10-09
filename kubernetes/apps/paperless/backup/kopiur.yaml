@@ -49,13 +49,16 @@ spec:
       fsGroupChangePolicy: OnRootMismatch
   maintenance:
     enabled: true
+    mover:
+      cache:
+        mode: Persistent
     takeoverPolicy: Force
     schedule:
       quick:
-        cron: 20 */6 * * *
+        cron: 40 4 * * *
         jitter: 0s
       full:
-        cron: 20 10 * * *
+        cron: 40 4 * * 0
         jitter: 0s
       timezone: Etc/UTC
 ---

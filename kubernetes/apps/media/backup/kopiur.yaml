@@ -44,13 +44,16 @@ spec:
     ttlSecondsAfterFinished: 1200
   maintenance:
     enabled: true
+    mover:
+      cache:
+        mode: Persistent
     takeoverPolicy: Force
     schedule:
       quick:
-        cron: 10 */6 * * *
+        cron: 20 4 * * *
         jitter: 0s
       full:
-        cron: 10 10 * * *
+        cron: 20 4 * * 0
         jitter: 0s
       timezone: Etc/UTC
 ---

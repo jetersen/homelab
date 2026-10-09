@@ -44,13 +44,16 @@ spec:
     ttlSecondsAfterFinished: 1200
   maintenance:
     enabled: true
+    mover:
+      cache:
+        mode: Persistent
     takeoverPolicy: Force
     schedule:
       quick:
-        cron: 0 */6 * * *
+        cron: 10 4 * * *
         jitter: 0s
       full:
-        cron: 0 10 * * *
+        cron: 10 4 * * 0
         jitter: 0s
       timezone: Etc/UTC
 ---
@@ -299,13 +302,16 @@ spec:
     ttlSecondsAfterFinished: 1200
   maintenance:
     enabled: true
+    mover:
+      cache:
+        mode: Persistent
     takeoverPolicy: Force
     schedule:
       quick:
-        cron: 20 */6 * * *
+        cron: 30 4 * * *
         jitter: 0s
       full:
-        cron: 20 10 * * *
+        cron: 30 4 * * 0
         jitter: 0s
       timezone: Etc/UTC
 ---
