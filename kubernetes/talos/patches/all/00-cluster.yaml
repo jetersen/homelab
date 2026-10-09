@@ -1,0 +1,33 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/external/siderolabs/talos/config.schema.json
+apiVersion: v1alpha1
+kind: KubeNodeConfig
+# Allow application workloads on the single control-plane node.
+taints:
+  node-role.kubernetes.io/control-plane:
+    $patch: delete
+nodeIP:
+  validSubnets:
+    - 192.168.1.0/24
+    - fde2:b84e:c4cd:1::/64
+---
+apiVersion: v1alpha1
+kind: KubeAPIServerConfig
+certExtraSANs:
+  - talos01
+  - talos01.lan.jetersen.dev
+---
+apiVersion: v1alpha1
+kind: KubeFlannelCNIConfig
+# Cilium supplies the CNI; omit Talos's generated Flannel configuration.
+$patch: delete
+---
+apiVersion: v1alpha1
+kind: KubeNetworkConfig
+dnsDomain: cluster.local
+podSubnets:
+  - 172.22.0.0/16
+  - 2a13:e747:b7be:2200::/56
+serviceSubnets:
+  - 172.23.0.0/16
+  - fde2:b84e:c4cd:2300::/112

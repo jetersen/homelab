@@ -1,0 +1,9 @@
+---
+machine:
+  env:
+    GRPC_GO_LOG_SEVERITY_LEVEL: error
+---
+apiVersion: v1alpha1
+kind: KubeletConfig
+config:
+  imageMaximumGCAge: 168h

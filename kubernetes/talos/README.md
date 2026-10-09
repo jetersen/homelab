@@ -1,5 +1,41 @@
 # Talos
 
+## Configuration generation
+
+[TOPF](https://github.com/postfinance/topf) assembles [topf.yaml](topf.yaml)
+with patches under `patches/all/`, `patches/control-plane/`, and
+`patches/node/<hostname>/`, in that order. Use TOPF 0.6.1 or newer and a
+`talosctl` matching the cluster version. [schematic.yaml](schematic.yaml)
+defines extensions and kernel arguments; its ID is computed locally.
+
+The existing `talsecret.sops.yaml` is the secrets bundle configured by
+`secretsPath`. Keep it SOPS-encrypted and ensure it exists before running TOPF.
+TOPF can generate a new bundle when one is missing and can fall back to
+plaintext storage when encryption fails.
+
+Run from this directory, with the SOPS age identity available:
+
+```sh
+umask 077
+topf render --output clusterconfig
+talosctl validate --config clusterconfig/talos01.yaml --mode metal
+```
+
+Rendered configs contain private keys and tokens and are ignored by Git.
+Capture TOPF apply previews privately outside the repository, including with
+`--dry-run`. A dry-run exits with status 2 when differences exist. Review the
+complete preview before applying; generation alone does not authorize changes
+to the node. Use focused `talosctl patch mc --mode=no-reboot` updates for narrow
+changes. TOPF applies complete configs, including any pending repository edits.
+
+`topf talosconfig` writes a client config to stdout. Redirect it privately or
+to the ignored `clusterconfig/talosconfig`; never print it in agent output.
+
+Kubelet removes container images after seven days without use through
+`imageMaximumGCAge: 168h`. Running containers keep their images; later rollbacks
+can pull removed images from the registry. Kubelet restarts reset age tracking,
+and disk usage thresholds can trigger cleanup sooner.
+
 ## Dual-stack networking
 
 Keep IPv4 first in the Pod and Service subnet lists to preserve the primary
@@ -65,12 +101,12 @@ and tailnet routes are ready.
 
 Tuppr reconciles the Talos and Kubernetes targets under
 [cluster/tuppr/upgrades](../cluster/tuppr/upgrades). Renovate groups each target
-with its matching version in `talconfig.yaml`. Upgrades may start on Sundays
+with its matching version in `topf.yaml`. Upgrades may start on Sundays
 between 04:00 and 06:00 Europe/Copenhagen; the window does not stop an upgrade
 already in progress. Single-node upgrades interrupt workloads during reboot.
 Node readiness, Cilium rollout, and CoreDNS availability gate upgrades.
 
-The [API access patch](patches/tuppr-api-access.yaml) grants `os:admin` to Talos
+The [API access patch](patches/control-plane/tuppr-api-access.yaml) grants `os:admin` to Talos
 service accounts in `system-upgrade`. Apply it before installing Tuppr. Keep the
 stored installer URL aligned with the running Factory schematic so Tuppr can
 verify that upgrades preserve extensions and boot customization.
@@ -93,7 +129,7 @@ retry a failed upgrade.
 ## Native Tailscale
 
 The Talos image includes `siderolabs/tailscale`.
-[The service patch](patches/tailscale-service.yaml) enables kernel networking and
+[The service patch](patches/node/talos01/tailscale-service.yaml) enables kernel networking and
 advertises individual host routes for the Kubernetes API, Envoy gateway, and
 cluster DNS. Keep these routes narrow instead of advertising the LAN subnet.
 
@@ -103,13 +139,13 @@ hold up boot. Keep enrollment URLs and recovery material outside the repository.
 Apply service changes with `talosctl patch mc --mode=no-reboot`, capturing raw
 configuration diffs privately as required by [AGENTS.md](../../AGENTS.md).
 
-Keep kubelet and etcd addresses pinned to the LAN through `talconfig.yaml` and
-[the etcd patch](patches/etcd-lan.yaml). Check Cilium still selects the physical
+Keep kubelet and etcd addresses pinned to the LAN through [the node configuration](patches/all/00-cluster.yaml) and
+[the etcd patch](patches/control-plane/etcd-lan.yaml). Check Cilium still selects the physical
 interface after changing native Tailscale networking.
 
 ## DNS and access
 
-[Resolver configuration](patches/resolver-search-domains.yaml) explicitly clears
+[Resolver configuration](patches/node/talos01/resolver-search-domains.yaml) explicitly clears
 DHCP search domains and disables hostname-derived search domains. Kubernetes
 adds its own service search domains; workloads use the default `ndots:5`.
 Use fully qualified LAN names. After applying this patch without reboot,
