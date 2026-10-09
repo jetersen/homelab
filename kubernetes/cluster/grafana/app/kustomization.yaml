@@ -16,3 +16,15 @@ configMapGenerator:
       disableNameSuffixHash: true
       labels:
         grafana_dashboard: "1"
+  - name: homelab-control-plane-dashboards
+    files:
+      - dashboards/apiserver.json
+      - dashboards/kubelet.json
+      - dashboards/etcd.json
+      - dashboards/global.json
+      - dashboards/namespaces.json
+      - dashboards/diagnostics.json
+    options:
+      disableNameSuffixHash: true
+      labels:
+        grafana_dashboard: "1"

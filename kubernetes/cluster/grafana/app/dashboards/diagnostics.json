@@ -1,0 +1,215 @@
+{
+  "uid": "homelab-control-plane-diagnostics",
+  "title": "Homelab / Control plane diagnostics",
+  "schemaVersion": 39,
+  "version": 1,
+  "tags": [
+    "homelab"
+  ],
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "API server storage call mean latency",
+      "type": "timeseries",
+      "description": "Average per observation; no observations yields no data. Percentiles require histogram buckets.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(etcd_request_duration_seconds_sum{job=\"apiserver\"}[$__rate_interval])) / sum(rate(etcd_request_duration_seconds_count{job=\"apiserver\"}[$__rate_interval]))"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Watch-list mean latency",
+      "type": "timeseries",
+      "description": "Average per observation; no observations yields no data. Percentiles require histogram buckets.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(apiserver_watch_list_duration_seconds_sum{job=\"apiserver\"}[$__rate_interval])) / sum(rate(apiserver_watch_list_duration_seconds_count{job=\"apiserver\"}[$__rate_interval]))"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Watch-cache freshness wait mean",
+      "type": "timeseries",
+      "description": "Average per observation; no observations yields no data. Percentiles require histogram buckets.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(apiserver_watch_cache_read_wait_seconds_sum{job=\"apiserver\"}[$__rate_interval])) / sum(rate(apiserver_watch_cache_read_wait_seconds_count{job=\"apiserver\"}[$__rate_interval]))"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Mean request body size",
+      "type": "timeseries",
+      "description": "Average per observation; no observations yields no data. Percentiles require histogram buckets.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(apiserver_request_body_size_bytes_sum{job=\"apiserver\"}[$__rate_interval])) / sum(rate(apiserver_request_body_size_bytes_count{job=\"apiserver\"}[$__rate_interval]))"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Mean response size",
+      "type": "timeseries",
+      "description": "Average per observation; no observations yields no data. Percentiles require histogram buckets.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(apiserver_response_sizes_sum{job=\"apiserver\"}[$__rate_interval])) / sum(rate(apiserver_response_sizes_count{job=\"apiserver\"}[$__rate_interval]))"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Mean watch event size",
+      "type": "timeseries",
+      "description": "Average per observation; no observations yields no data. Percentiles require histogram buckets.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(apiserver_watch_events_sizes_sum{job=\"apiserver\"}[$__rate_interval])) / sum(rate(apiserver_watch_events_sizes_count{job=\"apiserver\"}[$__rate_interval]))"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Failed container probes (rolling 5m)",
+      "description": "Readiness and startup failures can be expected during startup or rollouts. Inspect sustained failures and service impact.",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 24,
+        "w": 24,
+        "h": 10
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(increase(prober_probe_total{result=\"failed\"}[5m])) by(namespace,pod,container,probe_type)",
+          "legendFormat": "{{namespace}}/{{pod}} {{container}} {{probe_type}}"
+        }
+      ]
+    }
+  ]
+}

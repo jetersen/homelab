@@ -16,6 +16,9 @@ spec:
         # CPU quota throttling is expected on this small node; alert on service impact.
         CPUThrottlingHigh:
           enabled: false
+        # etcd's basic metrics mode does not publish the gRPC latency histogram.
+        etcdGRPCRequestsSlow:
+          enabled: false
         # Reloaders have a separate warning; keep main-service outages critical.
         ServiceDown:
           spec:
@@ -60,6 +63,18 @@ spec:
       enabled: false
     defaultDashboards:
       enabled: true
+      # Corrected, pinned upstream dashboards are provisioned by Grafana's Kustomization.
+      dashboards:
+        apiserver:
+          enabled: false
+        kubelet:
+          enabled: false
+        etcd:
+          enabled: false
+        kubernetes-views-global:
+          enabled: false
+        kubernetes-views-namespaces:
+          enabled: false
     vmsingle:
       enabled: true
       spec:
@@ -83,6 +98,21 @@ spec:
           external.url: https://grafana.jetersen.dev
           external.alert.source: 'explore?orgId=1&left={"datasource":"P4169E866C3094E38","queries":[{"refId":"A","expr":"{{`{{.Expr|queryEscape}}`}}"}]}'
     # Talos generates localhost serving certificates for these authenticated endpoints.
+    kubeApiServer:
+      vmScrape:
+        spec:
+          endpoints:
+            - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+              port: https
+              scheme: https
+              tlsConfig:
+                caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+                serverName: kubernetes
+              metricRelabelConfigs:
+                # Retain sums and counts for the diagnostics dashboard's means/rates.
+                - action: drop
+                  source_labels: [__name__]
+                  regex: '(etcd_request_duration_seconds|apiserver_request_body_size_bytes|apiserver_watch_list_duration_seconds|apiserver_watch_cache_read_wait_seconds|apiserver_response_sizes|apiserver_watch_events_sizes)_bucket'
     kubeControllerManager:
       vmScrape:
         spec:
@@ -123,6 +153,15 @@ spec:
         # cAdvisor supplies the container CPU and memory metrics used by our rules.
         resources:
           enabled: false
+        probes:
+          spec:
+            # Keep failure counters for transient readiness/startup diagnostics.
+            metricRelabelConfigs:
+              - action: labeldrop
+                regex: (uid|id|name)
+              - action: drop
+                source_labels: [__name__]
+                regex: 'prober_probe_duration_seconds_(bucket|sum|count)'
     victoria-metrics-operator:
       enabled: true
     kube-state-metrics:
