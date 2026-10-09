@@ -1,9 +1,10 @@
 # Application backups with Kopiur
 
 Home Assistant, Zigbee2MQTT, Sonarr, and PhotoPrism write encrypted repositories to retained
-NAS PVCs. `RepositoryReplication` mirrors each repository to S3 hourly, with
-separate schedules from snapshots and maintenance. Offsite recovery depends on
-a successful replication after the selected snapshot. The read-only
+NAS PVCs. `RepositoryReplication` mirrors each repository to S3 nightly. Its timer
+runs independently of snapshots and maintenance; scheduled timing does not ensure
+they have succeeded. Offsite recovery depends on successful replication after
+the selected snapshot, including after a manual snapshot. The read-only
 `APPLICATION-offsite` repositories support S3 discovery and recovery. Forgejo
 stages both stores on the NAS and writes its Kopia repository directly to S3.
 Paperless backs up native document exports directly to S3, excluding its live
@@ -12,6 +13,12 @@ SQLite database and working directories.
 Kopiur owns snapshot retention and repository maintenance. Native application
 archive retention is separate. The source-scoped keep-latest policy flag prevents
 Kopia's pruning from competing with Kopiur's retention.
+
+Nightly quick maintenance handles routine repository cleanup; weekly full
+maintenance performs deeper reclamation. The application repository inputs,
+such as [Home Assistant](../../apps/home-assistant/backup/kopiur.yaml), define the
+schedules and persistent maintenance cache. Reusing that cache avoids formatting
+a fresh local volume for each maintenance run.
 
 ## Storage and credentials
 

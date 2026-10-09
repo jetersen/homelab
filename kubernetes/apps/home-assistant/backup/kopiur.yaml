@@ -220,7 +220,7 @@ spec:
   policyRef:
     name: home-assistant-backup
   schedule:
-    cron: 0 7 * * *
+    cron: 0 3 * * *
     timezone: Etc/UTC
     concurrencyPolicy: Forbid
     startingDeadlineSeconds: 3600
@@ -247,7 +247,7 @@ spec:
         secretRef:
           name: home-assistant-kopia
   schedule:
-    cron: 40 * * * *
+    cron: 40 5 * * *
     timezone: Etc/UTC
     jitter: 0s
   sync:
@@ -514,7 +514,7 @@ spec:
   policyRef:
     name: zigbee2mqtt-backup
   schedule:
-    cron: 20 7 * * *
+    cron: 20 3 * * *
     timezone: Etc/UTC
     concurrencyPolicy: Forbid
     startingDeadlineSeconds: 3600
@@ -541,7 +541,7 @@ spec:
         secretRef:
           name: zigbee2mqtt-kopia
   schedule:
-    cron: 50 * * * *
+    cron: 50 5 * * *
     timezone: Etc/UTC
     jitter: 0s
   sync:

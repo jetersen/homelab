@@ -284,7 +284,7 @@ spec:
       prefix: applications/photoprism/
       region: de
   schedule:
-    cron: 20 * * * *
+    cron: 20 5 * * *
     jitter: 0s
     timezone: Etc/UTC
   sourceRef:

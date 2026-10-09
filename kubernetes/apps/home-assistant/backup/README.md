@@ -14,6 +14,11 @@ to three native archives at least five minutes old and stages the newest, which
 must be less than 30 hours old. Review manual backups if the count exceeds three;
 Home Assistant's automatic retention does not remove them.
 
+Configure native automatic backups to run daily at 01:30 in Europe/Copenhagen.
+This setting lives in Home Assistant and must be restored separately from GitOps.
+The [UTC snapshot schedule](kopiur.yaml) leaves time for the archive to finish
+and meet the staging job's minimum age.
+
 Zigbee's pre-backup job requests and validates a fresh native export. Follow the
 [manual backup procedure](/kubernetes/cluster/kopiur/README.md#manual-backups)
 with policy `home-assistant-backup` or `zigbee2mqtt-backup` in namespace
