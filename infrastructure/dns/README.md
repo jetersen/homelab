@@ -9,6 +9,11 @@ routes automatically; add public aliases alongside their routes. DNSControl does
 not discover routes or wait for them to become ready. Both `jetersen.dev` and
 `lan.jetersen.dev` need wildcards because Technitium serves them as separate zones.
 
+Kubernetes apps use `*.jetersen.dev`. Former `*.lan.jetersen.dev` app URLs
+permanently redirect to their canonical names, preserving paths and queries.
+Physical LAN devices keep their existing names. Both Jellyfin IoT names point to
+the dedicated IPv4 address so redirects stay reachable from the IoT network.
+
 Validate both address families for explicit IPv4-only names. Technitium suppresses
 the wildcard AAAA at an existing name, while UniFi can still return its wildcard
 IPv6 address. Keep IPv4-only isolated endpoints on Technitium DNS; UniFi's fallback

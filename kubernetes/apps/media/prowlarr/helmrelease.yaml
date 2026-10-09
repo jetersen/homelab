@@ -62,7 +62,7 @@ spec:
             port: 9696
     route:
       app:
-        hostnames: [prowlarr.lan.jetersen.dev]
+        hostnames: [prowlarr.jetersen.dev]
         parentRefs:
           - name: envoy-proxy
             namespace: kube-system

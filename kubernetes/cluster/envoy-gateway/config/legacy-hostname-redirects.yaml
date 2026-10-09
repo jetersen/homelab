@@ -1,0 +1,180 @@
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: dns-legacy-redirect
+spec:
+  hostnames:
+  - dns.lan.jetersen.dev
+  parentRefs:
+  - name: envoy-proxy
+    namespace: kube-system
+    sectionName: https
+  rules:
+  - filters:
+    - type: RequestRedirect
+      requestRedirect:
+        scheme: https
+        hostname: dns.jetersen.dev
+        port: 443
+        statusCode: 308
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: upgrade-versions-legacy-redirect
+spec:
+  hostnames:
+  - upgrade-versions.lan.jetersen.dev
+  parentRefs:
+  - name: envoy-proxy
+    namespace: kube-system
+    sectionName: https
+  rules:
+  - filters:
+    - type: RequestRedirect
+      requestRedirect:
+        scheme: https
+        hostname: upgrade-versions.jetersen.dev
+        port: 443
+        statusCode: 308
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: flux-mcp-legacy-redirect
+spec:
+  hostnames:
+  - flux-mcp.lan.jetersen.dev
+  parentRefs:
+  - name: envoy-proxy
+    namespace: kube-system
+    sectionName: https
+  rules:
+  - filters:
+    - type: RequestRedirect
+      requestRedirect:
+        scheme: https
+        hostname: flux-mcp.jetersen.dev
+        port: 443
+        statusCode: 308
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: flux-operator-legacy-redirect
+spec:
+  hostnames:
+  - flux-operator.lan.jetersen.dev
+  parentRefs:
+  - name: envoy-proxy
+    namespace: kube-system
+    sectionName: https
+  rules:
+  - filters:
+    - type: RequestRedirect
+      requestRedirect:
+        scheme: https
+        hostname: flux-operator.jetersen.dev
+        port: 443
+        statusCode: 308
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: jellyfin-legacy-redirect
+spec:
+  hostnames:
+  - jellyfin.lan.jetersen.dev
+  parentRefs:
+  - name: envoy-proxy
+    namespace: kube-system
+    sectionName: https
+  rules:
+  - filters:
+    - type: RequestRedirect
+      requestRedirect:
+        scheme: https
+        hostname: jellyfin.jetersen.dev
+        port: 443
+        statusCode: 308
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: sonarr-legacy-redirect
+spec:
+  hostnames:
+  - sonarr.lan.jetersen.dev
+  parentRefs:
+  - name: envoy-proxy
+    namespace: kube-system
+    sectionName: https
+  rules:
+  - filters:
+    - type: RequestRedirect
+      requestRedirect:
+        scheme: https
+        hostname: sonarr.jetersen.dev
+        port: 443
+        statusCode: 308
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: radarr-legacy-redirect
+spec:
+  hostnames:
+  - radarr.lan.jetersen.dev
+  parentRefs:
+  - name: envoy-proxy
+    namespace: kube-system
+    sectionName: https
+  rules:
+  - filters:
+    - type: RequestRedirect
+      requestRedirect:
+        scheme: https
+        hostname: radarr.jetersen.dev
+        port: 443
+        statusCode: 308
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: prowlarr-legacy-redirect
+spec:
+  hostnames:
+  - prowlarr.lan.jetersen.dev
+  parentRefs:
+  - name: envoy-proxy
+    namespace: kube-system
+    sectionName: https
+  rules:
+  - filters:
+    - type: RequestRedirect
+      requestRedirect:
+        scheme: https
+        hostname: prowlarr.jetersen.dev
+        port: 443
+        statusCode: 308
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: qbittorrent-legacy-redirect
+spec:
+  hostnames:
+  - qbittorrent.lan.jetersen.dev
+  parentRefs:
+  - name: envoy-proxy
+    namespace: kube-system
+    sectionName: https
+  rules:
+  - filters:
+    - type: RequestRedirect
+      requestRedirect:
+        scheme: https
+        hostname: qbittorrent.jetersen.dev
+        port: 443
+        statusCode: 308

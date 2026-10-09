@@ -83,7 +83,7 @@ spec:
           http: { port: 5380, targetPort: 5380 }
     route:
       app:
-        hostnames: [dns.lan.jetersen.dev]
+        hostnames: [dns.jetersen.dev]
         parentRefs:
           - name: envoy-proxy
             namespace: kube-system

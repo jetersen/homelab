@@ -119,6 +119,10 @@
       "providers": ["unifi"]
     },
     {
+      "name": "jellyfin-iot.jetersen.dev",
+      "ipv4": "192.168.1.22"
+    },
+    {
       "name": "jellyfin-iot.lan.jetersen.dev",
       "ipv4": "192.168.1.22"
     }

@@ -62,7 +62,7 @@ spec:
             port: 8989
     route:
       app:
-        hostnames: [sonarr.lan.jetersen.dev]
+        hostnames: [sonarr.jetersen.dev]
         parentRefs:
           - name: envoy-proxy
             namespace: kube-system

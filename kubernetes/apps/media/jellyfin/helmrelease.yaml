@@ -30,7 +30,7 @@ spec:
               tag: 12.1@sha256:78d3ea1207d1322471fcac39a614f004f2ccf7e878f95ab2977d752f07e4dd7e
             env:
               TZ: Europe/Copenhagen
-              JELLYFIN_PublishedServerUrl: https://jellyfin.lan.jetersen.dev
+              JELLYFIN_PublishedServerUrl: https://jellyfin.jetersen.dev
             securityContext:
               allowPrivilegeEscalation: false
               runAsUser: 568
@@ -67,7 +67,7 @@ spec:
             port: 8096
     route:
       app:
-        hostnames: [jellyfin.lan.jetersen.dev]
+        hostnames: [jellyfin.jetersen.dev]
         parentRefs:
           - name: envoy-proxy
             namespace: kube-system

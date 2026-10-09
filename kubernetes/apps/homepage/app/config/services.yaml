@@ -31,31 +31,31 @@
       namespace: photoprism
       app: photoprism
   - Jellyfin:
-      href: https://jellyfin.lan.jetersen.dev
+      href: https://jellyfin.jetersen.dev
       description: Movies and television
       icon: jellyfin.png
       namespace: media
       app: jellyfin
   - Sonarr:
-      href: https://sonarr.lan.jetersen.dev
+      href: https://sonarr.jetersen.dev
       description: TV library
       icon: sonarr.png
       namespace: media
       app: sonarr
   - Radarr:
-      href: https://radarr.lan.jetersen.dev
+      href: https://radarr.jetersen.dev
       description: Movie library
       icon: radarr.png
       namespace: media
       app: radarr
   - Prowlarr:
-      href: https://prowlarr.lan.jetersen.dev
+      href: https://prowlarr.jetersen.dev
       description: Indexer management
       icon: prowlarr.png
       namespace: media
       app: prowlarr
   - qBittorrent:
-      href: https://qbittorrent.lan.jetersen.dev
+      href: https://qbittorrent.jetersen.dev
       description: Downloads
       icon: qbittorrent.png
       namespace: media
@@ -74,13 +74,13 @@
       namespace: monitoring
       app: grafana
   - Flux:
-      href: https://flux-operator.lan.jetersen.dev
+      href: https://flux-operator.jetersen.dev
       description: GitOps reconciliation
       icon: flux-cd.png
       namespace: flux-system
       app: flux-operator
   - Technitium:
-      href: https://dns.lan.jetersen.dev
+      href: https://dns.jetersen.dev
       description: DNS management
       icon: technitium.png
       namespace: technitium

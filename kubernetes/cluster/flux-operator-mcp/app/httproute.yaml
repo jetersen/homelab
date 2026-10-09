@@ -6,7 +6,7 @@ metadata:
   name: flux-operator-mcp
 spec:
   hostnames:
-    - flux-mcp.lan.jetersen.dev
+    - flux-mcp.jetersen.dev
   parentRefs:
     - name: envoy-proxy
       namespace: kube-system

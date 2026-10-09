@@ -16,7 +16,6 @@ resources:
   - openspeedtest.yaml
   - paperless.yaml
   - photoprism.yaml
-  - reflector.yaml
   - searxng.yaml
   - system-upgrade.yaml
   - technitium.yaml

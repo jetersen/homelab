@@ -16,7 +16,7 @@ FFmpeg log for the QSV hardware encoder. Direct Play does not use the transcoder
 
 ## IoT access
 
-Use `https://jellyfin-iot.lan.jetersen.dev` for the TV. DNSControl maps this name
+Use `https://jellyfin-iot.jetersen.dev` for the TV. DNSControl maps this name
 to a dedicated IPv4 LoadBalancer Service. It forwards standard HTTPS to a
 separate Envoy listener that accepts only the Jellyfin hostname and route.
 The existing Jellyfin endpoint remains available for other clients.

@@ -57,7 +57,7 @@ spec:
     httpRoute:
       enabled: true
       hostnames:
-        - upgrade-versions.lan.jetersen.dev
+        - upgrade-versions.jetersen.dev
       parentRefs:
         - name: envoy-proxy
           namespace: kube-system

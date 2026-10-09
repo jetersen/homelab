@@ -62,7 +62,7 @@ spec:
             port: 7878
     route:
       app:
-        hostnames: [radarr.lan.jetersen.dev]
+        hostnames: [radarr.jetersen.dev]
         parentRefs:
           - name: envoy-proxy
             namespace: kube-system

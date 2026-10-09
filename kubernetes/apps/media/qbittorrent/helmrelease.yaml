@@ -132,7 +132,7 @@ spec:
     route:
       app:
         hostnames:
-        - qbittorrent.lan.jetersen.dev
+        - qbittorrent.jetersen.dev
         parentRefs:
         - name: envoy-proxy
           namespace: kube-system

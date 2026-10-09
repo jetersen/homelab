@@ -7,3 +7,4 @@ resources:
   - envoy.yaml
   - gateway.yaml
   - jellyfin-iot-service.yaml
+  - legacy-hostname-redirects.yaml
