@@ -6,10 +6,9 @@
 
 ## GitOps
 
-- Prefer updating manifests in this repo.
-- Flux-managed Kubernetes resources live under `kubernetes/`.
-- Routine homelab deployments needed to complete a requested task are authorized without separate approval, including committing and pushing manifests for Flux to reconcile. This overrides the general requirement for separate infrastructure deployment authorization in this repository.
-- Ask before destructive, data-affecting, broad, or hard-to-reverse changes; state the impact and rollback first.
+- Prefer GitOps through this repo's `kubernetes/` manifests.
+- Routine homelab deployments, commits, and Flux pushes need no separate approval when completing a requested task.
+- Ask before destructive, data-affecting, broad, or hard-to-reverse changes; explain impact and rollback.
 
 ## ExternalDNS
 
