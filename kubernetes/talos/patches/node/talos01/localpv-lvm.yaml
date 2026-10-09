@@ -1,0 +1,43 @@
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/external/siderolabs/talos/config.schema.json
+# Load the thin target before CSI activates thin volumes, including after reboot.
+machine:
+  kernel:
+    modules:
+      - name: dm_thin_pool
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/external/siderolabs/talos/config.schema.json
+# Allocate only unused space; retain the Talos and local-path partitions.
+apiVersion: v1alpha1
+kind: RawVolumeConfig
+name: localpv-thick
+provisioning:
+  diskSelector:
+    match: disk.wwid == "eui.0025385951a23743"
+  minSize: 512GiB
+  maxSize: 512GiB
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/external/siderolabs/talos/config.schema.json
+apiVersion: v1alpha1
+kind: RawVolumeConfig
+name: localpv-thin
+provisioning:
+  diskSelector:
+    match: disk.wwid == "eui.0025385951a23743"
+  minSize: 256GiB
+  maxSize: 256GiB
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/external/siderolabs/talos/config.schema.json
+apiVersion: v1alpha1
+kind: LVMVolumeGroupConfig
+name: localpv-thick
+provisioning:
+  volumeSelector:
+    match: volume.partition_label == "r-localpv-thick"
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/external/siderolabs/talos/config.schema.json
+apiVersion: v1alpha1
+kind: LVMVolumeGroupConfig
+name: localpv-thin
+provisioning:
+  volumeSelector:
+    match: volume.partition_label == "r-localpv-thin"

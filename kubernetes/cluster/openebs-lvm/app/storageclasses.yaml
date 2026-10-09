@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/storage.k8s.io/storageclass_v1.json
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: openebs-lvm
+provisioner: local.csi.openebs.io
+allowVolumeExpansion: true
+reclaimPolicy: Retain
+volumeBindingMode: WaitForFirstConsumer
+parameters:
+  storage: lvm
+  volgroup: localpv-thick
+  thinProvision: "no"
+  fsType: xfs
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/storage.k8s.io/storageclass_v1.json
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: openebs-lvm-thin
+provisioner: local.csi.openebs.io
+allowVolumeExpansion: true
+reclaimPolicy: Retain
+volumeBindingMode: WaitForFirstConsumer
+parameters:
+  storage: lvm
+  volgroup: localpv-thin
+  thinProvision: "yes"
+  fsType: xfs

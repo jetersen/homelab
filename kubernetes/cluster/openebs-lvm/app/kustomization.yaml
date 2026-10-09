@@ -2,14 +2,10 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - helmrelease.yaml
+  - namespace.yaml
   - source.yaml
-  - infrastructure-scrapes.yaml
-  - blackbox.yaml
-  - probes.yaml
-  - monitoring-rules.yaml
-  - storage-rules.yaml
-  - backup-rules.yaml
+  - helmrelease.yaml
+  - storageclasses.yaml
 components:
   - ../../../components/helmrelease-defaults
-  - ../../../components/oci-source-defaults
+  - ../../../components/helm-source-defaults

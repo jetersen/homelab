@@ -1,0 +1,61 @@
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/operator.victoriametrics.com/vmrule_v1beta1.json
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+metadata:
+  name: homelab-lvm-storage
+spec:
+  groups:
+    - name: homelab.lvm-storage
+      rules:
+        - alert: LVMVolumeGroupSpaceLow
+          expr: |
+            lvm_vg_free_size_bytes{name=~"localpv-(thick|thin)"}
+            / lvm_vg_total_size_bytes{name=~"localpv-(thick|thin)"} < 0.15
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: LVM volume group {{ $labels.name }} has less than 15% free space
+            description: New PVCs, volume expansion or thin-pool growth may fail. Add capacity before exhausting the volume group.
+        - alert: LVMThinPoolDataSpaceLow
+          expr: lvm_lv_used_percent{vg="localpv-thin",segtype="thin-pool"} > 75
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: LVM thin pool {{ $labels.name }} is more than 75% full
+            description: Extend the thin pool while the volume group has free space. PVC limits do not reserve physical thin-pool capacity.
+        - alert: LVMThinPoolDataSpaceCritical
+          expr: lvm_lv_used_percent{vg="localpv-thin",segtype="thin-pool"} > 90
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: LVM thin pool {{ $labels.name }} is more than 90% full
+            description: Extend the thin pool immediately. Exhaustion can interrupt writes to every volume in this pool.
+        - alert: LVMThinPoolMetadataSpaceLow
+          expr: lvm_lv_mda_used_percent{vg="localpv-thin",segtype="thin-pool"} > 75
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: LVM thin pool {{ $labels.name }} metadata is more than 75% full
+            description: Extend thin-pool metadata before exhaustion interrupts volumes in this pool.
+        - alert: LVMThinPoolMetadataSpaceCritical
+          expr: lvm_lv_mda_used_percent{vg="localpv-thin",segtype="thin-pool"} > 90
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: LVM thin pool {{ $labels.name }} metadata is more than 90% full
+            description: Extend thin-pool metadata immediately to protect volume availability.
+        - alert: LVMMetricsMissing
+          expr: |
+            kube_daemonset_status_desired_number_scheduled{namespace="openebs",daemonset="openebs-lvm-node"} > 0
+            unless on() lvm_vg_total_size_bytes{name="localpv-thick"}
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: OpenEBS LVM capacity metrics are missing
+            description: Check the CSI node agent and its metrics scrape. Thin-pool capacity cannot be monitored.

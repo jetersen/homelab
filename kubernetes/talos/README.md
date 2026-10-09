@@ -31,6 +31,19 @@ changes. TOPF applies complete configs, including any pending repository edits.
 `topf talosconfig` writes a client config to stdout. Redirect it privately or
 to the ignored `clusterconfig/talosconfig`; never print it in agent output.
 
+## Local application storage
+
+[LocalPV LVM](../cluster/openebs-lvm/README.md) uses dedicated raw partitions
+selected by disk WWID, with separate volume groups for thick and thin PVCs.
+The [storage patch](patches/node/talos01/localpv-lvm.yaml) preserves Talos's existing
+partitions and loads the thin-pool kernel module. Apply it as a focused patch;
+validate changes with the matching `talosctl` version before applying them.
+
+Keep free disk space available for future storage changes. Increasing a
+partition's configured maximum does not make it grow across an adjacent
+partition. EPHEMERAL holds container runtime data, kubelet data, logs and etcd;
+moving application PVCs does not free its capacity.
+
 Kubelet removes container images after seven days without use through
 `imageMaximumGCAge: 168h`. Running containers keep their images; later rollbacks
 can pull removed images from the registry. Kubelet restarts reset age tracking,

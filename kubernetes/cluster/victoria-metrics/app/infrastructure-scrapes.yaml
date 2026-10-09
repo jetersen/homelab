@@ -2,6 +2,22 @@
 apiVersion: operator.victoriametrics.com/v1beta1
 kind: VMServiceScrape
 metadata:
+  name: openebs-lvm
+spec:
+  namespaceSelector:
+    matchNames:
+      - openebs
+  selector:
+    matchLabels:
+      name: openebs-lvm-node
+  endpoints:
+    - port: metrics
+      path: /metrics
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/operator.victoriametrics.com/vmservicescrape_v1beta1.json
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMServiceScrape
+metadata:
   name: kopiur
 spec:
   namespaceSelector:
