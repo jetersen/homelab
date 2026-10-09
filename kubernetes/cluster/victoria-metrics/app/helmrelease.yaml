@@ -118,6 +118,11 @@ spec:
       spec:
         selectAllByDefault: true
         scrapeInterval: 20s
+    kubelet:
+      vmScrapes:
+        # cAdvisor supplies the container CPU and memory metrics used by our rules.
+        resources:
+          enabled: false
     victoria-metrics-operator:
       enabled: true
     kube-state-metrics:
