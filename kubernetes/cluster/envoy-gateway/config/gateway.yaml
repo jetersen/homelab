@@ -58,7 +58,7 @@ spec:
       tls:
         certificateRefs:
           - kind: Secret
-            name: lan-jetersen-dev-production-tls
+            name: gateway-production-tls
             namespace: kube-system
     - name: https
       protocol: HTTPS
@@ -69,8 +69,5 @@ spec:
       tls:
         certificateRefs:
           - kind: Secret
-            name: jetersen-dev-production-tls
-            namespace: kube-system
-          - kind: Secret
-            name: lan-jetersen-dev-production-tls
+            name: gateway-production-tls
             namespace: kube-system

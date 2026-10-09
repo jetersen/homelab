@@ -83,7 +83,7 @@ spec:
                 readOnly: true
       glkvm-tls:
         type: secret
-        name: glkvm-production-tls
+        name: glkvm-tls
         advancedMounts:
           home-assistant:
             app:

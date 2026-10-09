@@ -5,9 +5,9 @@
 cert-manager issues a dedicated Let's Encrypt certificate for
 `glkvm.jetersen.dev`. Internal DNS resolves this hostname directly to the KVM,
 so console access does not depend on the Kubernetes ingress during maintenance.
-Reflector copies only this certificate's TLS Secret into Home Assistant's
-namespace. The KVM administrator password is stored in a separate SOPS-encrypted
-Secret.
+The Certificate and its TLS Secret live in Home Assistant's namespace and are
+managed alongside the application. The KVM administrator password is stored in a
+separate SOPS-encrypted Secret.
 
 Home Assistant synchronizes the certificate when the UniFi tracker
 `device_tracker.glkvm` becomes `home`, when Home Assistant starts, and when
