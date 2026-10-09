@@ -9,8 +9,8 @@ spec:
       rules:
         - alert: LVMVolumeGroupSpaceLow
           expr: |
-            lvm_vg_free_size_bytes{name=~"localpv-(thick|thin)"}
-            / lvm_vg_total_size_bytes{name=~"localpv-(thick|thin)"} < 0.15
+            last_over_time(lvm_vg_free_size_bytes{name=~"localpv-(thick|thin)"}[15m])
+            / last_over_time(lvm_vg_total_size_bytes{name=~"localpv-(thick|thin)"}[15m]) < 0.15
           for: 10m
           labels:
             severity: warning
@@ -18,7 +18,7 @@ spec:
             summary: LVM volume group {{ $labels.name }} has less than 15% free space
             description: New PVCs, volume expansion or thin-pool growth may fail. Add capacity before exhausting the volume group.
         - alert: LVMThinPoolDataSpaceLow
-          expr: lvm_lv_used_percent{vg="localpv-thin",segtype="thin-pool"} > 75
+          expr: last_over_time(lvm_lv_used_percent{vg="localpv-thin",segtype="thin-pool"}[15m]) > 75
           for: 5m
           labels:
             severity: warning
@@ -26,7 +26,7 @@ spec:
             summary: LVM thin pool {{ $labels.name }} is more than 75% full
             description: Extend the thin pool while the volume group has free space. PVC limits do not reserve physical thin-pool capacity.
         - alert: LVMThinPoolDataSpaceCritical
-          expr: lvm_lv_used_percent{vg="localpv-thin",segtype="thin-pool"} > 90
+          expr: last_over_time(lvm_lv_used_percent{vg="localpv-thin",segtype="thin-pool"}[15m]) > 90
           for: 1m
           labels:
             severity: critical
@@ -34,7 +34,7 @@ spec:
             summary: LVM thin pool {{ $labels.name }} is more than 90% full
             description: Extend the thin pool immediately. Exhaustion can interrupt writes to every volume in this pool.
         - alert: LVMThinPoolMetadataSpaceLow
-          expr: lvm_lv_mda_used_percent{vg="localpv-thin",segtype="thin-pool"} > 75
+          expr: last_over_time(lvm_lv_mda_used_percent{vg="localpv-thin",segtype="thin-pool"}[15m]) > 75
           for: 5m
           labels:
             severity: warning
@@ -42,7 +42,7 @@ spec:
             summary: LVM thin pool {{ $labels.name }} metadata is more than 75% full
             description: Extend thin-pool metadata before exhaustion interrupts volumes in this pool.
         - alert: LVMThinPoolMetadataSpaceCritical
-          expr: lvm_lv_mda_used_percent{vg="localpv-thin",segtype="thin-pool"} > 90
+          expr: last_over_time(lvm_lv_mda_used_percent{vg="localpv-thin",segtype="thin-pool"}[15m]) > 90
           for: 1m
           labels:
             severity: critical
@@ -53,16 +53,16 @@ spec:
           expr: |
             kube_daemonset_status_desired_number_scheduled{namespace="openebs",daemonset="openebs-lvm-node"} > 0
             unless on() (
-              lvm_vg_total_size_bytes{name="localpv-thick"}
-              and on() lvm_vg_free_size_bytes{name="localpv-thick"}
-              and on() lvm_vg_total_size_bytes{name="localpv-thin"}
-              and on() lvm_vg_free_size_bytes{name="localpv-thin"}
-              and on() lvm_lv_used_percent{vg="localpv-thin",name="localpv-thin_thinpool",segtype="thin-pool"}
-              and on() lvm_lv_mda_used_percent{vg="localpv-thin",name="localpv-thin_thinpool",segtype="thin-pool"}
+              last_over_time(lvm_vg_total_size_bytes{name="localpv-thick"}[15m])
+              and on() last_over_time(lvm_vg_free_size_bytes{name="localpv-thick"}[15m])
+              and on() last_over_time(lvm_vg_total_size_bytes{name="localpv-thin"}[15m])
+              and on() last_over_time(lvm_vg_free_size_bytes{name="localpv-thin"}[15m])
+              and on() last_over_time(lvm_lv_used_percent{vg="localpv-thin",name="localpv-thin_thinpool",segtype="thin-pool"}[15m])
+              and on() last_over_time(lvm_lv_mda_used_percent{vg="localpv-thin",name="localpv-thin_thinpool",segtype="thin-pool"}[15m])
             )
           for: 10m
           labels:
             severity: warning
           annotations:
             summary: OpenEBS LVM capacity metrics are missing
-            description: Check the CSI node agent and its metrics scrape. Required total/free capacity for both volume groups or thin-pool data/metadata usage metrics are absent.
+            description: Check the CSI node agent and its metrics scrape. Required total/free capacity for both volume groups or thin-pool data/metadata usage metrics have no sample in the last 15 minutes.

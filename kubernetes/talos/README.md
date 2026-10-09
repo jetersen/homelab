@@ -44,6 +44,11 @@ partition's configured maximum does not make it grow across an adjacent
 partition. EPHEMERAL holds container runtime data, kubelet data, logs and etcd;
 moving application PVCs does not free its capacity.
 
+Talos trims unused EPHEMERAL filesystem blocks weekly through its native
+per-volume trim schedule. The node patch enables trimming only for EPHEMERAL;
+it does not schedule trims for application PVCs. Talos chooses a stable time
+within the interval and skips an immediate trim when the controller starts.
+
 Kubelet removes container images after seven days without use through
 `imageMaximumGCAge: 168h`. Running containers keep their images; later rollbacks
 can pull removed images from the registry. Kubelet restarts reset age tracking,

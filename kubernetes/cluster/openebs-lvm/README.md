@@ -39,8 +39,12 @@ enable automatic pool extension; monitor and grow pool data and metadata
 separately, retaining free volume-group capacity for expansion.
 
 VictoriaMetrics scrapes the CSI node agent for volume-group capacity and thin-pool
-data and metadata usage. Pool alerts warn at 75% and become critical at 90%.
-Verify these metrics before using thin volumes.
+data and metadata usage. Collection runs host LVM scan commands, so the
+[scrape cadence](../victoria-metrics/app/infrastructure-scrapes.yaml) favors slower
+capacity monitoring. [Storage rules](../victoria-metrics/app/storage-rules.yaml)
+use the latest raw sample within an explicit lookback, including after a stale
+marker. A newer sample replaces the old value; alerts can lag changes or missing
+metrics. Verify these metrics before using thin volumes.
 
 Expand a PVC by increasing its storage request. Thick expansion requires free
 volume-group space; thin expansion also requires enough physical pool capacity

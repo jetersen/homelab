@@ -12,6 +12,7 @@ spec:
       name: openebs-lvm-node
   endpoints:
     - port: metrics
+      interval: 5m
       path: /metrics
 ---
 # yaml-language-server: $schema=https://k8s-schemas.home-operations.com/operator.victoriametrics.com/vmservicescrape_v1beta1.json

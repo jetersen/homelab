@@ -36,7 +36,15 @@ name: enp1s0
 apiVersion: v1alpha1
 kind: VolumeConfig
 name: EPHEMERAL
+trim:
+  enabled: true
+  interval: 168h
 provisioning:
   diskSelector:
     match: disk.transport == "nvme"
   maxSize: 100GiB
+---
+# Keep native trim scoped to EPHEMERAL when regenerating Talos 1.14 configs.
+apiVersion: v1alpha1
+kind: FilesystemTrimConfig
+$patch: delete
