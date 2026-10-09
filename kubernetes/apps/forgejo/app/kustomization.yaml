@@ -6,7 +6,6 @@ resources:
   - lvm-storage.yaml
   - source.yaml
   - helmrelease.yaml
-  - storage.yaml
   - nas-storage.sops.yaml
   - admin-secret.sops.yaml
   - github-oauth.sops.yaml

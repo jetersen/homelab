@@ -1,18 +1,3 @@
-# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/core/persistentvolumeclaim_v1.json
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: searxng-config
-  annotations:
-    kustomize.toolkit.fluxcd.io/prune: disabled
-spec:
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: local-path
-  resources:
-    requests:
-      storage: 1Gi
----
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:

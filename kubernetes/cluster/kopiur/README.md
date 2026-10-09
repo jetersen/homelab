@@ -67,7 +67,7 @@ Select a successful Snapshot from the catalog. A Restore can reference its
 For an offsite restore, select the read-only `APPLICATION-offsite` repository and
 verify replication completed after that snapshot before proceeding.
 
-Use a new `target.pvc` with `local-path`, `ReadWriteOnce`, and enough capacity for
+Use a new `target.pvc` with `openebs-lvm`, `ReadWriteOnce`, and enough capacity for
 the recovered files. Set `policy.onMissingSnapshot: Fail` and leave
 `options.enableFileDeletion: false`. Keep the temporary manifest outside the
 repository and apply it with Kubernetes context `homelab`. Wait for
