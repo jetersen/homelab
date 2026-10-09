@@ -18,8 +18,16 @@ spec:
     lvmNode:
       kubeletDir: /var/lib/kubelet/
       logLevel: 2
+      resources:
+        requests:
+          cpu: 15m
+          memory: 32Mi
     lvmController:
       logLevel: 2
+      resources:
+        requests:
+          cpu: 10m
+          memory: 96Mi
       snapshotController:
         enabled: false
     crds:
