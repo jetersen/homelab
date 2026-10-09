@@ -16,7 +16,7 @@ spec:
       retentionPeriod: 1y
       persistentVolume:
         enabled: true
-        size: 20Gi
+        existingClaim: server-volume-victoria-logs-single-server-0-lvm
       resources:
         requests:
           cpu: 50m

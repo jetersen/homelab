@@ -79,12 +79,14 @@ spec:
       enabled: true
       spec:
         retentionPeriod: 1y
-        storage:
-          accessModes:
-            - ReadWriteOnce
-          resources:
-            requests:
-              storage: 20Gi
+        storage: null
+        volumes:
+          - name: data
+            persistentVolumeClaim:
+              claimName: vmsingle-vm-lvm
+        volumeMounts:
+          - name: data
+            mountPath: /victoria-metrics-data
         resources:
           requests:
             cpu: 50m

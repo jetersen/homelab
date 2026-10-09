@@ -10,9 +10,10 @@ Age-based downsampling requires VictoriaMetrics Enterprise; Grafana's larger
 query steps affect displayed resolution, not stored samples. Logs keep complete
 entries until their partitions expire.
 
-Both stores use node-local directories through `local-path`. PVC sizes are
-requests, not enforced quotas on the shared filesystem. Check actual data size,
-filesystem free space, and ingestion trends before extending retention. Reserve
+Both stores use XFS on thick OpenEBS LocalPV LVM volumes. PVC capacities are
+enforced and support expansion. Configure capacities in each store's
+`app/lvm-storage.yaml`. Check actual data size, volume-group free space, and
+ingestion trends before extending retention. Reserve
 space for compaction and up to an additional month of metric partitions.
 Increasing retention preserves future history; it does not restore expired data.
 

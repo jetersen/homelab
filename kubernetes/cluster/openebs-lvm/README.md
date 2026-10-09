@@ -8,13 +8,27 @@ as a physical volume.
 
 | StorageClass | Allocation | Volume group |
 | --- | --- | --- |
-| `openebs-lvm` | Thick, reserves the requested capacity | `localpv-thick` |
+| `openebs-lvm` (default) | Thick, reserves the requested capacity | `localpv-thick` |
 | `openebs-lvm-thin` | Thin, shares physical pool capacity | `localpv-thin` |
+| `openebs-lvm-ephemeral` | Thin, deletes the volume with its PVC | `localpv-thin` |
 
-Both classes use `WaitForFirstConsumer`, support expansion and retain volumes
-after PVC deletion. Retained volumes require explicit cleanup. Neither class
+The application classes use `WaitForFirstConsumer`, support expansion and retain
+volumes after PVC deletion. Use `openebs-lvm-ephemeral` for temporary backup job
+caches so completed jobs release their storage. Retained volumes require explicit
+cleanup. These classes
 provides disk redundancy. Keep application-consistent backups outside the node.
 CSI snapshot components are disabled.
+
+`shared: "yes"` permits multiple pods to mount a volume on the same node,
+including backup readers and parallel CI workers. PV node affinity still pins
+volumes to their owning node; this does not provide access across nodes.
+
+XFS cannot share a filesystem between CSI mounts with different read-only states.
+For custom backup pods, leave the PVC volume source writable and set
+`volumeMount.readOnly: true` on the container. Kopiur Direct sources mounted
+alongside an application require `readOnly: false` and
+`acknowledgeLiveMutation: true`; inherit the application's security context so
+its file ownership remains compatible.
 
 Use thick volumes for application state and monitoring. Thin volumes suit
 replaceable caches. The separate volume groups isolate their capacity budgets.

@@ -10,6 +10,8 @@ metadata:
     homelab.jetersen.dev/flux-homelab-source: enabled
     homelab.jetersen.dev/flux-wait: disabled
 spec:
+  dependsOn:
+    - name: openebs-lvm
   targetNamespace: monitoring
   commonMetadata:
     labels:

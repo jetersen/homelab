@@ -126,7 +126,7 @@ spec:
                   path: token
           - name: cache
             persistentVolumeClaim:
-              claimName: forgejo-ci-cache
+              claimName: forgejo-ci-cache-lvm
   triggers:
     - type: forgejo-runner
       metadata:

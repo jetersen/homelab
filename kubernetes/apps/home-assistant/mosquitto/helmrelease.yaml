@@ -38,10 +38,8 @@ spec:
             app:
               - path: /mosquitto/config
       data:
+        existingClaim: mosquitto-lvm
         type: persistentVolumeClaim
-        accessMode: ReadWriteOnce
-        size: 1Gi
-        storageClass: local-path
         advancedMounts:
           mosquitto:
             app:

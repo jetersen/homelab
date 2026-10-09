@@ -78,11 +78,8 @@ spec:
                 port: 8096
     persistence:
       config:
+        existingClaim: jellyfin-config-lvm
         type: persistentVolumeClaim
-        accessMode: ReadWriteOnce
-        storageClass: local-path
-        size: 20Gi
-        retain: true
         globalMounts:
           - path: /config
       data:
@@ -95,9 +92,7 @@ spec:
                 subPath: media
                 readOnly: true
       cache:
+        existingClaim: jellyfin-cache-lvm
         type: persistentVolumeClaim
-        accessMode: ReadWriteOnce
-        storageClass: local-path
-        size: 20Gi
         globalMounts:
           - path: /cache

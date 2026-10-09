@@ -106,7 +106,7 @@ spec:
             name: searxng-config
         - name: config
           persistentVolumeClaim:
-            claimName: searxng-config
+            claimName: searxng-config-lvm
         - name: cache
           emptyDir: {}
         - name: tmp

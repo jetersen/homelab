@@ -115,11 +115,8 @@ spec:
             backendRequest: 0s
     persistence:
       storage:
+        existingClaim: photoprism-lvm
         type: persistentVolumeClaim
-        accessMode: ReadWriteOnce
-        storageClass: local-path
-        size: 10Gi
-        retain: true
         globalMounts:
         - path: /photoprism/storage
       originals:

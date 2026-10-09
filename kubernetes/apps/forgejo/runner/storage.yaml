@@ -9,3 +9,15 @@ spec:
   resources:
     requests:
       storage: 20Gi
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/core/persistentvolumeclaim_v1.json
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: forgejo-runner-docker-cache-lvm
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: openebs-lvm-thin
+  resources:
+    requests:
+      storage: 40Gi

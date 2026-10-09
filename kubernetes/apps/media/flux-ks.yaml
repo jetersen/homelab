@@ -27,6 +27,7 @@ spec:
   path: ./kubernetes/apps/media/sonarr
   wait: true
   dependsOn:
+    - name: openebs-lvm
     - name: media-storage
     - name: app-template
     - name: technitium
@@ -45,6 +46,7 @@ spec:
   path: ./kubernetes/apps/media/radarr
   wait: true
   dependsOn:
+    - name: openebs-lvm
     - name: media-storage
     - name: app-template
     - name: technitium
@@ -63,6 +65,7 @@ spec:
   path: ./kubernetes/apps/media/prowlarr
   wait: true
   dependsOn:
+    - name: openebs-lvm
     - name: media-storage
     - name: app-template
     - name: technitium
@@ -81,6 +84,7 @@ spec:
   path: ./kubernetes/apps/media/qbittorrent
   wait: true
   dependsOn:
+    - name: openebs-lvm
     - name: media-storage
     - name: app-template
     - name: technitium
@@ -99,6 +103,7 @@ spec:
   path: ./kubernetes/apps/media/jellyfin
   wait: true
   dependsOn:
+    - name: openebs-lvm
     - name: intel-gpu-plugin
     - name: media-storage
     - name: app-template
@@ -118,5 +123,6 @@ spec:
   targetNamespace: media
   path: ./kubernetes/apps/media/backup
   dependsOn:
+    - name: openebs-lvm
     - name: kopiur
     - name: sonarr

@@ -21,5 +21,4 @@ spec:
       existingSecret: konflate-secrets
     persistence:
       enabled: true
-      storageClass: local-path
-      size: 5Gi
+      existingClaim: konflate-cache-lvm

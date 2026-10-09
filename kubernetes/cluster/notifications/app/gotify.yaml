@@ -84,10 +84,7 @@ spec:
             backendRequest: 0s
     persistence:
       data:
+        existingClaim: gotify-lvm
         type: persistentVolumeClaim
-        accessMode: ReadWriteOnce
-        storageClass: local-path
-        size: 1Gi
-        retain: true
         globalMounts:
         - path: /app/data

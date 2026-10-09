@@ -37,6 +37,7 @@ spec:
       limits:
         memory: 1Gi
     cache:
+      storageClassName: openebs-lvm-ephemeral
       capacity: 1Gi
       metadataCacheSizeMb: 64
       contentCacheSizeMb: 128
@@ -95,6 +96,7 @@ spec:
       limits:
         memory: 1Gi
     cache:
+      storageClassName: openebs-lvm-ephemeral
       capacity: 1Gi
       metadataCacheSizeMb: 64
       contentCacheSizeMb: 128
@@ -116,7 +118,7 @@ spec:
     hostname: homelab
   sources:
   - pvc:
-      name: sonarr-backup-exports
+      name: sonarr-backup-exports-lvm
     sourcePathOverride: /data
   copyMethod: Direct
   defaultDeletionPolicy: Delete
@@ -187,10 +189,10 @@ spec:
               volumes:
               - name: config
                 persistentVolumeClaim:
-                  claimName: sonarr
+                  claimName: sonarr-lvm
               - name: exports
                 persistentVolumeClaim:
-                  claimName: sonarr-backup-exports
+                  claimName: sonarr-backup-exports-lvm
               - name: temporary
                 emptyDir:
                   medium: Memory

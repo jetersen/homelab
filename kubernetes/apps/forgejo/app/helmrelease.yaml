@@ -41,7 +41,7 @@ spec:
     persistence:
       enabled: true
       create: false
-      claimName: forgejo-local
+      claimName: forgejo-local-lvm
     extraVolumes:
       - name: nas
         persistentVolumeClaim:

@@ -106,4 +106,4 @@ spec:
           emptyDir: {}
         - name: docker-cache
           persistentVolumeClaim:
-            claimName: forgejo-runner-docker-cache
+            claimName: forgejo-runner-docker-cache-lvm

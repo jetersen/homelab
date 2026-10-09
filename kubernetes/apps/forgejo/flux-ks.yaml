@@ -12,6 +12,7 @@ spec:
   targetNamespace: forgejo
   path: ./kubernetes/apps/forgejo/app
   dependsOn:
+    - name: openebs-lvm
     - name: envoy-gateway-config
 ---
 # yaml-language-server: $schema=https://k8s-schemas.home-operations.com/kustomize.toolkit.fluxcd.io/kustomization_v1.json
@@ -29,6 +30,7 @@ spec:
   path: ./kubernetes/apps/forgejo/runner
   dependsOn:
     - name: forgejo
+    - name: openebs-lvm
 ---
 # yaml-language-server: $schema=https://k8s-schemas.home-operations.com/kustomize.toolkit.fluxcd.io/kustomization_v1.json
 apiVersion: kustomize.toolkit.fluxcd.io/v1
@@ -45,6 +47,7 @@ spec:
   dependsOn:
     - name: forgejo
     - name: keda
+    - name: openebs-lvm
 ---
 # yaml-language-server: $schema=https://k8s-schemas.home-operations.com/kustomize.toolkit.fluxcd.io/kustomization_v1.json
 apiVersion: kustomize.toolkit.fluxcd.io/v1

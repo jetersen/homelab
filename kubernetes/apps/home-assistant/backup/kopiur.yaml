@@ -37,6 +37,7 @@ spec:
       limits:
         memory: 1Gi
     cache:
+      storageClassName: openebs-lvm-ephemeral
       capacity: 1Gi
       metadataCacheSizeMb: 64
       contentCacheSizeMb: 128
@@ -95,6 +96,7 @@ spec:
       limits:
         memory: 1Gi
     cache:
+      storageClassName: openebs-lvm-ephemeral
       capacity: 1Gi
       metadataCacheSizeMb: 64
       contentCacheSizeMb: 128
@@ -116,7 +118,7 @@ spec:
     hostname: homelab
   sources:
   - pvc:
-      name: home-assistant-backup-exports
+      name: home-assistant-backup-exports-lvm
     sourcePathOverride: /data
   copyMethod: Direct
   defaultDeletionPolicy: Delete
@@ -187,10 +189,10 @@ spec:
               volumes:
               - name: config
                 persistentVolumeClaim:
-                  claimName: home-assistant-pvc
+                  claimName: home-assistant-pvc-lvm
               - name: exports
                 persistentVolumeClaim:
-                  claimName: home-assistant-backup-exports
+                  claimName: home-assistant-backup-exports-lvm
               - name: temporary
                 emptyDir:
                   medium: Memory
@@ -290,6 +292,7 @@ spec:
       limits:
         memory: 1Gi
     cache:
+      storageClassName: openebs-lvm-ephemeral
       capacity: 1Gi
       metadataCacheSizeMb: 64
       contentCacheSizeMb: 128
@@ -348,6 +351,7 @@ spec:
       limits:
         memory: 1Gi
     cache:
+      storageClassName: openebs-lvm-ephemeral
       capacity: 1Gi
       metadataCacheSizeMb: 64
       contentCacheSizeMb: 128
@@ -369,7 +373,7 @@ spec:
     hostname: homelab
   sources:
   - pvc:
-      name: zigbee-backup-exports
+      name: zigbee-backup-exports-lvm
     sourcePathOverride: /data
   copyMethod: Direct
   defaultDeletionPolicy: Delete
@@ -483,7 +487,7 @@ spec:
               volumes:
               - name: exports
                 persistentVolumeClaim:
-                  claimName: zigbee-backup-exports
+                  claimName: zigbee-backup-exports-lvm
               imagePullSecrets:
               - name: homelab-oci-auth
           ttlSecondsAfterFinished: 1200

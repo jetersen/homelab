@@ -73,10 +73,7 @@ spec:
                 port: 9696
     persistence:
       config:
+        existingClaim: prowlarr-lvm
         type: persistentVolumeClaim
-        accessMode: ReadWriteOnce
-        storageClass: local-path
-        size: 5Gi
-        retain: true
         globalMounts:
           - path: /config

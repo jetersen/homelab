@@ -143,11 +143,8 @@ spec:
             port: 8080
     persistence:
       config:
+        existingClaim: qbittorrent-lvm
         type: persistentVolumeClaim
-        accessMode: ReadWriteOnce
-        storageClass: local-path
-        size: 5Gi
-        retain: true
         advancedMounts:
           qbittorrent:
             app:

@@ -3,6 +3,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: home-assistant
 resources:
+- lvm-storage.yaml
 - zigbee-export.yaml
 - home-assistant-secret.sops.yaml
 - home-assistant-nas-secret.sops.yaml

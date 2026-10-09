@@ -39,6 +39,7 @@ spec:
       limits:
         memory: 1Gi
     cache:
+      storageClassName: openebs-lvm-ephemeral
       capacity: 1Gi
       metadataCacheSizeMb: 64
       contentCacheSizeMb: 128
@@ -69,9 +70,15 @@ spec:
   identity:
     username: paperless
     hostname: homelab
+  mover:
+    inheritSecurityContextFrom:
+      pvcConsumer:
+        container: app
   sources:
   - pvc:
-      name: paperless
+      name: paperless-lvm
+    readOnly: false
+    acknowledgeLiveMutation: true
     sourcePathOverride: /storage
   copyMethod: Direct
   defaultDeletionPolicy: Delete

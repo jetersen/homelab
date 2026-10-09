@@ -11,6 +11,7 @@ spec:
   targetNamespace: photoprism
   path: ./kubernetes/apps/photoprism/app
   dependsOn:
+  - name: openebs-lvm
   - name: app-template
   - name: envoy-gateway-config
 ---

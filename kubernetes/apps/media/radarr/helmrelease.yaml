@@ -73,11 +73,8 @@ spec:
                 port: 7878
     persistence:
       config:
+        existingClaim: radarr-lvm
         type: persistentVolumeClaim
-        accessMode: ReadWriteOnce
-        storageClass: local-path
-        size: 5Gi
-        retain: true
         globalMounts:
           - path: /config
       data:

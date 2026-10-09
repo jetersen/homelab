@@ -11,6 +11,7 @@ spec:
   targetNamespace: paperless
   path: ./kubernetes/apps/paperless/app
   dependsOn:
+    - name: openebs-lvm
     - name: app-template
     - name: envoy-gateway-config
 ---

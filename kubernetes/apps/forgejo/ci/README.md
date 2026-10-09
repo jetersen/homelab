@@ -26,9 +26,10 @@ this is not a Forgejo-only hostname restriction. Internal deployment API
 exceptions belong only to the separate deployment/build runner.
 
 Workspaces and temporary files use per-job `emptyDir` volumes. Go build/module
-and NuGet caches share a local-path PVC, including NuGet's scratch directory for
-cross-process locking. This pins workers to the cache's node. Local-path storage
-does not enforce the PVC capacity; monitor disk use. Use a network cache service
+and NuGet caches share an OpenEBS LocalPV LVM thin PVC, including NuGet's scratch
+directory for cross-process locking. This pins workers to the cache's node.
+PVC capacity is enforced and supports expansion; monitor the thin pool's data
+and metadata capacity too. Use a network cache service
 before distributing this pool across nodes.
 
 A cleanup CronJob checks at 03:30 Europe/Copenhagen each day. It clears Go and

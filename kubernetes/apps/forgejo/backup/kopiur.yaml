@@ -40,6 +40,7 @@ spec:
       limits:
         memory: 1Gi
     cache:
+      storageClassName: openebs-lvm-ephemeral
       capacity: 1Gi
       metadataCacheSizeMb: 64
       contentCacheSizeMb: 128
@@ -162,8 +163,7 @@ spec:
                   sizeLimit: 6Gi
               - name: local
                 persistentVolumeClaim:
-                  claimName: forgejo-local
-                  readOnly: true
+                  claimName: forgejo-local-lvm
               - name: nas
                 persistentVolumeClaim:
                   claimName: forgejo-nas

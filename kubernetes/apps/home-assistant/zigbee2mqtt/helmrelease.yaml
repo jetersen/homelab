@@ -65,10 +65,8 @@ spec:
           tcp: { port: 6638, targetPort: 6638, protocol: TCP }
     persistence:
       data:
+        existingClaim: zigbee2mqtt-lvm
         type: persistentVolumeClaim
-        accessMode: ReadWriteOnce
-        size: 10Gi
-        storageClass: local-path
         advancedMounts:
           zigbee2mqtt:
             app:

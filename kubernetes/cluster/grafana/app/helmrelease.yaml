@@ -29,13 +29,13 @@ spec:
         api_url: https://api.github.com/user
         allowed_organizations: jetersen-cloud
         role_attribute_path: "[login=='jetersen'][0] && 'Admin' || 'Viewer'"
-    # Local-path/Talos can reject recursive chown on existing data dirs.
+    # Use the pod fsGroup for ownership of the existing data directory.
     # Rely on pod fsGroup instead of the chart's init-chown-data container.
     initChownData:
       enabled: false
     persistence:
       enabled: true
-      size: 5Gi
+      existingClaim: grafana-lvm
     resources:
       requests:
         cpu: 50m

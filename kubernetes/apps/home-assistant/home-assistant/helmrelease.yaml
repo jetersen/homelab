@@ -63,12 +63,8 @@ spec:
             targetPort: 8123
     persistence:
       config:
+        existingClaim: home-assistant-pvc-lvm
         type: persistentVolumeClaim
-        accessMode: ReadWriteOnce
-        size: 5Gi
-        storageClass: local-path
-        forceRename: home-assistant-pvc
-        retain: true
         advancedMounts:
           home-assistant:
             app:

@@ -12,6 +12,7 @@ spec:
   targetNamespace: monitoring
   path: ./kubernetes/cluster/notifications/app
   dependsOn:
+    - name: openebs-lvm
     - name: app-template
     - name: envoy-gateway-config
   healthChecks:

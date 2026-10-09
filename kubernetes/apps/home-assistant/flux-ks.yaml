@@ -15,6 +15,7 @@ spec:
     labels:
       app.kubernetes.io/name: home-assistant
   dependsOn:
+    - name: openebs-lvm
     - name: mosquitto
     - name: cert-manager-issuers
   path: ./kubernetes/apps/home-assistant/home-assistant
@@ -30,6 +31,8 @@ metadata:
     homelab.jetersen.dev/flux-homelab-source: enabled
     homelab.jetersen.dev/flux-wait: disabled
 spec:
+  dependsOn:
+    - name: openebs-lvm
   targetNamespace: home-assistant
   commonMetadata:
     labels:
@@ -52,6 +55,7 @@ spec:
     labels:
       app.kubernetes.io/name: zigbee2mqtt
   dependsOn:
+    - name: openebs-lvm
     - name: mosquitto
   path: ./kubernetes/apps/home-assistant/zigbee2mqtt
 ---
@@ -68,6 +72,7 @@ metadata:
 spec:
   targetNamespace: home-assistant
   dependsOn:
+  - name: openebs-lvm
   - name: kopiur
   - name: home-assistant
   - name: zigbee2mqtt
