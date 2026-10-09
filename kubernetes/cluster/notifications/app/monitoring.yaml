@@ -17,6 +17,7 @@ spec:
   jobName: notifications
   module: http_2xx
   interval: 30s
+  scrapeTimeout: 10s
   vmProberSpec:
     url: blackbox-exporter.monitoring.svc.cluster.local:9115
   targets:
