@@ -27,7 +27,7 @@ on:
         description: Runner label
         type: choice
         default: oci-build
-        options: [oci-build, runner-kubernetes, runner-rocket]
+        options: [oci-build, runner-rocket]
 enable-openid-connect: true
 concurrency:
   group: publish-images

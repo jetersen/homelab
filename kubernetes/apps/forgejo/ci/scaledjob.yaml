@@ -87,7 +87,6 @@ spec:
                 cpu: 200m
                 memory: 1Gi
               limits:
-                cpu: '1'
                 memory: 3Gi
             volumeMounts:
               - name: binary

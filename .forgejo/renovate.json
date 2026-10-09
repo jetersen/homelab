@@ -25,10 +25,9 @@
     },
     {
       "customType": "regex",
-      "description": "Update the job image used by both Forgejo runners",
+      "description": "Update the job image used by the Rocket Forgejo runner",
       "managerFilePatterns": [
-        "/^infrastructure/forgejo/runner/rocket\\.yaml$/",
-        "/^kubernetes/apps/forgejo/runner/runner\\.yaml$/"
+        "/^infrastructure/forgejo/runner/rocket\\.yaml$/"
       ],
       "matchStrings": [
         "docker://(?<depName>forgejo\\.jetersen\\.dev/jetersen/homelab/runner-job):(?<currentValue>[0-9]+\\.[0-9]+\\.[0-9]+)@(?<currentDigest>sha256:[a-f0-9]+)"

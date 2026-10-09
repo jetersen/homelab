@@ -15,7 +15,7 @@ Workflows run directly inside the worker container using the `host` executor.
 They have no Docker socket, privileged mode, or Kubernetes service-account token.
 This pool is for trusted repository checks; its processes can read the shared
 runner credential and dependency caches. Keep deployment and image-build jobs
-on their existing runner labels.
+on `oci-build`, provided by the Rocket Docker runner.
 
 The [network policy](networkpolicy.yaml) restricts worker traffic. Its shared
 Envoy exception also allows access to other applications on that listener;
@@ -36,5 +36,7 @@ workers can finish. Builds refill the caches afterward.
 
 The KEDA release is reconciled before this pool. To stop new workers while
 allowing active jobs to finish, set `autoscaling.keda.sh/paused: "true"` on the
-ScaledJob through GitOps. To move checks back, change their `runs-on` label to
-`runner-kubernetes`; keep the cache PVC for reuse.
+ScaledJob through GitOps. Go checks and style checks use `ci-kubernetes`. Deployment and image-build
+workflows use `oci-build`; `runner-rocket` remains available for explicit Docker
+runner selection. Preserve cache PVCs when removing worker workloads until
+data disposal is separately authorized.
