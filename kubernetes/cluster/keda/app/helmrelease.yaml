@@ -10,17 +10,14 @@ spec:
     name: keda
   values:
     watchNamespace: forgejo-runners
+    # ScaledJobs are scaled by the operator without the external metrics API.
+    metricsServer:
+      enabled: false
+      registerAPIService: false
     rbac:
       enabledCustomScaledRefKinds: false
     resources:
       operator:
-        requests:
-          cpu: 50m
-          memory: 100Mi
-        limits:
-          cpu: '1'
-          memory: 512Mi
-      metricServer:
         requests:
           cpu: 50m
           memory: 100Mi
