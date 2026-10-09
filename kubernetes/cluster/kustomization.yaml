@@ -15,7 +15,6 @@ resources:
   - intel-gpu-plugin/flux-ks.yaml
   - keda/flux-ks.yaml
   - kopiur/flux-ks.yaml
-  - local-path-provisioner/flux-ks.yaml
   - openebs-lvm/flux-ks.yaml
   - kromgo/flux-ks.yaml
   - metrics-server/flux-ks.yaml

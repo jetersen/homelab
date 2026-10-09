@@ -15,8 +15,8 @@ as a physical volume.
 The application classes use `WaitForFirstConsumer`, support expansion and retain
 volumes after PVC deletion. Use `openebs-lvm-ephemeral` for temporary backup job
 caches so completed jobs release their storage. Retained volumes require explicit
-cleanup. These classes
-provides disk redundancy. Keep application-consistent backups outside the node.
+cleanup. These classes do not
+provide disk redundancy. Keep application-consistent backups outside the node.
 CSI snapshot components are disabled.
 
 `shared: "yes"` permits multiple pods to mount a volume on the same node,

@@ -6,7 +6,7 @@ machine:
       - name: dm_thin_pool
 ---
 # yaml-language-server: $schema=https://k8s-schemas.home-operations.com/external/siderolabs/talos/config.schema.json
-# Allocate only unused space; retain the Talos and local-path partitions.
+# Allocate only unused space; preserve the Talos system partitions.
 apiVersion: v1alpha1
 kind: RawVolumeConfig
 name: localpv-thick

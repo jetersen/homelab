@@ -40,11 +40,3 @@ provisioning:
   diskSelector:
     match: disk.transport == "nvme"
   maxSize: 100GiB
----
-apiVersion: v1alpha1
-kind: UserVolumeConfig
-name: local-path-provisioner
-provisioning:
-  diskSelector:
-    match: disk.transport == "nvme"
-  maxSize: 1500GiB
