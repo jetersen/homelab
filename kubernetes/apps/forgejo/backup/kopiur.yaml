@@ -41,7 +41,8 @@ spec:
         memory: 1Gi
     cache:
       storageClassName: openebs-lvm-ephemeral
-      capacity: 1Gi
+      # Kopia cache budgets are soft limits; verification needs burst headroom.
+      capacity: 4Gi
       metadataCacheSizeMb: 64
       contentCacheSizeMb: 128
     ttlSecondsAfterFinished: 1200
