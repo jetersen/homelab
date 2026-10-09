@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   csharp:
-    runs-on: linux-host
+    runs-on: linux-docker
     timeout-minutes: 10
     steps:
       - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

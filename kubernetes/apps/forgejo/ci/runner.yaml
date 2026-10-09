@@ -2,20 +2,20 @@ log:
   level: info
 runner:
   capacity: 1
-  timeout: 12m
+  timeout: 45m
   shutdown_timeout: 1m
   labels:
-    - linux-host:host
+    - linux-docker:docker://forgejo.jetersen.dev/jetersen/homelab/runner-job:0.3.0@sha256:fe6cbc1e84f52d08c41b68d21d5eabcfeed9292c282ff19955a9b4aa7dd05a14
   envs:
-    GOCACHE: /cache/go/build
-    GOMODCACHE: /cache/go/mod
-    NUGET_PACKAGES: /cache/nuget/packages
-    NUGET_HTTP_CACHE_PATH: /cache/nuget/http
-    NUGET_SCRATCH: /cache/nuget/scratch
-    DOTNET_CLI_HOME: /data/dotnet
-    NPM_CONFIG_CACHE: /data/npm
-    XDG_CACHE_HOME: /data/cache
+    DOCKER_HOST: tcp://docker:2375
 cache:
   enabled: false
+container:
+  docker_host: tcp://127.0.0.1:2375
+  options: --add-host=docker:host-gateway --dns-option=ndots:1 --dns-search=.
+  privileged: false
+  valid_volumes: []
+  force_pull: true
+# Docker execution still stages action sources in the runner's writable directory.
 host:
   workdir_parent: /data/workspace

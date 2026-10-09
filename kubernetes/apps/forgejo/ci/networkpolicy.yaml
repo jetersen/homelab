@@ -32,6 +32,29 @@ spec:
               gateway.envoyproxy.io/owning-gateway-name: envoy-proxy
       ports:
         - {port: 10443, protocol: TCP}
+    # Deployment APIs on the NAS and UniFi gateway.
+    - to:
+        - ipBlock:
+            cidr: 192.168.1.2/32
+        - ipBlock:
+            cidr: 192.168.1.1/32
+        - ipBlock:
+            cidr: fde2:b84e:c4cd:1::53/128
+        - ipBlock:
+            cidr: 2a13:e747:b7be:9100::513/128
+      ports:
+        - {port: 443, protocol: TCP}
+    # DNSControl uses authenticated DNS updates and zone transfers.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: technitium
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: technitium
+      ports:
+        - {port: 53, protocol: UDP}
+        - {port: 53, protocol: TCP}
     # Public package registries, source repositories, and image registries.
     - to:
         - ipBlock:

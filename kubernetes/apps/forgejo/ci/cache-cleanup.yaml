@@ -4,6 +4,7 @@ kind: CronJob
 metadata:
   name: forgejo-ci-cache-cleanup
 spec:
+  suspend: true
   schedule: '30 3 * * *'
   timeZone: Europe/Copenhagen
   concurrencyPolicy: Forbid

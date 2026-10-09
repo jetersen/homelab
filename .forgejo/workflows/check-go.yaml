@@ -11,8 +11,8 @@ on:
       runner:
         description: Runner label
         type: choice
-        default: linux-host
-        options: [linux-host, linux-docker, runner-rocket]
+        default: linux-docker
+        options: [linux-docker, runner-rocket]
 concurrency:
   group: check-go
   cancel-in-progress: false
@@ -20,7 +20,7 @@ jobs:
   check:
     name: Go tests and vet
     if: forgejo.ref == 'refs/heads/main'
-    runs-on: ${{ inputs.runner || 'linux-host' }}
+    runs-on: ${{ inputs.runner || 'linux-docker' }}
     timeout-minutes: 10
     steps:
       - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

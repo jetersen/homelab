@@ -1,43 +1,39 @@
 # Forgejo CI workers
 
-KEDA starts disposable workers for repository checks using `linux-host`.
-Each worker runs `forgejo-runner one-job` in the bundled tool image. The
-[ScaledJob](scaledjob.yaml) defines polling, concurrency, job lifetime, and rollout
-behavior; [runner.yaml](runner.yaml) defines the executor and cache paths.
+KEDA starts disposable Docker workers for `linux-docker` jobs. Rocket accepts the
+same label, so workflows can run on either pool; `runner-rocket` selects Rocket
+explicitly. The [ScaledJob](scaledjob.yaml) defines polling, concurrency, job
+lifetime, and rollout behavior; [runner.yaml](runner.yaml) defines the executor.
 
 The pool uses a persistent repository-scoped runner registration shared by the
-one-job processes. The worker pods are disposable; the registration is not an
-ephemeral Forgejo registration. Keep registration and the scaler's read-only
-repository API token in the SOPS-encrypted Secret. Only the runner credentials
-are mounted in workers. The scaler credential stays with KEDA.
+one-job processes. Keep registration and the scaler's read-only repository API
+token in the SOPS-encrypted Secret. Only runner credentials are mounted in
+workers. The scaler credential stays with KEDA.
 
-Workflows run directly inside the worker container using the `host` executor.
-They have no Docker socket, privileged mode, or Kubernetes service-account token.
-This pool is for trusted repository checks; its processes can read the shared
-runner credential and dependency caches. Keep deployment and image-build jobs
-on `linux-docker`, provided by the Rocket Docker runner. Both pools use the same tool image;
-`linux-docker` adds Docker execution and deployment API access.
+Each worker has a privileged Docker-in-Docker restartable init sidecar. Workflow
+containers run without privileged mode, host sockets, or Kubernetes
+service-account tokens. Docker actions, services, image builds, and job container
+overrides use the worker's isolated daemon. This pool is for trusted repository
+workflows: Docker access can control that daemon and its containers.
 
-The [network policy](networkpolicy.yaml) restricts worker traffic. Its shared
-Envoy exception also allows access to other applications on that listener;
-it cannot distinguish HTTPS hostnames. Internal deployment API exceptions belong
-only to the separate deployment/build runner.
+The [network policy](networkpolicy.yaml) allows DNS, public package and image
+registries, the shared Envoy listener, and the internal deployment endpoints.
+The Envoy exception cannot distinguish HTTPS hostnames. Nested containers use
+cluster DNS; `docker` resolves to their daemon gateway for Docker CLI access.
 
-Workspaces and temporary files use per-job `emptyDir` volumes. Go build/module
-and NuGet caches share an OpenEBS LocalPV LVM thin PVC, including NuGet's scratch
-directory for cross-process locking. This pins workers to the cache's node.
-PVC capacity is enforced and supports expansion; monitor the thin pool's data
-and metadata capacity too. Use a network cache service
-before distributing this pool across nodes.
+Docker workspaces and image layers use a per-worker generic ephemeral PVC from
+`openebs-lvm-ephemeral`. Kubernetes deletes its PVC with the worker Pod, and the
+storage class deletes its volume. Workers bind to a node with that local thin
+pool. Monitor thin-pool data and metadata capacity as well as each PVC's capacity.
+The daemon puts nested containers under its own cgroup so its memory limit covers
+the entire job. The Docker sidecar stops automatically after the one-job runner
+exits.
 
-The [cleanup CronJob](cache-cleanup.yaml) runs the
-[cache cleanup script](cache-cleanup.sh), which defines the retention interval.
-Cleanup preserves the PVC and uses an exclusive filesystem lock so active
-workers can finish. Builds refill the caches afterward.
+The previous shared language and Docker cache PVCs remain in [storage.yaml](storage.yaml).
+Workers do not mount them, and the [cleanup CronJob](cache-cleanup.yaml) is
+suspended. Preserve those PVCs until data disposal is separately authorized.
+New workers download dependencies and images into their isolated store.
 
 The KEDA release is reconciled before this pool. To stop new workers while
 allowing active jobs to finish, set `autoscaling.keda.sh/paused: "true"` on the
-ScaledJob through GitOps. Go checks and style checks use `linux-host`.
-Deployment and image-build workflows use `linux-docker`; `runner-rocket` remains
-available for explicit Docker runner selection. Preserve cache PVCs when
-removing worker workloads until data disposal is separately authorized.
+ScaledJob through GitOps.

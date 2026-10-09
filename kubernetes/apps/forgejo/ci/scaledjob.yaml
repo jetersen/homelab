@@ -29,7 +29,7 @@ spec:
     strategy: gradual
   jobTargetRef:
     backoffLimit: 0
-    activeDeadlineSeconds: 900
+    activeDeadlineSeconds: 3600
     ttlSecondsAfterFinished: 300
     template:
       metadata:
@@ -67,14 +67,50 @@ spec:
             volumeMounts:
               - name: binary
                 mountPath: /runner
+          # Restartable init sidecar stops automatically when the one-job runner exits.
+          - name: docker
+            image: docker.io/library/docker:29.8.2-dind@sha256:1e08cdb63405ca788aea94ef35b792d1e299607c667d33d7bcbcae1fd2611ced
+            restartPolicy: Always
+            command: [/bin/sh, -ec]
+            args:
+              - |
+                parent=$(awk -F: '$1 == "0" {print $3}' /proc/self/cgroup)
+                test -n "$parent" && test "$parent" != /
+                exec dockerd-entrypoint.sh --tls=false --storage-driver=overlay2 --dns=172.23.0.10 --cgroup-parent="$parent"
+            env:
+              - name: DOCKER_TLS_CERTDIR
+                value: ''
+            securityContext:
+              runAsUser: 0
+              runAsGroup: 0
+              runAsNonRoot: false
+              privileged: true
+            startupProbe:
+              exec:
+                command: [docker, --host=tcp://127.0.0.1:2375, info]
+              periodSeconds: 2
+              failureThreshold: 60
+            resources:
+              requests:
+                cpu: 50m
+                memory: 512Mi
+              limits:
+                memory: 6Gi
+            volumeMounts:
+              - name: docker-data
+                mountPath: /var/lib/docker
         containers:
           - name: runner
             image: forgejo.jetersen.dev/jetersen/homelab/runner-job:0.3.0@sha256:fe6cbc1e84f52d08c41b68d21d5eabcfeed9292c282ff19955a9b4aa7dd05a14
             command: [/bin/bash, -ec]
             args:
-              - exec flock --shared --no-fork /cache/.cleanup.lock /runner/forgejo-runner --config /config/runner.yaml one-job --url https://forgejo.jetersen.dev --uuid "$(cat /registration/uuid)" --token-url file:/registration/token
+              - exec /runner/forgejo-runner --config /config/runner.yaml one-job --url https://forgejo.jetersen.dev --uuid "$(cat /registration/uuid)" --token-url file:/registration/token
             workingDir: /data
             env:
+              - name: HOME
+                value: /data
+              - name: DOCKER_CONFIG
+                value: /data/docker
               - name: XDG_CACHE_HOME
                 value: /data/cache
             securityContext:
@@ -85,9 +121,9 @@ spec:
             resources:
               requests:
                 cpu: 200m
-                memory: 1Gi
+                memory: 128Mi
               limits:
-                memory: 3Gi
+                memory: 512Mi
             volumeMounts:
               - name: binary
                 mountPath: /runner
@@ -102,8 +138,6 @@ spec:
                 mountPath: /data
               - name: tmp
                 mountPath: /tmp
-              - name: cache
-                mountPath: /cache
         volumes:
           - name: binary
             emptyDir: {}
@@ -123,15 +157,21 @@ spec:
                   path: uuid
                 - key: runner-token
                   path: token
-          - name: cache
-            persistentVolumeClaim:
-              claimName: forgejo-ci-cache-lvm
+          - name: docker-data
+            ephemeral:
+              volumeClaimTemplate:
+                spec:
+                  accessModes: [ReadWriteOnce]
+                  storageClassName: openebs-lvm-ephemeral
+                  resources:
+                    requests:
+                      storage: 20Gi
   triggers:
     - type: forgejo-runner
       metadata:
         address: https://forgejo.jetersen.dev
         owner: jetersen
         repo: homelab
-        labels: linux-host
+        labels: linux-docker
       authenticationRef:
         name: forgejo-ci
