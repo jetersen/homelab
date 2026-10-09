@@ -26,8 +26,8 @@ on:
       runner:
         description: Runner label
         type: choice
-        default: oci-build
-        options: [oci-build, runner-rocket]
+        default: linux-docker
+        options: [linux-docker, runner-rocket]
 enable-openid-connect: true
 concurrency:
   group: publish-images
@@ -35,7 +35,7 @@ concurrency:
 jobs:
   publish:
     if: forgejo.ref == 'refs/heads/main'
-    runs-on: ${{ inputs.runner || 'oci-build' }}
+    runs-on: ${{ inputs.runner || 'linux-docker' }}
     timeout-minutes: 20
     steps:
       - name: Authenticate release tags

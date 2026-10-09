@@ -5,7 +5,7 @@ runner:
   timeout: 12m
   shutdown_timeout: 1m
   labels:
-    - ci-kubernetes:host
+    - linux-host:host
   envs:
     GOCACHE: /cache/go/build
     GOMODCACHE: /cache/go/mod

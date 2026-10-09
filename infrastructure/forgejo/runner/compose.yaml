@@ -15,7 +15,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12
-    mem_limit: 8g
+    mem_limit: 16g
+    memswap_limit: 24g
   runner:
     image: data.forgejo.org/forgejo/runner:13@sha256:ca3d5eea46004789a175d1369eec6829d3ea9bfbe2011a06625b4bdaa55f7552
     restart: unless-stopped

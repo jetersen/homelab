@@ -132,6 +132,6 @@ spec:
         address: https://forgejo.jetersen.dev
         owner: jetersen
         repo: homelab
-        labels: ci-kubernetes
+        labels: linux-host
       authenticationRef:
         name: forgejo-ci
