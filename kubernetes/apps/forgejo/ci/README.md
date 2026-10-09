@@ -29,9 +29,6 @@ The daemon puts nested containers under its own cgroup so its memory limit cover
 the entire job. The Docker sidecar stops automatically after the one-job runner
 exits.
 
-The previous shared language and Docker cache PVCs remain in [storage.yaml](storage.yaml).
-Workers do not mount them, and the [cleanup CronJob](cache-cleanup.yaml) is
-suspended. Preserve those PVCs until data disposal is separately authorized.
 New workers download dependencies and images into their isolated store.
 
 The KEDA release is reconciled before this pool. To stop new workers while
