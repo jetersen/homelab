@@ -36,21 +36,21 @@ spec:
       annotations:
         summary: Kopiur maintenance failed for {{ $labels.namespace }}/{{ $labels.name }}
     - alert: BackupMaintenanceStale
-      expr: '(time() - homelab_kopiur_maintenance_full_last_success_timestamp_seconds > 172800)
+      expr: '(time() - homelab_kopiur_maintenance_full_last_success_timestamp_seconds > 777600)
 
-        and on (namespace, name) (time() - homelab_kopiur_maintenance_created > 172800)'
+        and on (namespace, name) (time() - homelab_kopiur_maintenance_created > 777600)'
       for: 5m
       labels:
         severity: warning
       annotations:
         summary: No recent full Kopiur maintenance for {{ $labels.namespace }}/{{ $labels.name }}
     - alert: BackupReplicationStale
-      expr: time() - homelab_kopiur_replication_last_success_timestamp_seconds > 7200
+      expr: time() - homelab_kopiur_replication_last_success_timestamp_seconds > 108000
       for: 5m
       labels:
         severity: warning
       annotations:
-        summary: No successful offsite replication within two hours for {{ $labels.namespace }}/{{ $labels.name }}
+        summary: No successful offsite replication within 30 hours for {{ $labels.namespace }}/{{ $labels.name }}
     - alert: BackupMonitoringMissing
       expr: |
         absent(homelab_kopiur_schedule_created{namespace="home-assistant",name="home-assistant-backup"})
