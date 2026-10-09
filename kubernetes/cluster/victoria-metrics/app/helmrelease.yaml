@@ -10,14 +10,23 @@ spec:
     kind: OCIRepository
     name: victoria-metrics-k8s-stack
   values:
+    syncJob:
+      resources:
+        requests:
+          cpu: 10m
     fullnameOverride: vm
     defaultRules:
       rules:
-        # CPU quota throttling is expected on this small node; alert on service impact.
+        # Workloads omit CPU limits; alert on service impact instead of quota throttling.
         CPUThrottlingHigh:
           enabled: false
         # etcd's basic metrics mode does not publish the gRPC latency histogram.
         etcdGRPCRequestsSlow:
+          enabled: false
+        # Local disk rules lower warnings and retain the critical fsync threshold.
+        etcdHighFsyncDurations:
+          enabled: false
+        etcdHighCommitDurations:
           enabled: false
         # Reloaders have a separate warning; keep main-service outages critical.
         ServiceDown:
@@ -29,6 +38,12 @@ spec:
             expr: count(up == 0) without(instance,pod,node) or vector(0)
     alertmanager:
       spec:
+        resources:
+          requests:
+            cpu: 5m
+            memory: 56Mi
+          limits:
+            memory: 256Mi
         secrets:
           - chaski-alertmanager-auth
       config:
@@ -92,10 +107,15 @@ spec:
             cpu: 50m
             memory: 256Mi
           limits:
-            cpu: 500m
             memory: 2Gi
     vmalert:
       spec:
+        resources:
+          requests:
+            cpu: 15m
+            memory: 200Mi
+          limits:
+            memory: 500Mi
         extraArgs:
           external.url: https://grafana.jetersen.dev
           external.alert.source: 'explore?orgId=1&left={"datasource":"P4169E866C3094E38","queries":[{"refId":"A","expr":"{{`{{.Expr|queryEscape}}`}}"}]}'
@@ -150,6 +170,18 @@ spec:
       spec:
         selectAllByDefault: true
         scrapeInterval: 30s
+        # Remove this filter to re-enable optional diagnostic series for future samples.
+        # Histogram sums/counts, queue latency, and OOM signals remain available.
+        inlineRelabelConfig:
+          - action: drop
+            source_labels: [__name__]
+            regex: '(container_tasks_state|container_memory_failures_total|container_file_descriptors|container_sockets|container_threads|container_threads_max|container_ulimits_soft|workqueue_work_duration_seconds_bucket|scheduler_plugin_execution_duration_seconds_bucket)'
+        resources:
+          requests:
+            cpu: 50m
+            memory: 200Mi
+          limits:
+            memory: 500Mi
     kubelet:
       vmScrapes:
         # cAdvisor supplies the container CPU and memory metrics used by our rules.
@@ -166,7 +198,25 @@ spec:
                 regex: 'prober_probe_duration_seconds_(bucket|sum|count)'
     victoria-metrics-operator:
       enabled: true
+      crds:
+        cleanup:
+          resources:
+            limits:
+              cpu: null
+      resources:
+        requests:
+          cpu: 20m
+          memory: 128Mi
+    prometheus-node-exporter:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 48Mi
     kube-state-metrics:
+      resources:
+        requests:
+          cpu: 10m
+          memory: 128Mi
       vmScrape:
         spec:
           endpoints:

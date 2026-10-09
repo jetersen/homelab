@@ -25,22 +25,33 @@ spec:
         summary: Service probe failed for {{ $labels.instance }}
         description: The {{ $labels.job }} probe has failed continuously for five
           minutes.
+    # Keep expected target counts aligned with probes.yaml and notifications' VMProbe.
     - alert: ServiceProbeMetricsMissing
       expr: |
-        up{job=~"application-http|nas-mqtt-tcp|technitium-dns|dns-recursion-udp|dns-recursion-tcp|gateway-https"} == 0
+        up{job=~"application-http|nas-mqtt-tcp|technitium-dns|dns-recursion-udp|dns-recursion-tcp|gateway-https|notifications"} == 0
+        or (up{job=~"application-http|nas-mqtt-tcp|technitium-dns|dns-recursion-udp|dns-recursion-tcp|gateway-https|notifications"}
+          unless on(job, instance) probe_success)
+        or count by(job) (up{job="application-http"}) < 11
+        or count by(job) (up{job="nas-mqtt-tcp"}) < 3
+        or count by(job) (up{job="technitium-dns"}) < 4
+        or count by(job) (up{job="dns-recursion-udp"}) < 3
+        or count by(job) (up{job="dns-recursion-tcp"}) < 3
+        or count by(job) (up{job="gateway-https"}) < 3
+        or count by(job) (up{job="notifications"}) < 2
         or absent(up{job="application-http"})
         or absent(up{job="nas-mqtt-tcp"})
         or absent(up{job="technitium-dns"})
         or absent(up{job="dns-recursion-udp"})
         or absent(up{job="dns-recursion-tcp"})
         or absent(up{job="gateway-https"})
+        or absent(up{job="notifications"})
       for: 5m
       labels:
         severity: warning
       annotations:
         summary: Probe metrics unavailable for {{ $labels.job }}
         description: The blackbox exporter could not supply probe metrics for this
-          configured target.
+          configured job or target. Check its scrape and expected probe targets.
     - alert: EnvoyConfigurationRejected
       expr: increase(envoy_listener_manager_lds_update_rejected[5m]) > 0
       for: 0m
@@ -96,3 +107,45 @@ spec:
         summary: Certificate {{ $labels.name }} expires within seven days
         description: Inspect cert-manager renewal and DNS validation before this certificate
           expires.
+    # Expected Certificates include the Kopiur chart's generated webhook Certificate.
+    - alert: CertificateMetricsMissing
+      expr: |
+        absent_over_time(certmanager_certificate_expiration_timestamp_seconds{name="glkvm",exported_namespace="home-assistant"}[15m])
+        or absent_over_time(certmanager_certificate_expiration_timestamp_seconds{name="jetersen-dev",exported_namespace="kube-system"}[15m])
+        or absent_over_time(certmanager_certificate_expiration_timestamp_seconds{name="kopiur-webhook",exported_namespace="kopiur-system"}[15m])
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: Certificate expiry metrics are missing for {{ $labels.exported_namespace }}/{{ $labels.name }}
+        description: No expiry metric was collected for this expected certificate
+          in fifteen minutes, allowing for the five-minute certificate scrape.
+          Check the Certificate resource and cert-manager metrics scrape.
+  - name: homelab.etcd-disk
+    rules:
+    # Local warnings follow https://etcd.io/docs/v3.6/faq/ disk-latency guidance.
+    # Retain the upstream critical fsync threshold while replacing its warning.
+    - alert: etcdHighFsyncDurations
+      expr: histogram_quantile(0.99, rate(etcd_disk_wal_fsync_duration_seconds_bucket{job=~".*etcd.*"}[5m])) > 0.01
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: etcd cluster 99th percentile fsync durations are too high.
+        description: 'etcd cluster "{{ $labels.job }}": 99th percentile fsync durations are {{ $value }}s on etcd instance {{ $labels.instance }}.'
+    - alert: etcdHighFsyncDurations
+      expr: histogram_quantile(0.99, rate(etcd_disk_wal_fsync_duration_seconds_bucket{job=~".*etcd.*"}[5m])) > 1
+      for: 10m
+      labels:
+        severity: critical
+      annotations:
+        summary: etcd cluster 99th percentile fsync durations are too high.
+        description: 'etcd cluster "{{ $labels.job }}": 99th percentile fsync durations are {{ $value }}s on etcd instance {{ $labels.instance }}.'
+    - alert: etcdHighCommitDurations
+      expr: histogram_quantile(0.99, rate(etcd_disk_backend_commit_duration_seconds_bucket{job=~".*etcd.*"}[5m])) > 0.025
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: etcd cluster 99th percentile commit durations are too high.
+        description: 'etcd cluster "{{ $labels.job }}": 99th percentile commit durations {{ $value }}s on etcd instance {{ $labels.instance }}.'

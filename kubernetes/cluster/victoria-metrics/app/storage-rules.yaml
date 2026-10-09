@@ -52,10 +52,17 @@ spec:
         - alert: LVMMetricsMissing
           expr: |
             kube_daemonset_status_desired_number_scheduled{namespace="openebs",daemonset="openebs-lvm-node"} > 0
-            unless on() lvm_vg_total_size_bytes{name="localpv-thick"}
+            unless on() (
+              lvm_vg_total_size_bytes{name="localpv-thick"}
+              and on() lvm_vg_free_size_bytes{name="localpv-thick"}
+              and on() lvm_vg_total_size_bytes{name="localpv-thin"}
+              and on() lvm_vg_free_size_bytes{name="localpv-thin"}
+              and on() lvm_lv_used_percent{vg="localpv-thin",name="localpv-thin_thinpool",segtype="thin-pool"}
+              and on() lvm_lv_mda_used_percent{vg="localpv-thin",name="localpv-thin_thinpool",segtype="thin-pool"}
+            )
           for: 10m
           labels:
             severity: warning
           annotations:
             summary: OpenEBS LVM capacity metrics are missing
-            description: Check the CSI node agent and its metrics scrape. Thin-pool capacity cannot be monitored.
+            description: Check the CSI node agent and its metrics scrape. Required total/free capacity for both volume groups or thin-pool data/metadata usage metrics are absent.
