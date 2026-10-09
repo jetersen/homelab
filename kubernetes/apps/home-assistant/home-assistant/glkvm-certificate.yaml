@@ -1,0 +1,17 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/cert-manager.io/certificate_v1.json
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: glkvm
+spec:
+  secretName: glkvm-tls
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  dnsNames:
+    - glkvm.jetersen.dev
+  privateKey:
+    algorithm: RSA
+    size: 2048
+    rotationPolicy: Always

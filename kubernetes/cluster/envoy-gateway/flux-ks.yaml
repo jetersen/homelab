@@ -29,6 +29,7 @@ metadata:
 spec:
   dependsOn:
     - name: envoy-gateway
+    - name: cert-manager-issuers
   targetNamespace: kube-system
   commonMetadata:
     labels:

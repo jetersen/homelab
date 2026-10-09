@@ -1,0 +1,19 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/cert-manager.io/certificate_v1.json
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: jetersen-dev
+spec:
+  secretName: gateway-production-tls
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  dnsNames:
+    - "*.jetersen.dev"
+    - lan.jetersen.dev
+    - "*.lan.jetersen.dev"
+  privateKey:
+    algorithm: ECDSA
+    # Envoy's QUIC listener requires the P-256 curve.
+    size: 256
