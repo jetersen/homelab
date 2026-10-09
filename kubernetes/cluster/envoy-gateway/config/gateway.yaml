@@ -5,7 +5,7 @@ kind: Gateway
 metadata:
   name: envoy-proxy
   annotations:
-    towonel.io/gateway-service: kube-system/envoy-proxy:443
+    towonel.io/gateway-service: kube-system/towonel-public:443
 spec:
   gatewayClassName: envoy-proxy
   infrastructure:
@@ -70,6 +70,24 @@ spec:
           selector:
             matchLabels:
               kubernetes.io/metadata.name: media
+      tls:
+        certificateRefs:
+          - kind: Secret
+            name: gateway-production-tls
+            namespace: kube-system
+    # Public routes use a dedicated listener.
+    - name: towonel-public
+      hostname: webhook.jetersen.dev
+      protocol: HTTPS
+      port: 8444
+      allowedRoutes:
+        kinds:
+          - kind: HTTPRoute
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              kubernetes.io/metadata.name: flux-system
       tls:
         certificateRefs:
           - kind: Secret

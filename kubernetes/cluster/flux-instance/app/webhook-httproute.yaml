@@ -14,7 +14,7 @@ spec:
   parentRefs:
     - name: envoy-proxy
       namespace: kube-system
-      sectionName: https
+      sectionName: towonel-public
   rules:
     - matches:
         - path:
