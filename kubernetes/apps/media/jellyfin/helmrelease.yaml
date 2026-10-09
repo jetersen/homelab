@@ -27,7 +27,7 @@ spec:
           app:
             image:
               repository: docker.io/jellyfin/jellyfin
-              tag: 12.1@sha256:78d3ea1207d1322471fcac39a614f004f2ccf7e878f95ab2977d752f07e4dd7e
+              tag: 12.2@sha256:357724bf0ae27a672c7cbaa899db2d9abeb13dbd8657ccce750258a4c059d037
             env:
               TZ: Europe/Copenhagen
               JELLYFIN_PublishedServerUrl: https://jellyfin.jetersen.dev
@@ -59,6 +59,31 @@ spec:
               limits:
                 memory: 4Gi
                 gpu.intel.com/i915: 1
+        initContainers:
+          transcodes:
+            image:
+              repository: docker.io/library/busybox
+              tag: 1.38.0@sha256:fd7dc98638c8e305f4dc34e979f1c0fdfdcaeb0fbf8fcff77ae834b6da3d7e6e
+            command:
+              - sh
+              - -ec
+              - |
+                mkdir -p /nas/.cache/jellyfin/transcodes
+                test -w /nas/.cache/jellyfin/transcodes
+            securityContext:
+              allowPrivilegeEscalation: false
+              runAsUser: 568
+              runAsGroup: 568
+              runAsNonRoot: true
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop: [ALL]
+            resources:
+              requests:
+                cpu: 10m
+                memory: 16Mi
+              limits:
+                memory: 64Mi
     service:
       app:
         controller: jellyfin
@@ -80,8 +105,10 @@ spec:
       config:
         existingClaim: jellyfin-config-lvm
         type: persistentVolumeClaim
-        globalMounts:
-          - path: /config
+        advancedMounts:
+          jellyfin:
+            app:
+              - path: /config
       data:
         type: persistentVolumeClaim
         existingClaim: media-data
@@ -91,8 +118,15 @@ spec:
               - path: /data/media
                 subPath: media
                 readOnly: true
+              # Keep Jellyfin's default transcode path, backed by dedicated NAS scratch space.
+              - path: /cache/transcodes
+                subPath: .cache/jellyfin/transcodes
+            transcodes:
+              - path: /nas
       cache:
         existingClaim: jellyfin-cache-lvm
         type: persistentVolumeClaim
-        globalMounts:
-          - path: /cache
+        advancedMounts:
+          jellyfin:
+            app:
+              - path: /cache
