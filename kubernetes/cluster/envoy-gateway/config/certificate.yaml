@@ -11,7 +11,6 @@ spec:
     kind: ClusterIssuer
   dnsNames:
     - "*.jetersen.dev"
-    - lan.jetersen.dev
     - "*.lan.jetersen.dev"
   privateKey:
     algorithm: ECDSA
