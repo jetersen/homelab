@@ -27,8 +27,8 @@ manual merge because upgrades can change the database schema.
 
 SQLite and its WAL stay on the local PVC. Repositories, LFS objects, attachments,
 packages, and Actions data live on the NAS. Both stores are required for recovery.
-Local-path storage has no enforced capacity quota; monitor node disk space and
-NAS usage before importing large repositories.
+The [local PVC](app/lvm-storage.yaml) uses thick LocalPV LVM with enforced
+capacity. Monitor PVC capacity and NAS usage before importing large repositories.
 
 ## Backup and recovery
 

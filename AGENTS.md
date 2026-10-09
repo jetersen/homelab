@@ -23,6 +23,8 @@
 ## Documentation and operational records
 
 - Keep live operational audits, inventory, credential-rotation records, backup locations, recovery artifacts, and incident details in protected private local storage outside the repository. Public documentation, including `AGENTS.md`, should contain only durable procedures and reusable rules.
+- Keep READMEs focused on purpose, setup, and non-obvious constraints. Link to code or manifests for exact settings instead of restating them. Preserve essential recovery requirements and design rationale, but keep session reasoning, progress, validation results, personal workflows, and migration status in the conversation or private records.
+- Check documentation claims against current sources. Describe configured behavior without implying verified live operation, security, or recoverability. Update existing guidance rather than appending a task summary.
 
 ## Talos
 

@@ -1,8 +1,7 @@
 # Monitoring retention
 
-VictoriaMetrics and VictoriaLogs retain data for one year. Configure metric
-retention in `app/helmrelease.yaml` and log retention in
-`../victoria-logs/app/helmrelease.yaml`.
+Configure retention in the [VictoriaMetrics values](app/helmrelease.yaml) and
+[VictoriaLogs values](../victoria-logs/app/helmrelease.yaml).
 
 The OSS metrics instance keeps the original sample resolution until expiry.
 Compression and background compaction do not progressively reduce resolution.
@@ -20,15 +19,10 @@ Increasing retention preserves future history; it does not restore expired data.
 Live queries use local storage. An object-storage backup must be restored before
 it can be queried. Remote hosting or replication is a separate deployment choice.
 
-Operational metrics and kubelet probe counters use a 30-second scrape interval.
-Selected kube-state-metrics creation timestamps and EndpointSlice inventory use
-separate two-minute scrapes; readiness and metadata joins keep the faster cadence.
-Certificate expiry and renewal timestamps use five-minute scrapes, with a
-15-minute lookback in the expiry alert. Slow scrapes have distinct jobs and their
-metrics are excluded from the fast scrapes.
-
-HTTP, TCP, DNS, and gateway blackbox probes run every 30 seconds, with a
-10-second scrape timeout and five-second module timeout. Grafana's datasource
-scrape interval is 30 seconds so its automatic rate windows match collection.
-API SLI histogram buckets and total-latency sums/counts remain available; unused
-total-request histogram buckets are excluded.
+Scrape intervals and metric filters live in the
+[metrics values](app/helmrelease.yaml), [infrastructure scrapes](app/infrastructure-scrapes.yaml),
+and [probe configuration](app/probes.yaml). Keep Grafana's
+[datasource interval](../grafana/app/helmrelease.yaml) aligned with collection.
+When slowing a scrape, adjust alert lookbacks and avoid collecting the same
+series in both fast and slow jobs. Preserve the histogram buckets and counters
+used by alerts and [dashboard overrides](../grafana/app/dashboards/README.md).

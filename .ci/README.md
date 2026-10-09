@@ -19,10 +19,11 @@ from the LAN and tailnet; GitHub-hosted runners cannot reach the registry. The
 Flux artifact also publishes to GHCR for bootstrap recovery.
 
 `backup-helper` and `runner-job` have independent SemVer releases. `git-cliff`
-uses conventional commits affecting each component's runtime inputs: `feat`
-bumps minor, breaking changes bump major, and other changes bump patch. Test-only
-changes do not create releases. Keep workflow path filters and
-[image-inputs.sh](image-inputs.sh) in sync.
+uses conventional commits affecting each component's selected inputs: `feat`
+bumps minor, breaking changes bump major, and other changes bump patch.
+[image-inputs.sh](image-inputs.sh) defines those inputs: backup-helper excludes
+its Go tests, while runner-job includes the DNS compatibility tests. Keep workflow
+path filters in sync with that script.
 
 A `<component>/vX.Y.Z` Git tag reserves each release before building. Reruns reuse
 it and preserve published image digests. Kubernetes pins versions and digests;
@@ -34,16 +35,10 @@ style tools, Pulumi, Flux, and git-cliff. `setup-tool` reads versions from its
 Dockerfile and uses upstream setup actions only when the bundled version differs.
 This lets workflows run before a new runner image reaches both runners.
 
-Go checks run directly through the shared `check-go` action. Renovate runs in its
-own pinned job container. Docker builds and smoke tests remain for published
-images; runner validation has its own workflow so unrelated code changes do not
-rebuild it. Registry login and logout use `docker/login-action` in each publisher.
-
-Code-style workflows have separate language path filters and use `ci-kubernetes`.
-KEDA scales that repository-scoped pool from zero to two one-job workers. Each
-worker runs in the bundled tool image without Docker or Kubernetes API access;
-Docker builds and deployment workflows continue to use the persistent runners.
-See the [CI worker configuration](../kubernetes/apps/forgejo/ci/README.md).
+Code-style workflows use the [CI worker pool](../kubernetes/apps/forgejo/ci/README.md).
+Docker builds and deployment workflows use the persistent runners. See the
+[shared actions](actions/) and workflow path filters for checks and publication
+triggers.
 
 ## Forgejo integrations
 
@@ -75,25 +70,25 @@ the secret. The target is `https://webhook.jetersen.dev/flux` followed by the
 `forgejo-oci-receiver` Receiver's `status.webhookPath`. Keep TLS verification
 enabled and the hostname in Forgejo's webhook allowlist.
 
-The receiver accepts signed `created` events for the `main` tag, including
-overwrites. It also accepts an empty `X-GitHub-Event` header because Forgejo sends
-one for package events. Source polling remains the fallback; Git push events
-can arrive before the artifact is published.
+The [receiver](../kubernetes/cluster/flux-instance/app/forgejo-oci-receiver.yaml)
+validates signatures and filters package events. Source polling remains the
+fallback; Git push events can arrive before the artifact is published.
 
 ## Live upgrade policy
 
 Renovate reads deployed versions from Kromgo and support matrices from the
 [kubernetes-compatibility cache](https://forgejo.jetersen.dev/jetersen/kubernetes-compatibility).
-The runner needs LAN or tailnet access to `upgrade-versions.lan.jetersen.dev`.
-Missing or ambiguous metrics, metrics older than two minutes, invalid matrices,
-or a cache older than 45 days stop the workflow.
+The [policy generator](renovate-upgrade-policy.mjs) defines the version endpoint,
+validation, and freshness limits. The runner needs LAN or tailnet access to that
+endpoint. Missing, ambiguous, or stale inputs stop the workflow.
 
 Kubernetes upgrades must satisfy the deployed Cilium, Envoy Gateway, Flux,
 cert-manager, and Talos matrices. Talos minor upgrades must support the running
 Kubernetes minor. Proposals cannot downgrade or skip a minor. Only patches on
-the live minor auto-merge, after a three-day release age; minor upgrades require
-dashboard approval and manual merge. Do not override the generated version bounds
-or patch automerge rules in repository presets.
+the live minor auto-merge, subject to the
+[release-age rules](../.renovate/autoMerge.json5); minor upgrades require dashboard
+approval and manual merge. Do not override the generated version bounds or patch
+automerge rules in repository presets.
 
 ## Local checks
 

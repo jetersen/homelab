@@ -7,7 +7,7 @@ clients; other sources are denied. No public DNS alias or tunnel is configured.
 Linux Tailscale clients must accept subnet routes and use tailnet DNS.
 
 The official image generates `settings.yml` and a random application secret on
-first boot. The retained `searxng-config` PVC preserves them across upgrades.
+first boot. The retained [configuration PVC](app/pvc.yaml) preserves them across upgrades.
 The init container applies [managed settings](app/config/settings.yml) on each
 start while retaining that secret. Edit the managed template rather than the
 PVC file; ConfigMap changes trigger a rollout. Do not print the PVC settings file
