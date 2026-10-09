@@ -15,6 +15,9 @@ spec:
     spec:
       containers:
         - name: openspeedtest
+          resources:
+            requests:
+              cpu: 5m
           image: openspeedtest/latest:v2.0.6
           ports:
             - name: http

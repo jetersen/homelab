@@ -3,6 +3,7 @@
 ## Kubernetes
 
 - Use kube context `homelab` for cluster operations.
+- Size Kubernetes CPU requests for measured normal demand, including init containers and sidecars, and omit CPU limits. Prefer CPU overcommit for homelab capacity while retaining control-plane and latency-sensitive reservations. Check chart and operator defaults so quotas are not reintroduced. Omit Docker CPU quotas too; preserve intentional memory limits and CPU scheduling weights.
 
 ## GitOps
 

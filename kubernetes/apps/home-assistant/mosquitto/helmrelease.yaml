@@ -19,6 +19,9 @@ spec:
       mosquitto:
         containers:
           app:
+            resources:
+              requests:
+                cpu: 5m
             image:
               repository: docker.io/library/eclipse-mosquitto
               tag: 2.0.22

@@ -12,13 +12,15 @@ spec:
         - name: kube-multus
           resources:
             requests:
-              cpu: 100m
+              cpu: 30m
               memory: 100Mi
             limits:
-              cpu: 500m
               memory: 256Mi
       initContainers:
         - name: install-secondary-plugins
+          resources:
+            requests:
+              cpu: 10m
           image: ghcr.io/siderolabs/install-cni:v1.9.0@sha256:53bdeb6c8d238dd593ee75f265baf4625925a034d8d18f10ffeae88d7fcf2c3e
           # Add only secondary plugins; retain Talos and Cilium's existing binaries.
           command: [/bin/sh, -ec]

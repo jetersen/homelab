@@ -9,6 +9,16 @@ spec:
     kind: OCIRepository
     name: envoy-gateway
   values:
+    certgen:
+      job:
+        resources:
+          requests:
+            cpu: 10m
+    deployment:
+      envoyGateway:
+        resources:
+          requests:
+            cpu: 20m
     config:
       envoyGateway:
         extensionApis:

@@ -10,6 +10,12 @@ spec:
   values:
     fullnameOverride: kopiur
     maxConcurrentJobs: 2
+    resources:
+      requests:
+        cpu: 10m
     webhook:
+      resources:
+        requests:
+          cpu: 5m
       tls:
         mode: cert-manager

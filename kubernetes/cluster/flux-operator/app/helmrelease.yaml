@@ -9,6 +9,11 @@ spec:
     name: flux-operator
     kind: OCIRepository
   values:
+    resources:
+      requests:
+        cpu: 40m
+      limits:
+        cpu: null
     serviceMonitor:
       create: false
     web:

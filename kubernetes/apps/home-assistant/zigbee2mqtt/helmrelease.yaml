@@ -15,6 +15,9 @@ spec:
         strategy: Recreate
         containers:
           app:
+            resources:
+              requests:
+                cpu: 15m
             image:
               repository: docker.io/koenkk/zigbee2mqtt
               tag: 2.14.2

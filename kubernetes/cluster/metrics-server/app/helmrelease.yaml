@@ -10,6 +10,9 @@ spec:
     kind: OCIRepository
     name: metrics-server
   values:
+    resources:
+      requests:
+        cpu: 15m
     args:
       - --kubelet-insecure-tls
       - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname

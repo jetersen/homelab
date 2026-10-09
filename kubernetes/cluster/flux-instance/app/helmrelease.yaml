@@ -11,6 +11,10 @@ spec:
     - name: flux-operator
       namespace: flux-system
   values:
+    healthcheck:
+      resources:
+        limits:
+          cpu: null
     instance:
       distribution:
         # renovate: datasource=github-releases depName=controlplaneio-fluxcd/distribution
@@ -32,6 +36,78 @@ spec:
         interval: 1m
       kustomize:
         patches:
+          - target:
+              kind: Deployment
+              name: helm-controller
+            patch: |
+              apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: helm-controller
+              spec:
+                template:
+                  spec:
+                    containers:
+                      - name: manager
+                        resources:
+                          requests:
+                            cpu: 50m
+                          limits:
+                            cpu: null
+          - target:
+              kind: Deployment
+              name: kustomize-controller
+            patch: |
+              apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: kustomize-controller
+              spec:
+                template:
+                  spec:
+                    containers:
+                      - name: manager
+                        resources:
+                          requests:
+                            cpu: 50m
+                          limits:
+                            cpu: null
+          - target:
+              kind: Deployment
+              name: notification-controller
+            patch: |
+              apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: notification-controller
+              spec:
+                template:
+                  spec:
+                    containers:
+                      - name: manager
+                        resources:
+                          requests:
+                            cpu: 15m
+                          limits:
+                            cpu: null
+          - target:
+              kind: Deployment
+              name: source-controller
+            patch: |
+              apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: source-controller
+              spec:
+                template:
+                  spec:
+                    containers:
+                      - name: manager
+                        resources:
+                          requests:
+                            cpu: 15m
+                          limits:
+                            cpu: null
           - target:
               kind: Service
               name: webhook-receiver

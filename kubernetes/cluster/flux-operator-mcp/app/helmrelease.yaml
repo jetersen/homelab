@@ -10,6 +10,9 @@ spec:
     name: flux-operator-mcp
     kind: OCIRepository
   values:
+    resources:
+      limits:
+        cpu: null
     transport: http
     readonly: true
     networkPolicy:

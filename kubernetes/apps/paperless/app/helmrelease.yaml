@@ -23,6 +23,9 @@ spec:
         strategy: Recreate
         initContainers:
           language:
+            resources:
+              requests:
+                cpu: 10m
             image:
               repository: ghcr.io/paperless-ngx/paperless-ngx
               tag: 3.3.0@sha256:6b94799bc769a063b3340cc5847402e626d4d91d29a295a8e747f8e9bead4207
@@ -110,7 +113,7 @@ spec:
                   failureThreshold: 6
             resources:
               requests: {cpu: 100m, memory: 512Mi}
-              limits: {cpu: '2', memory: 3Gi}
+              limits: {memory: 3Gi}
           broker:
             image:
               repository: docker.io/valkey/valkey

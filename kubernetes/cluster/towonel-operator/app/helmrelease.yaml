@@ -9,6 +9,11 @@ spec:
     kind: OCIRepository
     name: towonel-operator
   values:
+    resources:
+      requests:
+        cpu: 10m
+      limits:
+        cpu: null
     credentials:
       existingSecret: towonel-api
       tokenKey: token

@@ -1,0 +1,16 @@
+apiVersion: towonel.io/v1alpha1
+kind: TowonelAgent
+metadata:
+  name: towonel-system-homelab-b679ec58
+  namespace: towonel-system
+  annotations:
+    kustomize.toolkit.fluxcd.io/prune: disabled
+spec:
+  mode: Managed
+  tunnelRef:
+    name: homelab
+    namespace: towonel-system
+  workload:
+    resources:
+      requests:
+        cpu: 10m

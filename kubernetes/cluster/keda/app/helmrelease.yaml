@@ -19,15 +19,15 @@ spec:
     resources:
       operator:
         requests:
-          cpu: 50m
+          cpu: 10m
           memory: 100Mi
         limits:
-          cpu: '1'
+          cpu: null
           memory: 512Mi
       webhooks:
         requests:
-          cpu: 50m
+          cpu: 5m
           memory: 100Mi
         limits:
-          cpu: '1'
+          cpu: null
           memory: 512Mi

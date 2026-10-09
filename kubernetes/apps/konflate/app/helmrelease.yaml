@@ -5,11 +5,33 @@ kind: HelmRelease
 metadata:
   name: konflate
 spec:
+  postRenderStrategy: combined
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              version: v1
+              kind: Pod
+              name: konflate-test-connection
+            patch: |-
+              apiVersion: v1
+              kind: Pod
+              metadata:
+                name: konflate-test-connection
+              spec:
+                containers:
+                  - name: connection
+                    resources:
+                      requests:
+                        cpu: 10m
   chartRef:
     kind: OCIRepository
     name: konflate
   releaseName: konflate
   values:
+    resources:
+      requests:
+        cpu: 5m
     deploymentAnnotations:
       reloader.stakater.com/auto: "true"
     config:

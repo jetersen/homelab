@@ -21,6 +21,9 @@ spec:
           configmap.reloader.stakater.com/reload: home-assistant-notifications
         containers:
           app:
+            resources:
+              requests:
+                cpu: 25m
             nameOverride: home-assistant
             image:
               repository: ghcr.io/home-assistant/home-assistant

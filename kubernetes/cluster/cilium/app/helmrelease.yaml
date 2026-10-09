@@ -12,6 +12,15 @@ spec:
   values:
     cni:
       exclusive: false
+      resources:
+        limits:
+          cpu: null
+    resources:
+      requests:
+        cpu: 100m
+    initResources:
+      requests:
+        cpu: 10m
     autoDirectNodeRoutes: true
     bpf:
       masquerade: true
@@ -58,6 +67,9 @@ spec:
     operator:
       enabled: true
       replicas: 1
+      resources:
+        requests:
+          cpu: 10m
     rollOutCiliumPods: true
     routingMode: native
     securityContext:

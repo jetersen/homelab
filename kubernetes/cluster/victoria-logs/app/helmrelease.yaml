@@ -19,8 +19,7 @@ spec:
         existingClaim: server-volume-victoria-logs-single-server-0-lvm
       resources:
         requests:
-          cpu: 50m
+          cpu: 20m
           memory: 256Mi
         limits:
-          cpu: 500m
           memory: 1Gi
