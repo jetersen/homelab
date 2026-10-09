@@ -19,7 +19,7 @@ runs:
         git archive HEAD kubernetes/apps kubernetes/cluster kubernetes/components kubernetes/flux \
           | tar -x -C "$directory"
         # Resolve remote bases in CI so Flux can build these overlays offline.
-        for app in local-path-provisioner multus; do
+        for app in multus; do
           app_path="$directory/kubernetes/cluster/$app/app"
           kubectl kustomize "$app_path" > "$app_path/bundled.yaml"
           cat > "$app_path/kustomization.yaml" <<'EOF'

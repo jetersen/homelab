@@ -11,17 +11,6 @@
   ],
   "customManagers": [
     {
-      "customType": "regex",
-      "description": "Update the local-path-provisioner manifest fetched directly over HTTPS",
-      "managerFilePatterns": [
-        "/^kubernetes/cluster/local-path-provisioner/app/kustomization\\.yaml$/"
-      ],
-      "matchStrings": [
-        "https://raw\\.githubusercontent\\.com/(?<depName>rancher/local-path-provisioner)/(?<currentValue>[^/]+)/deploy/local-path-storage\\.yaml"
-      ],
-      "datasourceTemplate": "github-tags"
-    },
-    {
       "customType": "jsonata",
       "description": "Update TrueNAS catalog app versions consumed by Pulumi",
       "fileFormat": "json",
