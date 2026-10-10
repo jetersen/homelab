@@ -24,7 +24,7 @@ spec:
                 cpu: 5m
             image:
               repository: docker.io/library/eclipse-mosquitto
-              tag: 2.0.22
+              tag: 2.0.22@sha256:199ea8ef2e35ec2b1b37e59cfd1dbae538ed4dfa4a2251a121a52215a6248a21
     service:
       app:
         controller: mosquitto
