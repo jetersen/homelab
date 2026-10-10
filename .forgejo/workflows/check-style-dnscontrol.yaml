@@ -1,9 +1,10 @@
 name: Code style (dnscontrol)
 on:
   push:
-    paths: ['infrastructure/dns/compat/**', 'infrastructure/dns/install.sh', '.ci/actions/check-go/**', '.editorconfig', 'infrastructure/forgejo/runner/Dockerfile', '.forgejo/workflows/check-style-dnscontrol.yaml']
+    branches: [main]
+    paths: ['infrastructure/dns/compat/**', 'infrastructure/dns/install.sh', '.ci/actions/check-go/**', '.editorconfig', '.forgejo/workflows/check-style-dnscontrol.yaml']
   pull_request:
-    paths: ['infrastructure/dns/compat/**', 'infrastructure/dns/install.sh', '.ci/actions/check-go/**', '.editorconfig', 'infrastructure/forgejo/runner/Dockerfile', '.forgejo/workflows/check-style-dnscontrol.yaml']
+    paths: ['infrastructure/dns/compat/**', 'infrastructure/dns/install.sh', '.ci/actions/check-go/**', '.editorconfig', '.forgejo/workflows/check-style-dnscontrol.yaml']
   workflow_dispatch:
 concurrency:
   group: code-style-dnscontrol-${{ forgejo.ref }}

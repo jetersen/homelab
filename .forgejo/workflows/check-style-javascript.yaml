@@ -1,9 +1,10 @@
 name: Code style (javascript)
 on:
   push:
-    paths: ['**/*.js', '**/*.mjs', '**/*.cjs', 'package*.json', 'biome.json', '.ci/actions/setup-tool/**', '.editorconfig', 'infrastructure/forgejo/runner/Dockerfile', '.forgejo/workflows/check-style-javascript.yaml']
+    branches: [main]
+    paths: ['**/*.js', '**/*.mjs', '**/*.cjs', 'biome.json', '.ci/actions/setup-tool/check.sh', '.editorconfig', '.forgejo/workflows/check-style-javascript.yaml']
   pull_request:
-    paths: ['**/*.js', '**/*.mjs', '**/*.cjs', 'package*.json', 'biome.json', '.ci/actions/setup-tool/**', '.editorconfig', 'infrastructure/forgejo/runner/Dockerfile', '.forgejo/workflows/check-style-javascript.yaml']
+    paths: ['**/*.js', '**/*.mjs', '**/*.cjs', 'biome.json', '.ci/actions/setup-tool/check.sh', '.editorconfig', '.forgejo/workflows/check-style-javascript.yaml']
   workflow_dispatch:
 concurrency:
   group: code-style-javascript-${{ forgejo.ref }}

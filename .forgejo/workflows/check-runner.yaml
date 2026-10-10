@@ -1,14 +1,6 @@
 name: Runner image
+# Main pushes validate the runner while publishing its image.
 on:
-  push:
-    paths:
-      - infrastructure/forgejo/runner/Dockerfile*
-      - infrastructure/dns/install.sh
-      - infrastructure/dns/compat/**
-      - package*.json
-      - requirements-dev.txt
-      - .ci/check-runner.sh
-      - .forgejo/workflows/check-runner.yaml
   pull_request:
     paths:
       - infrastructure/forgejo/runner/Dockerfile*

@@ -1,9 +1,10 @@
 name: Code style (python)
 on:
   push:
-    paths: ['package.json', '**/*.py', 'ruff.toml', 'requirements-dev.txt', '.editorconfig', 'infrastructure/forgejo/runner/Dockerfile', '.forgejo/workflows/check-style-python.yaml']
+    branches: [main]
+    paths: ['**/*.py', 'ruff.toml', '.editorconfig', '.forgejo/workflows/check-style-python.yaml']
   pull_request:
-    paths: ['package.json', '**/*.py', 'ruff.toml', 'requirements-dev.txt', '.editorconfig', 'infrastructure/forgejo/runner/Dockerfile', '.forgejo/workflows/check-style-python.yaml']
+    paths: ['**/*.py', 'ruff.toml', '.editorconfig', '.forgejo/workflows/check-style-python.yaml']
   workflow_dispatch:
 concurrency:
   group: code-style-python-${{ forgejo.ref }}

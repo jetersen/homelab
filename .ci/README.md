@@ -36,6 +36,9 @@ Dockerfile and uses upstream setup actions only when the bundled version differs
 This lets workflows run before a new runner image reaches both runners.
 
 Code-style workflows use the [CI worker pool](../kubernetes/apps/forgejo/ci/README.md).
+They run the tools bundled in the published runner image, so changes that only bump
+tool versions skip them; the runner image check builds and validates those. Branches
+are checked through pull requests, and only `main` pushes run checks directly.
 Docker builds and deployment workflows use the persistent runners. See the
 [shared actions](actions/) and workflow path filters for checks and publication
 triggers.

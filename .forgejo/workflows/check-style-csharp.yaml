@@ -1,9 +1,10 @@
 name: Code style (csharp)
 on:
   push:
-    paths: ['package.json', '**/*.cs', '**/*.csproj', '**/*.props', '**/*.targets', '**/global.json', '**/packages.lock.json', '**/NuGet.Config', '*.slnx', 'infrastructure/truenas/restore-provider.py', '.editorconfig', 'infrastructure/forgejo/runner/Dockerfile', '.forgejo/workflows/check-style-csharp.yaml']
+    branches: [main]
+    paths: ['**/*.cs', '**/*.csproj', '**/*.props', '**/*.targets', '**/global.json', '**/packages.lock.json', '**/NuGet.Config', '*.slnx', 'infrastructure/truenas/restore-provider.py', '.editorconfig', '.forgejo/workflows/check-style-csharp.yaml']
   pull_request:
-    paths: ['package.json', '**/*.cs', '**/*.csproj', '**/*.props', '**/*.targets', '**/global.json', '**/packages.lock.json', '**/NuGet.Config', '*.slnx', 'infrastructure/truenas/restore-provider.py', '.editorconfig', 'infrastructure/forgejo/runner/Dockerfile', '.forgejo/workflows/check-style-csharp.yaml']
+    paths: ['**/*.cs', '**/*.csproj', '**/*.props', '**/*.targets', '**/global.json', '**/packages.lock.json', '**/NuGet.Config', '*.slnx', 'infrastructure/truenas/restore-provider.py', '.editorconfig', '.forgejo/workflows/check-style-csharp.yaml']
   workflow_dispatch:
 concurrency:
   group: code-style-csharp-${{ forgejo.ref }}
