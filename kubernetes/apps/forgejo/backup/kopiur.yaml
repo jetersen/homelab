@@ -23,7 +23,11 @@ spec:
   catalog:
     adoption: Ignore
     periodicRefresh: true
-    refreshInterval: 1h
+    refreshInterval: 24h
+  # Failed backups re-probe immediately, and backup alerts cover the nightly runs.
+  health:
+    probe:
+      interval: 24h
   scheduleDefaults:
     timezone: Etc/UTC
   concurrency:
