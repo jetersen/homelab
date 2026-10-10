@@ -6,6 +6,7 @@ resources:
   - lvm-storage.yaml
   - glkvm-certificate.yaml
   - helmrelease.yaml
+  - network.yaml
   - httproute.yaml
   - secrets.sops.yaml
   - glkvm-auth.sops.yaml

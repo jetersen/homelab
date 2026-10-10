@@ -1,0 +1,37 @@
+---
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: home-assistant-lan
+spec:
+  # Exclusive to the single HA replica on talos01; outside DHCP and Cilium's pool.
+  config: |-
+    {
+      "cniVersion": "0.3.1",
+      "name": "home-assistant-lan",
+      "plugins": [
+        {
+          "type": "macvlan",
+          "master": "enp1s0",
+          "mode": "bridge",
+          "ipam": {
+            "type": "host-local",
+            "ranges": [[{
+              "subnet": "192.168.1.0/24",
+              "rangeStart": "192.168.1.11",
+              "rangeEnd": "192.168.1.11"
+            }]],
+            "dataDir": "/run/cni"
+          }
+        },
+        {
+          "type": "tuning",
+          "mac": "2e:1a:7d:fd:b4:77",
+          "sysctl": {
+            "net.ipv4.ip_forward": "0",
+            "net.ipv6.conf.all.forwarding": "0",
+            "net.ipv6.conf.IFNAME.accept_ra": "0"
+          }
+        }
+      ]
+    }

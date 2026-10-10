@@ -10,9 +10,6 @@ spec:
   policyTypes: [Ingress, Egress]
   ingress:
     - from:
-        # HA currently shares this node's namespace, as do other node processes.
-        - ipBlock:
-            cidr: 192.168.1.10/32
         - podSelector:
             matchLabels:
               app.kubernetes.io/name: home-assistant

@@ -128,11 +128,11 @@ must supply credentials from their existing configuration or Secrets. A TCP
 monitoring probe only checks listener availability; validate MQTT authentication
 separately after broker changes.
 
-Home Assistant uses `hostNetwork`, sharing the node's network namespace. Ordinary
-Pod policies cannot give it an independent network boundary. Cilium host policies
-cover the host namespace, including host-networked workloads, and require a
-separate rollout that preserves node management and cluster traffic. See
-[Cilium host firewall](https://docs.cilium.io/en/stable/security/host-firewall/).
+Home Assistant uses Cilium for its primary pod network and a Multus macvlan
+attachment for discovery on the main LAN. Its Service and ingress use the Cilium
+address; the LAN attachment has no default route and is selected explicitly in
+Home Assistant's Network settings. See the
+[runtime configuration](kubernetes/apps/home-assistant/README.md).
 
 Multus attaches additional interfaces through other CNI plugins. Consider it only
 when a workload requires direct attachment to another network; routed access does
@@ -145,8 +145,8 @@ connections to trusted clients and IoT devices. Cilium remains the primary pod
 network. For direct LAN access, Multus can attach a
 [macvlan interface](https://www.cni.dev/plugins/current/main/macvlan/) through a
 VLAN interface on the node; the switch port must carry that VLAN. Keep the pod's
-default route and DNS on its primary network. This is an optional design, not a
-deployed topology.
+default route and DNS on its primary network. Moving the nodes to a dedicated
+server VLAN remains an optional design.
 
 For wake-on-LAN alone, prefer a small relay pod per target network over attaching
 Home Assistant to every VLAN. Restrict its command listener to the primary pod

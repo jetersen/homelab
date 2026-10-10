@@ -17,11 +17,9 @@ the relay address outside DHCP. The secondary interface has no default route;
 IPv4 and IPv6 forwarding are disabled in the pod. The process runs without root,
 Linux capabilities, a writable root filesystem, or a Kubernetes API token.
 
-NetworkPolicy restricts the primary interface and denies new outbound
-connections there. Home Assistant currently uses host networking, so access from
-its node also allows other processes on that node. Secondary LAN traffic is not
-covered by that policy; the relay binds no command listener to IoT. Moving Home
-Assistant onto its own pod network allows removal of the node-address exception.
+NetworkPolicy restricts the primary interface to Home Assistant pods and denies
+new outbound connections there. Secondary LAN traffic is not covered by that
+policy; the relay binds no command listener to IoT.
 
 Apply the Talos VLAN patch before deploying the relay. Cilium's VLAN filter needs
 the link present on the node when it builds its datapath; keep `bpf.vlanBypass`

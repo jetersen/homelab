@@ -13,8 +13,10 @@ spec:
     namespace: flux-system
   values:
     defaultPodOptions:
-      # LAN discovery (zeroconf, SSDP) and Wake-on-LAN broadcasts need the host network.
-      hostNetwork: true
+      annotations:
+        k8s.v1.cni.cncf.io/networks: home-assistant-lan@lan0
+      nodeSelector:
+        kubernetes.io/hostname: talos01
       securityContext:
         runAsUser: 568
         runAsGroup: 568
@@ -47,7 +49,6 @@ spec:
             ports:
               - name: http
                 containerPort: 8123
-                hostPort: 8123
                 protocol: TCP
             probes:
               liveness:

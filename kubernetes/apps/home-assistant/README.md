@@ -7,8 +7,22 @@ Home Assistant runs as UID 568 from the rootless
 Custom integration requirements install into `/config/.venv`, which the image
 rebuilds when the Home Assistant version changes. Integrations that need raw
 sockets or extra capabilities, such as DHCP discovery or Bluetooth, are
-unavailable. Host networking remains for zeroconf discovery and Wake-on-LAN
-broadcasts; see the [networking overview](../../../NETWORKING.md).
+unavailable.
+
+Cilium provides cluster DNS, the default route, and Service access. Configure the
+MQTT integration with `mosquitto.home-assistant.svc.cluster.local` on port `1883`.
+Multus attaches `lan0` directly to the main LAN for zeroconf and SSDP discovery;
+see [the attachment](home-assistant/network.yaml) for its reserved IP and MAC.
+Keep that address outside DHCP and other allocation pools. The attachment is
+exclusive to Home Assistant's single replica on `talos01` and adds no default
+route; router advertisements cannot add an IPv6 default route on `lan0`.
+
+Select only `lan0` in Settings > System > Network and restart Home Assistant
+after changing the selection. Automatic detection follows the primary pod's
+multicast route. Cilium policy covers only the primary interface, and macvlan
+cannot directly reach the parent node's LAN address. Use Kubernetes Services for
+node-hosted services. Keep IoT wake traffic on the [wake relay](wol-relay/README.md).
+See the [networking overview](../../../NETWORKING.md).
 
 ## KVM certificate delivery
 
