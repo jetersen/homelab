@@ -174,7 +174,7 @@ spec:
                   type: RuntimeDefault
               containers:
               - name: export
-                image: forgejo.jetersen.dev/jetersen/homelab/backup-helper:0.1.0@sha256:a809682e13070f9503ad8ea92cd907ac4498549985f5d2ee6195d731b20e3673
+                image: forgejo.jetersen.dev/jetersen/homelab/backup-helper:0.1.2@sha256:5400761149c58f91542844ed5855fe9749add2f52be9e662b9d1067ae8c6b665
                 args:
                 - sonarr
                 securityContext:
