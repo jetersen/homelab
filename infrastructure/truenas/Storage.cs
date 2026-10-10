@@ -5,6 +5,87 @@ static class Storage
 {
     public static void Configure(TrueNas.Provider provider)
     {
+        var backup = Dataset("backup-dataset", new TrueNas.DatasetArgs
+        {
+            Name = "nvme/backup",
+            Copies = 1,
+        }, provider);
+
+        _ = Dataset("kubernetes-backup-dataset", new TrueNas.DatasetArgs
+        {
+            Name = backup.Name.Apply(name => $"{name}/kubernetes"),
+            Acltype = "posix",
+            Aclmode = "DISCARD",
+            Atime = "OFF",
+            Exec = "OFF",
+            Sync = "STANDARD",
+            Quota = 100L * 1024 * 1024 * 1024,
+        }, provider);
+
+        _ = Dataset("forgejo-dataset", new TrueNas.DatasetArgs
+        {
+            Name = "nvme/forgejo",
+            Acltype = "posix",
+            Aclmode = "DISCARD",
+            Atime = "OFF",
+            Exec = "ON",
+            Sync = "STANDARD",
+            Quota = 100L * 1024 * 1024 * 1024,
+        }, provider);
+
+        _ = Dataset("apps-dataset", new TrueNas.DatasetArgs
+        {
+            Name = "nvme/apps",
+            Acltype = "nfsv4",
+            Aclmode = "PASSTHROUGH",
+            Atime = "OFF",
+            Copies = 1,
+        }, provider);
+
+        _ = Dataset("media-dataset", new TrueNas.DatasetArgs
+        {
+            Name = "nvme/media",
+            Copies = 1,
+        }, provider);
+
+        _ = Dataset("git-dataset", new TrueNas.DatasetArgs
+        {
+            Name = "nvme/git",
+            Copies = 1,
+        }, provider);
+
+        _ = Dataset("forgejo-backup-staging-dataset", new TrueNas.DatasetArgs
+        {
+            Name = "nvme/forgejo-backup-staging",
+            Acltype = "posix",
+            Aclmode = "DISCARD",
+            Atime = "OFF",
+            Exec = "ON",
+            Sync = "STANDARD",
+            Quota = 120L * 1024 * 1024 * 1024,
+        }, provider);
+
+        _ = Dataset("share-dataset", new TrueNas.DatasetArgs
+        {
+            Name = "nvme/share",
+            Copies = 1,
+        }, provider);
+
+        _ = new TrueNas.ScrubTask("nvme-scrub", new TrueNas.ScrubTaskArgs
+        {
+            Pool = 1,
+            Enabled = true,
+            Threshold = 35,
+            Schedule = new TrueNas.Inputs.ScrubTaskScheduleArgs
+            {
+                Minute = "00",
+                Hour = "00",
+                Dom = "*",
+                Month = "*",
+                Dow = "7",
+            },
+        }, Retained(provider));
+
         _ = new TrueNas.NfsConfig("nfs", new TrueNas.NfsConfigArgs
         {
             Protocols = { "NFSV3", "NFSV4" },
@@ -80,6 +161,22 @@ static class Storage
             Hosts = { "192.168.1.10" },
             Securities = { "SYS" },
         }, provider);
+    }
+
+    private static TrueNas.Dataset Dataset(string name, TrueNas.DatasetArgs args, TrueNas.Provider provider)
+    {
+        args.Type = "filesystem";
+        args.Compression ??= "inherit";
+        args.Acltype ??= "inherit";
+        args.Aclmode ??= "INHERIT";
+        args.Atime ??= "INHERIT";
+        args.Checksum ??= "INHERIT";
+        args.Dedup ??= "INHERIT";
+        args.Exec ??= "INHERIT";
+        args.Readonly ??= "INHERIT";
+        args.Snapdir ??= "INHERIT";
+        args.Sync ??= "INHERIT";
+        return new TrueNas.Dataset(name, args, Retained(provider));
     }
 
     private static void Share(string name, TrueNas.NfsShareArgs args, TrueNas.Provider provider)

@@ -4,9 +4,9 @@
     "net10.0": {
       "Jetersen.Pulumi.TrueNas": {
         "type": "Direct",
-        "requested": "[0.2.0, )",
-        "resolved": "0.2.0",
-        "contentHash": "YgoPQM/wpis2hg7UFCsIFiYYgcngyyhHnqW2HTa4fWD2ozXXPQsRfPsVtO/OyGXHyyuhB5q42to1AYo0OYqXag==",
+        "requested": "[0.3.1, )",
+        "resolved": "0.3.1",
+        "contentHash": "33tKQ7AcE9rQnY2b8FIxALu6sd2yvYeUfU/OGOyR0Myjbx10PqCyjvMcvXnVikFSdJ/yi4GtsVtggfPUia5iSw==",
         "dependencies": {
           "Pulumi": "3.114.1"
         }
