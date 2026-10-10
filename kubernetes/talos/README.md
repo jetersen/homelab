@@ -54,7 +54,9 @@ least-recently-used unused images until usage falls below 50%. This leaves a wid
 reclaim window before the 15% free-space eviction threshold. The separate
 `imageMaximumGCAge: 168h` setting remains as a seven-day backstop. Running
 containers keep their images; later rollbacks can pull removed images from the
-registry. Kubelet restarts reset age tracking.
+registry. Kubelet restarts reset age tracking. Serialize image pulls to limit
+temporary disk use from concurrent downloads on the single node; large cold starts
+may take longer to populate images.
 
 ## Dual-stack networking
 

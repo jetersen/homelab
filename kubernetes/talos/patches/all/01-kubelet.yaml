@@ -9,3 +9,4 @@ config:
   imageGCHighThresholdPercent: 65
   imageGCLowThresholdPercent: 50
   imageMaximumGCAge: 168h
+  serializeImagePulls: true
