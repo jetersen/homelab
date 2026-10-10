@@ -3,7 +3,7 @@ url = "https://homeassistant.jetersen.dev/api/mcp"
 bearer_token_env_var = "HOME_ASSISTANT_TOKEN"
 
 [mcp_servers.flux]
-url = "https://flux-mcp.lan.jetersen.dev/mcp"
+url = "https://flux-mcp.jetersen.dev/mcp"
 
 [mcp_servers.flux.tools.get_flux_instance]
 approval_mode = "approve"

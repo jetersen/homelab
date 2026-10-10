@@ -2,7 +2,7 @@
   "mcpServers": {
     "flux": {
       "type": "http",
-      "url": "https://flux-mcp.lan.jetersen.dev/mcp"
+      "url": "https://flux-mcp.jetersen.dev/mcp"
     }
   }
 }
