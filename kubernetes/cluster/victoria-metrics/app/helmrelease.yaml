@@ -16,6 +16,10 @@ spec:
           cpu: 10m
     fullnameOverride: vm
     defaultRules:
+      groups:
+        # Workloads omit CPU limits, so these recording rules never produce data.
+        k8s.rules.container_cpu_limits:
+          enabled: false
       rules:
         # Workloads omit CPU limits; alert on service impact instead of quota throttling.
         CPUThrottlingHigh:
