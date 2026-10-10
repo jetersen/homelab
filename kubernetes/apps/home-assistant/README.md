@@ -1,5 +1,15 @@
 # Home Assistant
 
+## Runtime
+
+Home Assistant runs as UID 568 from the rootless
+[home-operations image](https://github.com/home-operations/containers/tree/main/apps/home-assistant).
+Custom integration requirements install into `/config/.venv`, which the image
+rebuilds when the Home Assistant version changes. Integrations that need raw
+sockets or extra capabilities, such as DHCP discovery or Bluetooth, are
+unavailable. Host networking remains for zeroconf discovery and Wake-on-LAN
+broadcasts; see the [networking overview](../../../NETWORKING.md).
+
 ## KVM certificate delivery
 
 cert-manager issues a dedicated Let's Encrypt certificate for

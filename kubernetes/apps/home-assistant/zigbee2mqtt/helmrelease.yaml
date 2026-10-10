@@ -10,6 +10,15 @@ spec:
     name: app-template
     namespace: flux-system
   values:
+    defaultPodOptions:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
     controllers:
       zigbee2mqtt:
         strategy: Recreate
@@ -20,7 +29,12 @@ spec:
                 cpu: 15m
             image:
               repository: docker.io/koenkk/zigbee2mqtt
-              tag: 2.14.2
+              tag: 2.14.2@sha256:addbfb08fcef2e4477de1535636118241e10d13e898fbe4d9faba8a4d7396311
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop: [ALL]
             env:
               ZIGBEE2MQTT_DATA: /data
               ZIGBEE2MQTT_CONFIG_HOMEASSISTANT_ENABLED: "true"
@@ -36,7 +50,6 @@ spec:
               ZIGBEE2MQTT_CONFIG_MQTT_PASSWORD:
                 valueFrom:
                   secretKeyRef: { name: zigbee2mqtt, key: mqttPassword }
-              ZIGBEE2MQTT_CONFIG_PERMIT_JOIN: "true"
               ZIGBEE2MQTT_CONFIG_SERIAL_PORT: tcp://192.168.1.9:6638
               ZIGBEE2MQTT_CONFIG_SERIAL_BAUDRATE: "115200"
               ZIGBEE2MQTT_CONFIG_SERIAL_RTSCTS: "false"
@@ -74,3 +87,9 @@ spec:
           zigbee2mqtt:
             app:
               - path: /data
+      tmp:
+        type: emptyDir
+        advancedMounts:
+          zigbee2mqtt:
+            app:
+              - path: /tmp
