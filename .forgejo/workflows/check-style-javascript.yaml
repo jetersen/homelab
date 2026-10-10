@@ -2,9 +2,9 @@ name: Code style (javascript)
 on:
   push:
     branches: [main]
-    paths: ['**/*.js', '**/*.mjs', '**/*.cjs', 'biome.json', '.ci/actions/setup-tool/check.sh', '.editorconfig', '.forgejo/workflows/check-style-javascript.yaml']
+    paths: ['**/*.js', '**/*.mjs', '**/*.cjs', 'biome.json', '.ci/actions/setup-tool/check.sh', '.editorconfig', '.forgejo/workflows/check-style-javascript.yaml', '.forgejo/workflows/dnscontrol.yaml', '.forgejo/renovate.json', 'infrastructure/forgejo/runner/rocket.yaml', 'kubernetes/apps/forgejo/ci/runner.yaml', 'kubernetes/apps/forgejo/ci/scaledjob.yaml']
   pull_request:
-    paths: ['**/*.js', '**/*.mjs', '**/*.cjs', 'biome.json', '.ci/actions/setup-tool/check.sh', '.editorconfig', '.forgejo/workflows/check-style-javascript.yaml']
+    paths: ['**/*.js', '**/*.mjs', '**/*.cjs', 'biome.json', '.ci/actions/setup-tool/check.sh', '.editorconfig', '.forgejo/workflows/check-style-javascript.yaml', '.forgejo/workflows/dnscontrol.yaml', '.forgejo/renovate.json', 'infrastructure/forgejo/runner/rocket.yaml', 'kubernetes/apps/forgejo/ci/runner.yaml', 'kubernetes/apps/forgejo/ci/scaledjob.yaml']
   workflow_dispatch:
 concurrency:
   group: code-style-javascript-${{ forgejo.ref }}
@@ -18,4 +18,4 @@ jobs:
         with:
           persist-credentials: false
       - run: npm run check:javascript
-      - run: node --test .ci/setup-tool.test.mjs infrastructure/dns/creds.test.mjs
+      - run: node --test .ci/setup-tool.test.mjs .ci/runner-pool-routing.test.mjs infrastructure/dns/creds.test.mjs

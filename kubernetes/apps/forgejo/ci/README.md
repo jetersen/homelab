@@ -2,9 +2,12 @@
 
 KEDA starts disposable Docker workers for `linux-docker` jobs. Rocket accepts the
 same label, so workflows can run on either pool; `runner-rocket` selects Rocket
-explicitly. A worker that finds its task already claimed by Rocket exits
-successfully. The [ScaledJob](scaledjob.yaml) defines polling, concurrency, job
-lifetime, and rollout behavior; [runner.yaml](runner.yaml) defines the executor.
+explicitly. `runner-kubernetes` selects only the Kubernetes pool and is reserved
+for jobs that need Kubernetes source addresses. Combine it after `linux-docker`
+in `runs-on` so Docker remains the selected executor. A worker that finds its
+task already claimed by Rocket exits successfully. The [ScaledJob](scaledjob.yaml)
+defines polling, concurrency, job lifetime, and rollout behavior;
+[runner.yaml](runner.yaml) defines the executor.
 
 The pool uses a persistent repository-scoped runner registration shared by the
 one-job processes. Keep registration and the scaler's read-only repository API
