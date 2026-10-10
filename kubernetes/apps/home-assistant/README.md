@@ -20,8 +20,10 @@ route; router advertisements cannot add an IPv6 default route on `lan0`.
 Select only `lan0` in Settings > System > Network and restart Home Assistant
 after changing the selection. Automatic detection follows the primary pod's
 multicast route. Cilium policy covers only the primary interface, and macvlan
-cannot directly reach the parent node's LAN address. Use Kubernetes Services for
-node-hosted services. Keep IoT wake traffic on the [wake relay](wol-relay/README.md).
+cannot directly reach its parent host. A short-lived init container uses
+`NET_ADMIN` to route the node's IPv4 address through the primary Cilium gateway,
+so kubelet probe replies keep working. Home Assistant itself keeps all Linux
+capabilities dropped. Keep IoT wake traffic on the [wake relay](wol-relay/README.md).
 See the [networking overview](../../../NETWORKING.md).
 
 ## KVM certificate delivery
