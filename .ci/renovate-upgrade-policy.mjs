@@ -145,19 +145,24 @@ export function policy(live, matrices, talosLines = [live.talos.line]) {
 }
 
 async function fetchText(url, headers = {}) {
-  const response = await fetch(url, {
-    signal: AbortSignal.timeout(30_000),
-    cache: "no-store",
-    headers,
-    redirect: "error",
-  });
+  let response;
+  try {
+    response = await fetch(url, {
+      signal: AbortSignal.timeout(30_000),
+      cache: "no-store",
+      headers,
+      redirect: "error",
+    });
+  } catch (error) {
+    throw new Error(`${error.cause?.message ?? error.message}: ${url}`, { cause: error });
+  }
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}: ${url}`);
   }
   return response.text();
 }
 
-export async function generate(base = "https://upgrade-versions.lan.jetersen.dev") {
+export async function generate(base = "https://upgrade-versions.jetersen.dev") {
   const entries = await Promise.all(
     ["node", "cilium", "envoy", "flux", "cert-manager"].map(async (id) => [
       id,
