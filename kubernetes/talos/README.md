@@ -49,10 +49,12 @@ per-volume trim schedule. The node patch enables trimming only for EPHEMERAL;
 it does not schedule trims for application PVCs. Talos chooses a stable time
 within the interval and skips an immediate trim when the controller starts.
 
-Kubelet removes container images after seven days without use through
-`imageMaximumGCAge: 168h`. Running containers keep their images; later rollbacks
-can pull removed images from the registry. Kubelet restarts reset age tracking,
-and disk usage thresholds can trigger cleanup sooner.
+Kubelet begins image garbage collection at 65% image-filesystem usage and removes
+least-recently-used unused images until usage falls below 50%. This leaves a wider
+reclaim window before the 15% free-space eviction threshold. The separate
+`imageMaximumGCAge: 168h` setting remains as a seven-day backstop. Running
+containers keep their images; later rollbacks can pull removed images from the
+registry. Kubelet restarts reset age tracking.
 
 ## Dual-stack networking
 

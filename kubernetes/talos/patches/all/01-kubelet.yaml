@@ -6,4 +6,6 @@ machine:
 apiVersion: v1alpha1
 kind: KubeletConfig
 config:
+  imageGCHighThresholdPercent: 65
+  imageGCLowThresholdPercent: 50
   imageMaximumGCAge: 168h

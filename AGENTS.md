@@ -11,6 +11,10 @@
 - Routine homelab deployments, commits, and Flux pushes need no separate approval when completing a requested task.
 - Ask before destructive, data-affecting, broad, or hard-to-reverse changes; explain impact and rollback.
 
+## Image and chart upgrades
+
+- Apply application, chart, and image upgrades one at a time. After each upgrade, verify affected workloads are ready, nodes remain `Ready=True` with `DiskPressure=False`, and image-filesystem free space can accommodate the next planned pulls before proceeding. Treat CI render success as manifest validation only, not proof of live readiness.
+
 ## ExternalDNS
 
 - Do not assume `--dry-run` suppresses writes through webhook providers. Never simulate changed or empty desired record sets against a live webhook unless write suppression is independently verified. Use saved records and offline comparisons for ownership audits.
