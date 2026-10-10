@@ -1,11 +1,17 @@
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
-  // Use platform-native auto-merge after main's required Konflate check passes.
+  // Use platform-native auto-merge by default; pace container and chart updates through Renovate.
   automerge: true,
   automergeType: "pr",
   automergeStrategy: "rebase",
   platformAutomerge: true,
   packageRules: [
+    {
+      description: "Pace container image and Helm chart upgrades through Renovate",
+      matchDatasources: ["docker", "helm"],
+      platformAutomerge: false,
+      rebaseWhen: "behind-base-branch",
+    },
     {
       description: "Separate operating-system and Kubernetes patch updates from reviewed minor upgrades",
       matchPackageNames: ["siderolabs/talos", "ghcr.io/siderolabs/talos", "kubernetes/kubernetes", "ghcr.io/siderolabs/kubelet"],
