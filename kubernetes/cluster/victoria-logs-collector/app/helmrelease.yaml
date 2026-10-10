@@ -10,6 +10,19 @@ spec:
     kind: OCIRepository
     name: victoria-logs-collector
   values:
+    podSecurityContext:
+      # Talos container logs are root:root with mode 0640.
+      supplementalGroups: [0]
+      seccompProfile:
+        type: RuntimeDefault
+    securityContext:
+      runAsUser: 65532
+      runAsGroup: 65532
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop: [ALL]
     remoteWrite:
       - url: http://victoria-logs-single-server.monitoring.svc.cluster.local:9428
         format: native
@@ -28,3 +41,42 @@ spec:
         memory: 64Mi
       limits:
         memory: 256Mi
+  # hostPath volumes do not receive fsGroup ownership changes.
+  postRenderers:
+    - kustomize:
+        patches:
+          - target:
+              group: apps
+              version: v1
+              kind: DaemonSet
+              name: victoria-logs-collector
+            patch: |-
+              apiVersion: apps/v1
+              kind: DaemonSet
+              metadata:
+                name: victoria-logs-collector
+              spec:
+                template:
+                  spec:
+                    initContainers:
+                      - name: buffer-permissions
+                        image: docker.io/library/busybox:1.38.0@sha256:fd7dc98638c8e305f4dc34e979f1c0fdfdcaeb0fbf8fcff77ae834b6da3d7e6e
+                        command: [chown, -Rh, '65532:65532', /var/lib/vl-collector]
+                        securityContext:
+                          runAsUser: 0
+                          runAsGroup: 0
+                          runAsNonRoot: false
+                          allowPrivilegeEscalation: false
+                          readOnlyRootFilesystem: true
+                          capabilities:
+                            drop: [ALL]
+                            add: [CHOWN]
+                        resources:
+                          requests:
+                            cpu: 10m
+                            memory: 16Mi
+                          limits:
+                            memory: 32Mi
+                        volumeMounts:
+                          - name: vl-collector-data
+                            mountPath: /var/lib/vl-collector

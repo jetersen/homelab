@@ -24,6 +24,13 @@ spec:
           memory: 32Mi
     lvmController:
       logLevel: 2
+      securityContext:
+        runAsUser: 65532
+        runAsGroup: 65532
+        runAsNonRoot: true
+        fsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
       resources:
         requests:
           cpu: 10m
@@ -52,5 +59,14 @@ spec:
                 template:
                   spec:
                     containers:
+                      - name: csi-resizer
+                        securityContext: &nonroot
+                          allowPrivilegeEscalation: false
+                          capabilities:
+                            drop: [ALL]
+                      - name: csi-provisioner
+                        securityContext: *nonroot
+                      - name: openebs-lvm-plugin
+                        securityContext: *nonroot
                       - name: csi-snapshotter
                         $patch: delete
