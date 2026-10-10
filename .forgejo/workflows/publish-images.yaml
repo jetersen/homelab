@@ -70,7 +70,7 @@ jobs:
           script: |
             if (!process.env.AUDIENCE) throw new Error('Configure the Authorized Integration audience');
             core.setOutput('token', await core.getIDToken(process.env.AUDIENCE));
-      - uses: https://github.com/docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
+      - uses: https://github.com/docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: forgejo.jetersen.dev
           username: ${{ forgejo.repository_owner }}
