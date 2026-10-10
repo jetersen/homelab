@@ -5,7 +5,6 @@ resources:
   - forgejo.yaml
   - forgejo-runners.yaml
   - keda.yaml
-  - adguard.yaml
   - cert-manager.yaml
   - home-assistant.yaml
   - homepage.yaml
