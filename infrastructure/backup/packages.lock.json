@@ -40,11 +40,11 @@
       },
       "Pulumi.Ovh": {
         "type": "Direct",
-        "requested": "[2.21.0, )",
-        "resolved": "2.21.0",
-        "contentHash": "NxRrKfoERLvbQT+IEDPmXGHQgCRQJwe7mW50SVc39Q9RwWNw+dhNF3O5hLCohTU3eEdqZxPczT81Bh+rjwCO+A==",
+        "requested": "[2.22.0, )",
+        "resolved": "2.22.0",
+        "contentHash": "dwLOUt44Tn+ygMTNlsfmdCep6d004ezqdTmcaMBEuoV8ZRp7cSyf2jAq9GF5Tbg1ABsm+l5HM6MeweQlNOG3mw==",
         "dependencies": {
-          "Pulumi": "3.114.0"
+          "Pulumi": "3.114.1"
         }
       },
       "Ben.Demystifier": {
