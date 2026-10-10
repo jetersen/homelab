@@ -34,8 +34,9 @@ capacity. Monitor PVC capacity and NAS usage before importing large repositories
 
 The backup job briefly stops Forgejo to stage a consistent copy of both stores,
 validates SQLite on local storage, and resumes Forgejo before Kopiur uploads the
-staged copy to S3. Staging is not an independent backup. A watchdog resumes a
-pause older than 25 minutes, including after an abruptly terminated backup pod.
+staged copy to S3. Staging is not an independent backup. A watchdog checks every
+15 minutes and resumes a pause older than 25 minutes, including after an abruptly
+terminated backup pod.
 
 Provision a separate staging dataset with room for both stores. See the
 [shared backup setup](../../cluster/kopiur/README.md#storage-and-credentials)
