@@ -24,6 +24,31 @@ spec:
       mosquitto:
         # A single broker owns the persisted message store.
         strategy: Recreate
+        annotations:
+          secret.reloader.stakater.com/reload: mqtt-auth
+        initContainers:
+          password-file:
+            image:
+              repository: docker.io/library/busybox
+              tag: 1.38.0@sha256:fd7dc98638c8e305f4dc34e979f1c0fdfdcaeb0fbf8fcff77ae834b6da3d7e6e
+            command:
+              - sh
+              - -ec
+              - |
+                umask 077
+                cp /mqtt-auth/passwd /mosquitto/secrets/passwd
+                chmod 0600 /mosquitto/secrets/passwd
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop: [ALL]
+            resources:
+              requests:
+                cpu: 5m
+                memory: 16Mi
+              limits:
+                memory: 32Mi
         containers:
           app:
             securityContext:
@@ -72,10 +97,22 @@ spec:
             app:
               - path: /mosquitto/data
       passwd:
+        # Secret projections remain root-owned; copy as the broker UID at startup.
         type: secret
         name: mqtt-auth
+        defaultMode: 288 # 0440; fsGroup permits the non-root init container to read it.
         advancedMounts:
           mosquitto:
+            password-file:
+              - path: /mqtt-auth
+                readOnly: true
+      private-passwd:
+        type: emptyDir
+        medium: Memory
+        advancedMounts:
+          mosquitto:
+            password-file:
+              - path: /mosquitto/secrets
             app:
               - path: /mosquitto/secrets
                 readOnly: true
