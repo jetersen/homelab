@@ -14,6 +14,10 @@ spec:
     reloader:
       deployment:
         replicas: 1
+        containerSecurityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: [ALL]
         resources:
           requests:
             cpu: 5m
