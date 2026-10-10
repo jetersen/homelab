@@ -10,6 +10,19 @@ spec:
     name: app-template
     namespace: flux-system
   values:
+    defaultPodOptions:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+        # Bind DNS on port 53 without root or capabilities.
+        sysctls:
+          - name: net.ipv4.ip_unprivileged_port_start
+            value: "53"
     controllers:
       technitium:
         strategy: Recreate
@@ -60,9 +73,9 @@ spec:
                   periodSeconds: 10
             securityContext:
               allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
               capabilities:
                 drop: [ALL]
-                add: [NET_BIND_SERVICE]
             resources:
               requests: { cpu: 50m, memory: 128Mi }
               limits: { memory: 512Mi }
@@ -100,6 +113,18 @@ spec:
           technitium:
             app:
               - path: /etc/dns
+      tmp:
+        type: emptyDir
+        advancedMounts:
+          technitium:
+            app:
+              - path: /tmp
+      logs:
+        type: emptyDir
+        advancedMounts:
+          technitium:
+            app:
+              - path: /var/log/technitium
       admin:
         type: secret
         name: technitium-auth

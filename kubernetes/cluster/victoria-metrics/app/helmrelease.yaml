@@ -42,6 +42,8 @@ spec:
             expr: count(up == 0) without(instance,pod,node) or vector(0)
     alertmanager:
       spec:
+        # Run as UID 65534 with a read-only root filesystem and no capabilities.
+        useStrictSecurity: true
         resources:
           requests:
             cpu: 5m
@@ -97,6 +99,8 @@ spec:
     vmsingle:
       enabled: true
       spec:
+        # Run as UID 65534 with a read-only root filesystem and no capabilities.
+        useStrictSecurity: true
         retentionPeriod: 1y
         storage: null
         volumes:
@@ -114,6 +118,8 @@ spec:
             memory: 2Gi
     vmalert:
       spec:
+        # Run as UID 65534 with a read-only root filesystem and no capabilities.
+        useStrictSecurity: true
         resources:
           requests:
             cpu: 15m
@@ -172,6 +178,8 @@ spec:
     vmagent:
       enabled: true
       spec:
+        # Run as UID 65534 with a read-only root filesystem and no capabilities.
+        useStrictSecurity: true
         selectAllByDefault: true
         scrapeInterval: 30s
         # Remove this filter to re-enable optional diagnostic series for future samples.
