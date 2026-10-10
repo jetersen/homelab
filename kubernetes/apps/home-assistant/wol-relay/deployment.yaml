@@ -28,7 +28,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: relay
-          image: docker.io/library/python:3.14.0-alpine3.22@sha256:8373231e1e906ddfb457748bfc032c4c06ada8c759b7b62d9c73ec2a3c56e710
+          image: docker.io/library/python:3.14.5-alpine3.22@sha256:6b91e66ab2a880ce9ca5a1b91c70f45963ff71ff68268df056336e1a657d5efd
           command: [python, -B, /app/relay.py]
           env:
             - name: POD_IP
