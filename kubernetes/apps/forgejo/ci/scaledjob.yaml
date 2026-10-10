@@ -103,8 +103,23 @@ spec:
           - name: runner
             image: forgejo.jetersen.dev/jetersen/homelab/runner-job:0.3.0@sha256:fe6cbc1e84f52d08c41b68d21d5eabcfeed9292c282ff19955a9b4aa7dd05a14
             command: [/bin/bash, -ec]
+            # Exit status 2 means Rocket claimed the queued task first; finish without a failed Job.
             args:
-              - exec /runner/forgejo-runner --config /config/runner.yaml one-job --url https://forgejo.jetersen.dev --uuid "$(cat /registration/uuid)" --token-url file:/registration/token
+              - |
+                /runner/forgejo-runner --config /config/runner.yaml one-job --url https://forgejo.jetersen.dev --uuid "$(cat /registration/uuid)" --token-url file:/registration/token &
+                runner=$!
+                trap 'kill -TERM "$runner" 2>/dev/null' TERM INT
+                status=0
+                wait "$runner" || status=$?
+                while kill -0 "$runner" 2>/dev/null; do
+                  status=0
+                  wait "$runner" || status=$?
+                done
+                if [ "$status" -eq 2 ]; then
+                  echo 'No queued task remained for this worker'
+                  exit 0
+                fi
+                exit "$status"
             workingDir: /data
             env:
               - name: HOME
