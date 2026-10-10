@@ -7,7 +7,7 @@
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Pulumi" Version="3.114.1" />
+    <PackageReference Include="Pulumi" Version="3.114.2" />
     <PackageReference Include="Pulumi.Ovh" Version="2.22.0" />
     <!-- Override vulnerable telemetry versions inherited from the Pulumi SDK. -->
     <PackageReference Include="OpenTelemetry.Api" Version="1.19.1" />
