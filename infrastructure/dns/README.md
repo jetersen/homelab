@@ -44,9 +44,10 @@ Set the repository variable `DNSCONTROL_ENABLED=true` and configure these secret
 
 Use the Kubernetes runner so source addresses match the provider ACLs. The
 workflow requests both `linux-docker` and `runner-kubernetes`, keeping the Docker
-executor while excluding Rocket. The KEDA scaler continues to watch `linux-docker`;
-Forgejo matches that label as a subset of the job's requested labels. Keep TLS
-verification enabled and configure Technitium's AXFR and update keys. One job
+executor while excluding Rocket. The KEDA query includes both labels because
+Forgejo matches jobs only when all their `runs-on` labels appear in the query;
+this retains ordinary `linux-docker` jobs too. Keep TLS verification enabled and
+configure Technitium's AXFR and update keys. One job
 validates the configuration, then reconciles all three providers in a single
 DNSControl invocation. Only the reconciliation step receives provider credentials.
 

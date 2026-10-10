@@ -9,6 +9,10 @@ task already claimed by Rocket exits successfully. The [ScaledJob](scaledjob.yam
 defines polling, concurrency, job lifetime, and rollout behavior;
 [runner.yaml](runner.yaml) defines the executor.
 
+The KEDA Forgejo query lists `linux-docker,runner-kubernetes`. Forgejo returns a
+waiting job when every label requested by the job is present in the query, so this
+matches both ordinary `linux-docker` jobs and jobs requiring the Kubernetes label.
+
 The pool uses a persistent repository-scoped runner registration shared by the
 one-job processes. Keep registration and the scaler's read-only repository API
 token in the SOPS-encrypted Secret. Only runner credentials are mounted in

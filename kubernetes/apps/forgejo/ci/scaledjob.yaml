@@ -187,6 +187,6 @@ spec:
         address: https://forgejo.jetersen.dev
         owner: jetersen
         repo: homelab
-        labels: linux-docker
+        labels: linux-docker,runner-kubernetes
       authenticationRef:
         name: forgejo-ci
