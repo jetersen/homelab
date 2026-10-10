@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "automergeStrategy": "fast-forward",
+  "automergeStrategy": "rebase",
   "extends": [
     "github>home-operations/renovate-presets",
     "github>jetersen/.github",
