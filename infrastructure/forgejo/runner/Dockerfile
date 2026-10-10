@@ -1,4 +1,4 @@
-FROM docker.io/library/golang:1.27.1-trixie@sha256:8f58fd67ea075142d947a60e0caa4317746a55118d312f027793d382c7741734 AS dnscontrol
+FROM docker.io/library/golang:1.27.2-trixie@sha256:e58d6f83b3416618d8bcac2b3dde1b7f7e3c4a77d25e88637f8bbae81536c48d AS dnscontrol
 WORKDIR /build
 COPY infrastructure/dns/compat/go.mod infrastructure/dns/compat/go.sum ./compat/
 RUN cd compat && go mod download
