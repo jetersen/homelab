@@ -8,7 +8,7 @@ RUN cd compat && go test ./... && cd .. && bash install.sh /out
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0.401-noble@sha256:e70cdb7f80b0348f5cb85f19a8f670fca061f033d57eed12fa003d58b0e06317 AS dotnet
 
-FROM docker.io/pulumi/pulumi-base:3.267.0@sha256:78a0f1547f834efe340d2debac8f701e4c828a2c93355197142f04a48d5403bd AS pulumi
+FROM docker.io/pulumi/pulumi-base:3.268.0@sha256:4232eef43dca93e5ab4ed942b18d85a42140466681011ded7435d2b2bbf284d5 AS pulumi
 FROM ghcr.io/fluxcd/flux-cli:v2.9.6@sha256:b1ac18156f227af9a524b842a96f2c20986c7a779ef721df3ba4e4540f449d76 AS flux
 FROM docker.io/orhunp/git-cliff:2.14.2@sha256:1e696a381a1b0366bb6ccbb6bd4e50e73473fda88eab3a757b95e0d0d66c9531 AS git-cliff
 
