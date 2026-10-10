@@ -10,6 +10,15 @@ spec:
     kind: OCIRepository
     name: victoria-logs-collector
   values:
+    # Talos logs stay under /var/log; its root-only /var/lib blocks non-root access.
+    defaultVolumes:
+      - name: varlog
+        hostPath:
+          path: /var/log
+    defaultVolumeMounts:
+      - name: varlog
+        mountPath: /var/log
+        readOnly: true
     podSecurityContext:
       # Talos container logs are root:root with mode 0640.
       supplementalGroups: [0]
