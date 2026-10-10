@@ -7,6 +7,7 @@ const read = (path) => readFileSync(path, "utf8");
 const kubernetesRunner = read("kubernetes/apps/forgejo/ci/runner.yaml");
 const rocketRunner = read("infrastructure/forgejo/runner/rocket.yaml");
 const scaledJob = read("kubernetes/apps/forgejo/ci/scaledjob.yaml");
+const networkPolicy = read("kubernetes/apps/forgejo/ci/networkpolicy.yaml");
 const dnsWorkflow = read(".forgejo/workflows/dnscontrol.yaml");
 
 function runnerLabel(config, label) {
@@ -35,4 +36,21 @@ test("KEDA keeps scaling all linux-docker jobs, including DNSControl", () => {
   assert.match(scaledJob, /^\s+labels:\s*linux-docker\s*$/m);
   const dnsLabels = ["linux-docker", "runner-kubernetes"];
   assert.ok(["linux-docker"].every((label) => dnsLabels.includes(label)));
+});
+
+test("runner egress allows Technitium's post-Service-mapping DNS port", () => {
+  const rule = networkPolicy
+    .split("    # DNSControl uses authenticated DNS updates and zone transfers.\n")[1]
+    ?.split("    # Public package registries")[0];
+  assert.ok(rule, "expected the Technitium-specific egress rule");
+  assert.match(rule, /kubernetes\.io\/metadata\.name: technitium/);
+  assert.match(rule, /app\.kubernetes\.io\/name: technitium/);
+  const ports = [...rule.matchAll(/- \{port: (\d+), protocol: (UDP|TCP)\}/g)].map((match) => [
+    Number(match[1]),
+    match[2],
+  ]);
+  assert.deepEqual(ports, [
+    [1053, "UDP"],
+    [1053, "TCP"],
+  ]);
 });

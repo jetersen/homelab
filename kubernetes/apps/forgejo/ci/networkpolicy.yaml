@@ -53,8 +53,8 @@ spec:
             matchLabels:
               app.kubernetes.io/name: technitium
       ports:
-        - {port: 53, protocol: UDP}
-        - {port: 53, protocol: TCP}
+        - {port: 1053, protocol: UDP}
+        - {port: 1053, protocol: TCP}
     # Public package registries, source repositories, and image registries.
     - to:
         - ipBlock:
