@@ -13,8 +13,24 @@ spec:
       labels:
         app.kubernetes.io/name: openspeedtest
     spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: openspeedtest
+          # Ingress terminates TLS; use the image's static Nginx configuration.
+          command: [nginx]
+          args: [-g, "daemon off;"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
           resources:
             requests:
               cpu: 5m
@@ -31,3 +47,13 @@ spec:
             httpGet:
               path: /
               port: http
+          volumeMounts:
+            - name: cache
+              mountPath: /var/cache/nginx
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: cache
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
