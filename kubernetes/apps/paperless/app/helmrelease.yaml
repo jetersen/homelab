@@ -117,7 +117,7 @@ spec:
           broker:
             image:
               repository: docker.io/valkey/valkey
-              tag: 9.0.3-alpine@sha256:e1095c6c76ee982cb2d1e07edbb7fb2a53606630a1d810d5a47c9f646b708bf5
+              tag: 9.1.2-alpine@sha256:48332870af354a799964c0012ae1194a0bf2bf894eb508f945810596dc2d8d11
             command: [valkey-server]
             args: [--bind, '127.0.0.1', --dir, /storage/broker, --appendonly, 'yes', --save, '']
             securityContext:
