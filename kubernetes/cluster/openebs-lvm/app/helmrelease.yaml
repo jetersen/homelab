@@ -66,6 +66,17 @@ spec:
                             drop: [ALL]
                       - name: csi-provisioner
                         securityContext: *nonroot
+                        # Chart 1.10.1 has no extra-args value. Keep its defaults and
+                        # own capacity records through the Deployment, not a ReplicaSet.
+                        args:
+                          - --csi-address=$(ADDRESS)
+                          - --v=2
+                          - --feature-gates=Topology=true
+                          - --strict-topology
+                          - --enable-capacity=true
+                          - --extra-create-metadata=true
+                          - --default-fstype=ext4
+                          - --capacity-ownerref-level=2
                       - name: openebs-lvm-plugin
                         securityContext: *nonroot
                       - name: csi-snapshotter

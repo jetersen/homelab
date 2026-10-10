@@ -1,0 +1,22 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: openebs-lvm-capacity-owner
+rules:
+  # Follow Pod -> ReplicaSet -> Deployment for CSIStorageCapacity ownership.
+  - apiGroups: [apps]
+    resources: [replicasets]
+    verbs: [get]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: openebs-lvm-capacity-owner
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: openebs-lvm-capacity-owner
+subjects:
+  - kind: ServiceAccount
+    name: openebs-lvm-controller-sa
+    namespace: openebs

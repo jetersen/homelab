@@ -6,6 +6,7 @@ resources:
   - source.yaml
   - helmrelease.yaml
   - storageclasses.yaml
+  - capacity-rbac.yaml
 components:
   - ../../../components/helmrelease-defaults
   - ../../../components/helm-source-defaults

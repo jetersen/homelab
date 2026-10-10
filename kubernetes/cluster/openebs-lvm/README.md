@@ -19,6 +19,10 @@ cleanup. These classes do not
 provide disk redundancy. Keep application-consistent backups outside the node.
 CSI snapshot components are disabled.
 
+Capacity records belong to the controller Deployment so they survive ReplicaSet
+changes. The provisioner needs namespace-scoped read access to ReplicaSets to
+follow that ownership chain.
+
 `shared: "yes"` permits multiple pods to mount a volume on the same node,
 including backup readers and parallel CI workers. PV node affinity still pins
 volumes to their owning node; this does not provide access across nodes.
