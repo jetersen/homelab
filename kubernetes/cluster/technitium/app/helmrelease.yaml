@@ -19,10 +19,6 @@ spec:
         fsGroupChangePolicy: OnRootMismatch
         seccompProfile:
           type: RuntimeDefault
-        # Bind DNS on port 53 without root or capabilities.
-        sysctls:
-          - name: net.ipv4.ip_unprivileged_port_start
-            value: "53"
     controllers:
       technitium:
         strategy: Recreate
@@ -61,14 +57,14 @@ spec:
                 enabled: true
                 custom: true
                 spec:
-                  tcpSocket: { port: 53 }
+                  tcpSocket: { port: 1053 }
                   initialDelaySeconds: 30
                   periodSeconds: 30
               readiness:
                 enabled: true
                 custom: true
                 spec:
-                  httpGet: { path: /, port: 5380 }
+                  tcpSocket: { port: 1053 }
                   initialDelaySeconds: 5
                   periodSeconds: 10
             securityContext:
@@ -87,8 +83,9 @@ spec:
         annotations:
           lbipam.cilium.io/ips: 192.168.1.21
         ports:
-          dns-tcp: { port: 53, protocol: TCP, targetPort: 53 }
-          dns-udp: { port: 53, protocol: UDP, targetPort: 53 }
+          # Configure Technitium's persisted DNS endpoints for port 1053.
+          dns-tcp: { port: 53, protocol: TCP, targetPort: 1053 }
+          dns-udp: { port: 53, protocol: UDP, targetPort: 1053 }
           https-cluster: { port: 53443, protocol: TCP, targetPort: 53443 }
       app:
         controller: technitium
