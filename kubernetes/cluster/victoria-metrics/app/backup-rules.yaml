@@ -21,6 +21,16 @@ spec:
         severity: warning
       annotations:
         summary: No recent Kopiur backup for {{ $labels.namespace }}/{{ $labels.policy }}
+    - alert: ForgejoStopped
+      expr: max(kube_deployment_spec_replicas{namespace="forgejo",deployment="forgejo"}) == 0
+      for: 15m
+      labels:
+        severity: critical
+      annotations:
+        summary: Forgejo has been scaled to zero for 15 minutes
+        description: The nightly backup pauses Forgejo for about a minute. Check the
+          backup job, remove the deployment's backup.jetersen.dev/forgejo-pause
+          annotation, and scale Forgejo back to one replica.
     - alert: BackupRepositoryUnavailable
       expr: max by (namespace, name) (kopiur_resource_phase{kind="Repository",phase=~"Degraded|Failed"}) == 1
       for: 5m

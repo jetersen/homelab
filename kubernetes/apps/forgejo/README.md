@@ -34,16 +34,15 @@ capacity. Monitor PVC capacity and NAS usage before importing large repositories
 
 The backup job briefly stops Forgejo to stage a consistent copy of both stores,
 validates SQLite on local storage, and resumes Forgejo before Kopiur uploads the
-staged copy to S3. Staging is not an independent backup. A watchdog checks every
-15 minutes and resumes a pause older than 25 minutes, including after an abruptly
-terminated backup pod.
+staged copy to S3. Staging is not an independent backup. If a backup pod dies
+while Forgejo is paused, the `ForgejoStopped` alert fires after 15 minutes.
 
 Provision a separate staging dataset with room for both stores. See the
 [shared backup setup](../../cluster/kopiur/README.md#storage-and-credentials)
 for repository initialization and credentials.
 
-For recovery, suspend the Kopiur SnapshotSchedule, maintenance, the recovery
-CronJob, and the HelmRelease, then stop Forgejo. Connect to Kopia with the backup
+For recovery, suspend the Kopiur SnapshotSchedule, maintenance, and the
+HelmRelease, then stop Forgejo. Connect to Kopia with the backup
 Secret and restore one snapshot into an isolated destination. Restore its
 `current/local/` and `current/nas/` trees together onto the corresponding volumes,
 preserving configuration, generated secrets, host keys, and UID/GID 1000
@@ -51,12 +50,13 @@ permissions. Validate SQLite on local storage and run `git fsck` on restored
 repositories before starting Forgejo. Resume Flux and the backup schedules after
 verifying login, clone/push, LFS, and uploads.
 
-The helper image is published by Forgejo. Its pinned image uses `IfNotPresent`,
-so the scheduled recovery watchdog can reuse the node's cached copy while
-Forgejo is paused. If Forgejo is unavailable and the image is missing, resume
-its Deployment directly with `kubectl --context homelab -n forgejo scale
-deployment/forgejo --replicas=1`; inspect the backup job and pause annotations
-before resuming schedules.
+To resume Forgejo after a stranded pause, inspect the failed backup job, then
+remove the pause marker so later backups can run and scale Forgejo back up:
+
+```sh
+kubectl --context homelab -n forgejo annotate deployment/forgejo backup.jetersen.dev/forgejo-pause-
+kubectl --context homelab -n forgejo scale deployment/forgejo --replicas=1
+```
 
 For a recovery that needs the helper while the registry is down, clone the
 GitHub mirror, check out the helper's recorded source revision, and build it
