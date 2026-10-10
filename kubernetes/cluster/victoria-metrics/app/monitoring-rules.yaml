@@ -123,16 +123,9 @@ spec:
           Check the Certificate resource and cert-manager metrics scrape.
   - name: homelab.etcd-disk
     rules:
-    # Local warnings follow https://etcd.io/docs/v3.6/faq/ disk-latency guidance.
-    # Retain the upstream critical fsync threshold while replacing its warning.
-    - alert: etcdHighFsyncDurations
-      expr: histogram_quantile(0.99, rate(etcd_disk_wal_fsync_duration_seconds_bucket{job=~".*etcd.*"}[5m])) > 0.01
-      for: 10m
-      labels:
-        severity: warning
-      annotations:
-        summary: etcd cluster 99th percentile fsync durations are too high.
-        description: 'etcd cluster "{{ $labels.job }}": 99th percentile fsync durations are {{ $value }}s on etcd instance {{ $labels.instance }}.'
+    # The node's NVMe drive lacks power-loss protection, so routine flushes keep
+    # p99 fsync near 125 ms on this single-member cluster. Alert only at the
+    # upstream critical threshold, where etcd stability is at risk.
     - alert: etcdHighFsyncDurations
       expr: histogram_quantile(0.99, rate(etcd_disk_wal_fsync_duration_seconds_bucket{job=~".*etcd.*"}[5m])) > 1
       for: 10m
@@ -141,11 +134,3 @@ spec:
       annotations:
         summary: etcd cluster 99th percentile fsync durations are too high.
         description: 'etcd cluster "{{ $labels.job }}": 99th percentile fsync durations are {{ $value }}s on etcd instance {{ $labels.instance }}.'
-    - alert: etcdHighCommitDurations
-      expr: histogram_quantile(0.99, rate(etcd_disk_backend_commit_duration_seconds_bucket{job=~".*etcd.*"}[5m])) > 0.025
-      for: 10m
-      labels:
-        severity: warning
-      annotations:
-        summary: etcd cluster 99th percentile commit durations are too high.
-        description: 'etcd cluster "{{ $labels.job }}": 99th percentile commit durations {{ $value }}s on etcd instance {{ $labels.instance }}.'

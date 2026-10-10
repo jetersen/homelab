@@ -27,7 +27,7 @@ spec:
         # etcd's basic metrics mode does not publish the gRPC latency histogram.
         etcdGRPCRequestsSlow:
           enabled: false
-        # Local disk rules lower warnings and retain the critical fsync threshold.
+        # Local rules keep only the critical fsync threshold for this drive.
         etcdHighFsyncDurations:
           enabled: false
         etcdHighCommitDurations:
