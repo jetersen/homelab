@@ -13,6 +13,12 @@
       pinDigests: true,
     },
     {
+      description: "SearXNG tags append a commit hash to their date version",
+      matchDatasources: ["docker"],
+      matchPackageNames: ["ghcr.io/searxng/searxng"],
+      versioning: "regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-[0-9a-f]+$",
+    },
+    {
       description: "Review Forgejo and chart major upgrades before database migrations",
       matchPackageNames: [
         "code.forgejo.org/forgejo/forgejo",
