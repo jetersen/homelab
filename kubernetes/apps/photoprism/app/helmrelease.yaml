@@ -25,7 +25,7 @@ spec:
           app:
             image:
               repository: docker.io/photoprism/photoprism
-              tag: 260919-ce@sha256:fb9e9a8d979099ed5b58623338278e3360600596be1484b794bd04b815e903ab
+              tag: 261007-ce@sha256:6e631a4b893c036a1a5d74c42bb1605088cf21d3c19b1feb34c20b7fcd20d78e
             command:
             - /opt/photoprism/bin/photoprism
             args:
