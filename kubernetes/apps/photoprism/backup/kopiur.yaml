@@ -169,6 +169,8 @@ spec:
     keepMonthly: 12
     keepAnnual: 0
   mover:
+    cache:
+      mode: Persistent
     inheritSecurityContextFrom:
       pvcConsumer:
         container: app
@@ -207,6 +209,9 @@ kind: SnapshotPolicy
 metadata:
   name: photoprism-originals
 spec:
+  mover:
+    cache:
+      mode: Persistent
   adoption: Ignore
   copyMethod: Direct
   defaultDeletionPolicy: Delete

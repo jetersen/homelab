@@ -74,6 +74,8 @@ spec:
     username: paperless
     hostname: homelab
   mover:
+    cache:
+      mode: Persistent
     inheritSecurityContextFrom:
       pvcConsumer:
         container: app

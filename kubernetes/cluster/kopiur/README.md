@@ -18,7 +18,11 @@ Nightly quick maintenance handles routine repository cleanup; weekly full
 maintenance performs deeper reclamation. The application repository inputs,
 such as [Home Assistant](../../apps/home-assistant/backup/kopiur.yaml), define the
 schedules and persistent maintenance cache. Reusing that cache avoids formatting
-a fresh local volume for each maintenance run.
+a fresh local volume for each maintenance run. Paperless export and the two
+PhotoPrism snapshot policies also retain separate policy-owned caches across
+runs; verification keeps its disposable cache. Persistent snapshot and
+maintenance caches require distinct controller resource names: the installed
+operator derives the same PVC name from both kinds.
 
 ## Storage and credentials
 
