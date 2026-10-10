@@ -16,6 +16,9 @@ spec:
       dnsConfig:
         nameservers: [192.168.1.21, 192.168.1.2]
       securityContext:
+        runAsUser: 568
+        runAsGroup: 568
+        runAsNonRoot: true
         fsGroup: 568
         fsGroupChangePolicy: OnRootMismatch
         seccompProfile:
@@ -26,15 +29,15 @@ spec:
         containers:
           app:
             image:
-              repository: lscr.io/linuxserver/sonarr
-              tag: 4.0.20.3014-ls326@sha256:f247545d23ba8b233d6604575347e48a623fe6ad75dda02348bf81917f3b5c06
+              repository: ghcr.io/home-operations/sonarr
+              tag: 4.0.20.3012@sha256:1f19eb5e0f421418c1a956bbe01310a0141423afe28bd9a4b1dcb8629ff2bce2
             env:
               TZ: Europe/Copenhagen
-              PUID: "568"
-              PGID: "568"
-              UMASK: "002"
             securityContext:
               allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop: [ALL]
             probes:
               liveness:
                 enabled: true
@@ -72,6 +75,10 @@ spec:
               - identifier: app
                 port: 8989
     persistence:
+      tmp:
+        type: emptyDir
+        globalMounts:
+          - path: /tmp
       config:
         existingClaim: sonarr-lvm
         type: persistentVolumeClaim

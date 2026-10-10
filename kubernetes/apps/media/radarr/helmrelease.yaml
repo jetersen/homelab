@@ -16,6 +16,9 @@ spec:
       dnsConfig:
         nameservers: [192.168.1.21, 192.168.1.2]
       securityContext:
+        runAsUser: 568
+        runAsGroup: 568
+        runAsNonRoot: true
         fsGroup: 568
         fsGroupChangePolicy: OnRootMismatch
         seccompProfile:
@@ -26,15 +29,15 @@ spec:
         containers:
           app:
             image:
-              repository: lscr.io/linuxserver/radarr
-              tag: 6.4.4.10685-ls318@sha256:adb6c09d6b729ea5e642c99cea35af72702ef476bf4763f153299ac5db9f0b4f
+              repository: ghcr.io/home-operations/radarr
+              tag: 6.4.4.10685@sha256:be53998a2d39cfa3c3315b70c7509a6a1f2a10c3aee9337653efc9f4c970430e
             env:
               TZ: Europe/Copenhagen
-              PUID: "568"
-              PGID: "568"
-              UMASK: "002"
             securityContext:
               allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop: [ALL]
             probes:
               liveness:
                 enabled: true
@@ -72,6 +75,10 @@ spec:
               - identifier: app
                 port: 7878
     persistence:
+      tmp:
+        type: emptyDir
+        globalMounts:
+          - path: /tmp
       config:
         existingClaim: radarr-lvm
         type: persistentVolumeClaim

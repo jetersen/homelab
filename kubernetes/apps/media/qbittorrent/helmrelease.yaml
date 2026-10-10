@@ -27,16 +27,19 @@ spec:
         containers:
           app:
             image:
-              repository: lscr.io/linuxserver/qbittorrent
-              tag: 5.2.3_v2.0.15-ls478@sha256:caab2ebce30799ab342c374ea268fef4ec063a8ec3733a4e5d4a8e856ee32ce8
+              repository: ghcr.io/home-operations/qbittorrent
+              tag: 5.2.3@sha256:4fcf15b7f265c2c8d7bc2a7e13240a07e0593c326f3cf3b5b9bb69eec5b79299
             env:
               TZ: Europe/Copenhagen
-              PUID: '568'
-              PGID: '568'
-              UMASK: '002'
-              WEBUI_PORT: '8080'
-            securityContext:
+            # Set per container: the VPN sidecar needs root to manage its firewall.
+            securityContext: &nonroot
+              runAsUser: 568
+              runAsGroup: 568
+              runAsNonRoot: true
               allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop: [ALL]
             probes:
               liveness:
                 enabled: true
@@ -72,8 +75,7 @@ spec:
                 if [ ! -f /config/qBittorrent/qBittorrent.conf ]; then
                   cp /defaults/qBittorrent.conf /config/qBittorrent/qBittorrent.conf
                 fi
-            securityContext:
-              allowPrivilegeEscalation: false
+            securityContext: *nonroot
           vpn:
             restartPolicy: Always
             image:
@@ -145,6 +147,12 @@ spec:
           - identifier: app
             port: 8080
     persistence:
+      tmp:
+        type: emptyDir
+        advancedMounts:
+          qbittorrent:
+            app:
+            - path: /tmp
       config:
         existingClaim: qbittorrent-lvm
         type: persistentVolumeClaim
