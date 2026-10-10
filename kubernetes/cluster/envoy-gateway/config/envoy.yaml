@@ -81,6 +81,10 @@ spec:
     initialConnectionWindowSize: 32Mi
     onInvalidMessage: TerminateStream
   http3: {}
+  # Forgejo API refs encode branch slashes as %2F; the default redirect unescapes
+  # them into a different path. No route or access policy on this listener matches paths.
+  path:
+    escapedSlashesAction: KeepUnchanged
   proxyProtocol:
     # Towonel TLS passthrough sends PROXY v2; retain it on TCP listeners.
     optional: true
