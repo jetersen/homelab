@@ -1,8 +1,10 @@
-# TrueNAS applications
+# TrueNAS configuration
 
 Pulumi manages the NAS Technitium Compose app and the Syncthing and Tailscale
 catalog apps. Flux manages Kubernetes Technitium independently. DNSControl writes
 records to the primary, which replicates to the NAS through Technitium's catalog.
+Pulumi also manages the NFS service, its configuration, and exports in
+[`Storage.cs`](Storage.cs). Datasets and pools have separate lifecycles.
 
 The `homelab-truenas/homelab` stack uses the shared OVH Pulumi state bucket with
 its own project namespace and the same passphrase provider. Do not initialize
@@ -41,6 +43,18 @@ The workflow previews same-repository PRs and applies changes on `main`. Set the
 
 Forgejo injects these directly into Pulumi. Keep them synchronized with local
 credentials. Runs are serialized and deploy independently of Flux.
+
+## Adopting existing configuration
+
+Import existing resources locally into this stack before pushing their declarations.
+Use the existing `nas` provider: NFS shares import by their numeric share ID, the
+NFS configuration by `nfs_config`, and the service by `nfs`. Require a refreshed
+preview with no NAS changes before publishing an adoption.
+
+Preserve export paths, allowed clients, and user/group mappings during adoption.
+Use both `Protect` and `RetainOnDelete` for exports and services; removing an
+unretained service resource can stop the service and disable autostart.
+Keep import manifests and state recovery copies outside the repository.
 
 ## Managing apps
 

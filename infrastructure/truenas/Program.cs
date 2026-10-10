@@ -20,6 +20,8 @@ return await Deployment.RunAsync(() =>
         Insecure = false,
     });
 
+    Storage.Configure(provider);
+
     var app = new TrueNas.App("technitium", new TrueNas.AppArgs
     {
         Name = "technitium",

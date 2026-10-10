@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://www.schemastore.org/pulumi.json
 name: homelab-truenas
-description: TrueNAS applications
+description: TrueNAS applications and NFS configuration
 runtime: dotnet
 backend:
   url: s3://jetersen-homelab-pulumi?endpoint=https://s3.de.io.cloud.ovh.net&region=de&s3ForcePathStyle=true&awssdk=v2
