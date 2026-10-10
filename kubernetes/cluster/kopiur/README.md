@@ -23,6 +23,8 @@ PhotoPrism snapshot policies also retain separate policy-owned caches across
 runs; verification keeps its disposable cache. Persistent snapshot and
 maintenance caches require distinct controller resource names: the installed
 operator derives the same PVC name from both kinds.
+Cache eviction follows Kopia's cache budgets separately from repository
+maintenance.
 
 ## Storage and credentials
 
@@ -70,6 +72,11 @@ immediate replication, annotate its resource with a fresh RFC3339
 `kopiur.home-operations.com/run-requested` value, then verify that
 `status.manualRun.phase` is `Succeeded` and `status.lastReplicated` follows the
 snapshot completion.
+
+Maintenance accepts the same request annotation plus
+`kopiur.home-operations.com/run-mode: quick` or `full`. After a manual run
+completes, remove its trigger annotations. Restoring an older request timestamp
+after a newer run completes can execute the old request again.
 
 ## Isolated restores
 
