@@ -15,5 +15,6 @@ For an unscheduled run, create a Job from `tuppr-wake` in `system-upgrade`. The
 plans still honor their maintenance windows. Create a Job from `tuppr-sleep`
 after completion to stop the controller. Job failure alerts cover failed runs,
 and the operator availability alert applies only while replicas are
-requested. Controller metrics are available while Tuppr runs; historical data
+requested. The empty scrape-pool alert excludes Tuppr only while its requested
+replica count is zero. Controller metrics are available while Tuppr runs; historical data
 remains queryable while it is off.

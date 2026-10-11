@@ -33,6 +33,10 @@ spec:
         k8s.rules.container_cpu_limits:
           enabled: false
       rules:
+        # Tuppr intentionally has no scrape targets while its controller sleeps.
+        ScrapePoolHasNoTargets:
+          spec:
+            expr: (sum(vm_promscrape_scrape_pool_targets) without(status,instance,pod) == 0) unless on(scrape_job) label_replace(kube_deployment_spec_replicas{namespace="system-upgrade",deployment="tuppr"} == 0, "scrape_job", "serviceScrape/system-upgrade/tuppr/0", "deployment", ".*")
         # Fixed rate windows need several samples at the one-minute scrape cadence.
         instance:node_cpu:rate:sum:
           spec:
