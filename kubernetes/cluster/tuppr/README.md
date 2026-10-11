@@ -4,7 +4,9 @@ upgrade plans to be `Completed` for their current generation. Pending, running,
 failed, or unreadable plans leave the controller enabled for recovery and alerts.
 
 Version changes made while the controller is off wait for the next scheduled
-window. Helm installs and upgrades enable the controller so a chart update
+window. Admission webhook call failures are ignored while its endpoint is
+offline; CRD schema validation still applies, and an available webhook still
+rejects invalid plans. Helm installs and upgrades enable the controller so a chart update
 cannot stop an active cluster upgrade. The scheduled stop job returns it to
 zero after completion. Flux drift correction is disabled for this release so
 ordinary reconciliation does not undo scheduled scaling.
