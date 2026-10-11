@@ -24,6 +24,8 @@ spec:
     autoDirectNodeRoutes: true
     bpf:
       masquerade: true
+      # Preserve service load-balancing behavior independently of Gateway API.
+      lbAlgorithmAnnotation: true
       # Permit only the IoT tag used by the Multus wake relay.
       vlanBypass: [20]
     bgp:
@@ -40,13 +42,11 @@ spec:
       mode: kubernetes
     egressGateway:
       enabled: false
+    # Envoy Gateway owns the application's Gateway; this controller is unused.
     gatewayAPI:
-      enabled: true
-      gatewayClass:
-        create: "true"
-      secretsNamespace:
-        create: false
-        name: kube-system
+      enabled: false
+    socketLB:
+      hostNamespaceOnly: true
     tls:
       secretsNamespace:
         create: false

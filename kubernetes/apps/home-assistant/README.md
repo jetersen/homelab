@@ -26,6 +26,10 @@ so kubelet probe replies keep working. Home Assistant itself keeps all Linux
 capabilities dropped. Keep IoT wake traffic on the [wake relay](wol-relay/README.md).
 See the [networking overview](../../../NETWORKING.md).
 
+Configure main-LAN Wake-on-LAN targets with the LAN subnet's broadcast address.
+The generic `255.255.255.255` broadcast follows Cilium's primary interface;
+selecting `lan0` for discovery does not change that route.
+
 ## KVM certificate delivery
 
 cert-manager issues a dedicated Let's Encrypt certificate for
