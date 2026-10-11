@@ -20,16 +20,6 @@ spec:
         spec:
           interval: 60s
       groups:
-        # These upstream groups set their own interval instead of using the default.
-        vmagent:
-          spec:
-            interval: 60s
-        vmalert:
-          spec:
-            interval: 60s
-        vmsingle:
-          spec:
-            interval: 60s
         # This single-user cluster has no API availability SLO or error budget.
         kube-apiserver-availability.rules:
           enabled: false

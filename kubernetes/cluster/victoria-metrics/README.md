@@ -23,7 +23,9 @@ Scrape intervals and metric filters live in the
 [metrics values](app/helmrelease.yaml), [infrastructure scrapes](app/infrastructure-scrapes.yaml),
 and [probe configuration](app/probes.yaml). Default scrapes and rule evaluations
 run once per minute; inventory and external probes use their slower configured
-intervals. Fixed counter-rate windows span at least five minutes. Keep Grafana's
+intervals. The upstream vmagent, vmalert, and vmsingle rule groups explicitly
+evaluate every 30 seconds; the chart's group settings supply defaults and do not
+override those source intervals. Fixed counter-rate windows span at least five minutes. Keep Grafana's
 [datasource interval](../grafana/app/helmrelease.yaml) aligned with collection.
 When slowing a scrape, adjust alert lookbacks and avoid collecting the same
 series in both fast and slow jobs. Preserve the histogram buckets and counters
