@@ -192,6 +192,24 @@ spec:
           enabled: false
         kubernetes-system-api-server:
           enabled: false
+        # Local overrides omit startup flag tables and controller latency percentiles.
+        victoriametrics-single-node:
+          enabled: false
+        victoriametrics-vmagent:
+          enabled: false
+        victoriametrics-vmalert:
+          enabled: false
+        victoriametrics-operator:
+          enabled: false
+      sources:
+        victoriametrics-single-node:
+          enabled: false
+        victoriametrics-vmagent:
+          enabled: false
+        victoriametrics-vmalert:
+          enabled: false
+        victoriametrics-operator:
+          enabled: false
     vmsingle:
       enabled: true
       spec:
@@ -282,6 +300,10 @@ spec:
         # Remove this filter to re-enable optional diagnostic series for future samples.
         # Histogram sums/counts, queue latency, and OOM signals remain available.
         inlineRelabelConfig:
+          # Optional dashboard panels are omitted by the pinned local overrides.
+          - action: drop
+            source_labels: [__name__]
+            regex: '(flag|controller_runtime_reconcile_time_seconds_bucket)'
           - action: drop
             source_labels: [__name__]
             regex: '(container_tasks_state|container_memory_failures_total|container_file_descriptors|container_sockets|container_threads|container_threads_max|container_ulimits_soft|workqueue_work_duration_seconds_bucket|scheduler_plugin_execution_duration_seconds_bucket)'
@@ -300,6 +322,20 @@ spec:
         spec:
           interval: 60s
       vmScrapes:
+        cadvisor:
+          spec:
+            metricRelabelConfigs:
+              - action: labeldrop
+                regex: (uid|id|name)
+              - action: drop
+                source_labels: [__name__]
+                regex: 'rest_client_request_duration_seconds_(bucket|sum|count)'
+              # Host interfaces are repeated by every host-networked pod.
+              # Node exporter owns host traffic; retain CNI, Multus and VPN interfaces.
+              - action: drop
+                if: '{__name__=~"container_network_.+",pod=""}'
+              - action: drop
+                if: '{__name__=~"container_network_.+",interface!~"(eth|net|lan|iot|tun|tap|wg)[0-9]+"}'
         # cAdvisor supplies the container CPU and memory metrics used by our rules.
         resources:
           enabled: false

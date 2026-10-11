@@ -25,6 +25,34 @@ class DashboardTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             generate.one_panel({"panels": [{"title": "Depth"}] * 2}, "Depth")
 
+    def test_optional_panel_removal_preserves_nested_siblings_and_guards_queries(self):
+        wanted = {"title": "Errors", "targets": [{"expr": "controller_runtime_reconcile_errors_total"}]}
+        optional = {"title": "Flags", "targets": [{"expr": 'flag{is_set="true"}'}]}
+        dashboard = {"panels": [{"title": "Row", "panels": [optional, wanted]}]}
+        with self.assertRaises(ValueError):
+            generate.remove_panel(dashboard, "Flags", "changed_metric")
+        self.assertEqual(dashboard["panels"][0]["panels"], [optional, wanted])
+        generate.remove_panel(dashboard, "Flags", "flag{")
+        self.assertEqual(dashboard["panels"][0]["panels"], [wanted])
+
+    def test_optional_metric_filters_preserve_controller_errors_and_mean_latency(self):
+        filters = VALUES["vmagent"]["spec"]["inlineRelabelConfig"]
+        regex = next(r["regex"] for r in filters if "flag|" in r.get("regex", ""))
+        for metric in ["flag", "controller_runtime_reconcile_time_seconds_bucket"]:
+            self.assertIsNotNone(re.fullmatch(regex, metric))
+        for metric in [
+            "controller_runtime_reconcile_errors_total",
+            "controller_runtime_reconcile_total",
+            "controller_runtime_reconcile_time_seconds_sum",
+            "controller_runtime_reconcile_time_seconds_count",
+            "workqueue_queue_duration_seconds_bucket",
+        ]:
+            self.assertIsNone(re.fullmatch(regex, metric))
+        for path in ROOT.glob("*.json"):
+            dashboard = json.loads(path.read_text())
+            for target in generate.expressions(dashboard):
+                self.assertNotRegex(target["expr"], r"\b(flag|controller_runtime_reconcile_time_seconds_bucket)\b")
+
     def test_dashboard_selectors_match_unlabelled_homelab(self):
         for path in ROOT.glob("*.json"):
             dashboard = json.loads(path.read_text())
@@ -159,6 +187,10 @@ class DashboardTests(unittest.TestCase):
             "etcd",
             "kubernetes-views-global",
             "kubernetes-views-namespaces",
+            "victoriametrics-single-node",
+            "victoriametrics-vmagent",
+            "victoriametrics-vmalert",
+            "victoriametrics-operator",
         }
         disabled = {
             name
@@ -167,8 +199,8 @@ class DashboardTests(unittest.TestCase):
         }
         self.assertTrue(expected <= disabled)
         dashboards = [json.loads(path.read_text()) for path in ROOT.glob("*.json")]
-        self.assertEqual(len(dashboards), 6)
-        self.assertEqual(len({dashboard["uid"] for dashboard in dashboards}), 6)
+        self.assertEqual(len(dashboards), 10)
+        self.assertEqual(len({dashboard["uid"] for dashboard in dashboards}), 10)
 
 
 if __name__ == "__main__":

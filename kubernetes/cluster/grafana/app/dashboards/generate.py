@@ -12,6 +12,7 @@ import yaml
 DOTDC = "e4faf59e017a18e1b06fa64f11623bef15ce7507"
 MIXINS = "97c701c0918b211a1d33791cf9d70c4fdb57a2cb"
 KUBE_PROMETHEUS = "799f3d73b5adf5758c3119c9201d9f417accb6d0"
+VICTORIAMETRICS = "2dcf2265734e00e0f6f4e42a3d0a6beedec0e5b6"
 DATASOURCE = "P4169E866C3094E38"
 ROOT = Path(__file__).parent
 
@@ -33,6 +34,19 @@ def one_panel(dashboard, title):
     if len(matches) != 1:
         raise ValueError(f"Expected one {title!r} panel, found {len(matches)}")
     return matches[0]
+
+
+def remove_panel(dashboard, title, metric):
+    """Remove an optional panel only when its pinned query still matches."""
+    panel = one_panel(dashboard, title)
+    targets = panel.get("targets", [])
+    if len(targets) != 1 or metric not in targets[0].get("expr", ""):
+        raise ValueError(f"Unexpected query shape for {title!r}")
+    for parent in [dashboard, *panels(dashboard)]:
+        if any(child is panel for child in parent.get("panels", [])):
+            parent["panels"].remove(panel)
+            return
+    raise ValueError(f"Missing parent for {title!r}")
 
 
 def expressions(dashboard):
@@ -186,7 +200,7 @@ def prepare(dashboard):
     dashboard = normalize(copy.deepcopy(dashboard))
     dashboard.pop("__inputs", None)
     for variable in dashboard["templating"]["list"]:
-        if variable["name"] == "datasource":
+        if variable["name"] in {"datasource", "ds"}:
             variable["current"] = {"text": "VictoriaMetrics", "value": DATASOURCE}
         elif variable["name"] == "cluster":
             # This cluster has no cluster label. .* also matches an absent label.
@@ -294,6 +308,26 @@ def patched_dashboards():
     for name, dashboard in result.items():
         if dashboard["uid"] != uids[name]:
             raise ValueError(f"Upstream UID changed for {name}")
+        result[name] = prepare(dashboard)
+    vm_uids = {
+        "victoriametrics": "wNf0q_kZk",
+        "vmagent": "G7Z9GzMGz",
+        "vmalert": "LzldHAVnz",
+        "operator": "1H179hunk",
+    }
+    for name, uid in vm_uids.items():
+        dashboard = json.loads(
+            fetch("VictoriaMetrics/VictoriaMetrics", VICTORIAMETRICS, f"dashboards/{name}.json")
+        )
+        if dashboard["uid"] != uid:
+            raise ValueError(f"Upstream UID changed for {name}")
+        remove_panel(dashboard, "Non-default flags", "flag{")
+        if name == "operator":
+            remove_panel(
+                dashboard,
+                "Reconciliation latency by controller",
+                "controller_runtime_reconcile_time_seconds_bucket",
+            )
         result[name] = prepare(dashboard)
     return result
 

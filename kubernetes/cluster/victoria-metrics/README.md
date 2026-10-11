@@ -43,6 +43,16 @@ histogram still supplies mean request latency. Metric filters also omit unused
 feature inventory, block-I/O series, and diagnostic histogram buckets while
 preserving their sums/counts and garbage-collection metrics.
 
+cAdvisor network metrics retain pod CNI, Multus and VPN interfaces named
+`ethN`, `netN`, `lanN`, `iotN`, `tunN`, `tapN` or `wgN`, where `N` is a number.
+Extend the interface selector when adding another pod interface naming scheme.
+Host interfaces and anonymous cgroup network totals are omitted because they
+repeat node traffic; node exporter supplies host network metrics. CPU, memory
+and filesystem collection remain independent of this network filter.
+Startup flag inventory and controller reconciliation latency buckets are also
+omitted with their optional dashboard panels. Reconciliation errors, counters
+and histogram sums/counts remain available.
+
 The API server's heap/CPU tradeoff is configured in the
 [Talos GC patch](../../talos/patches/control-plane/api-gc.yaml). `GOGC` controls
 the heap growth target rather than imposing a hard memory limit. Restore `100`
