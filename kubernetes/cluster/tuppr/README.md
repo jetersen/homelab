@@ -1,0 +1,16 @@
+Tuppr runs for the Sunday maintenance window. Two short CronJobs wake it at
+03:55 and stop it at 06:15 in `Europe/Copenhagen`. The stop job requires both
+upgrade plans to be `Completed` for their current generation. Pending, running,
+failed, or unreadable plans leave the controller enabled for recovery and alerts.
+
+Version changes made while the controller is off wait for the next scheduled
+window. Helm installs and upgrades set the controller to zero replicas; avoid
+upgrading its chart during an active cluster upgrade. Flux drift correction is
+disabled for this release so it does not undo scheduled scaling.
+
+For an unscheduled run, create a Job from `tuppr-wake` in `system-upgrade`. The
+plans still honor their maintenance windows. Create a Job from `tuppr-sleep`
+after completion to stop the controller. Job failure alerts cover failed runs,
+and the operator availability alert applies only while replicas are
+requested. Controller metrics are available while Tuppr runs; historical data
+remains queryable while it is off.

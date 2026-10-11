@@ -23,7 +23,7 @@ spec:
     - name: homelab.upgrades
       rules:
         - alert: TupprOperatorUnavailable
-          expr: absent(tuppr_build_info) or (up{namespace="system-upgrade",endpoint="metrics"} == 0)
+          expr: (kube_deployment_spec_replicas{namespace="system-upgrade",deployment="tuppr"} > 0) and on() (absent(tuppr_build_info) or (up{namespace="system-upgrade",endpoint="metrics"} == 0))
           for: 5m
           labels:
             severity: warning

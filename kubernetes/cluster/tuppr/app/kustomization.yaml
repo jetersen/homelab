@@ -5,6 +5,11 @@ resources:
   - source.yaml
   - helmrelease.yaml
   - monitoring.yaml
+  - schedule.yaml
+configMapGenerator:
+  - name: tuppr-schedule
+    files:
+      - controller-schedule.py
 components:
   - ../../../components/helmrelease-defaults
   - ../../../components/oci-source-defaults

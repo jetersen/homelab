@@ -8,8 +8,12 @@ spec:
   chartRef:
     kind: OCIRepository
     name: tuppr
+  # The scheduled jobs own the live replica count between Helm upgrades.
+  driftDetection:
+    mode: disabled
   values:
     fullnameOverride: tuppr
+    replicaCount: 0
     resources:
       requests:
         cpu: 20m
