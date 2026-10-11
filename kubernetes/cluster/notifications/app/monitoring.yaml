@@ -10,23 +10,6 @@ spec:
     - port: metrics
 ---
 apiVersion: operator.victoriametrics.com/v1beta1
-kind: VMProbe
-metadata:
-  name: notifications
-spec:
-  jobName: notifications
-  module: http_2xx
-  interval: 30s
-  scrapeTimeout: 10s
-  vmProberSpec:
-    url: blackbox-exporter.monitoring.svc.cluster.local:9115
-  targets:
-    staticConfig:
-      targets:
-        - http://gotify.monitoring.svc.cluster.local:8080/health
-        - http://chaski.monitoring.svc.cluster.local:8080/readyz
----
-apiVersion: operator.victoriametrics.com/v1beta1
 kind: VMRule
 metadata:
   name: notifications

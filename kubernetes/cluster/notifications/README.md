@@ -2,8 +2,8 @@
 
 VMAlertmanager sends infrastructure alerts through Chaski to Home Assistant and
 Gotify. Home Assistant delivers Android push and desktop notifications; Gotify
-keeps the message inbox. Flux uses Chaski for successful installs, upgrades, and
-rollbacks. Monitoring rules handle deployment failures to avoid duplicate messages.
+keeps the message inbox. Flux sends successful installs, upgrades, and rollbacks
+to Gotify only. Monitoring rules handle deployment failures to avoid duplicate messages.
 
 ## Delivery and history
 

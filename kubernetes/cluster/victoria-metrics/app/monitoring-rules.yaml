@@ -25,26 +25,20 @@ spec:
         summary: Service probe failed for {{ $labels.instance }}
         description: The {{ $labels.job }} probe has failed continuously for five
           minutes.
-    # Keep expected target counts aligned with probes.yaml and notifications' VMProbe.
+    # Keep expected target counts aligned with probes.yaml.
     - alert: ServiceProbeMetricsMissing
       expr: |
-        up{job=~"application-http|nas-mqtt-tcp|technitium-dns|dns-recursion-udp|dns-recursion-tcp|gateway-https|notifications"} == 0
-        or (up{job=~"application-http|nas-mqtt-tcp|technitium-dns|dns-recursion-udp|dns-recursion-tcp|gateway-https|notifications"}
+        up{job=~"nas-tcp|technitium-dns|dns-recursion-udp|dns-recursion-tcp"} == 0
+        or (up{job=~"nas-tcp|technitium-dns|dns-recursion-udp|dns-recursion-tcp"}
           unless on(job, instance) probe_success)
-        or count by(job) (up{job="application-http"}) < 11
-        or count by(job) (up{job="nas-mqtt-tcp"}) < 3
+        or count by(job) (up{job="nas-tcp"}) < 2
         or count by(job) (up{job="technitium-dns"}) < 4
         or count by(job) (up{job="dns-recursion-udp"}) < 3
         or count by(job) (up{job="dns-recursion-tcp"}) < 3
-        or count by(job) (up{job="gateway-https"}) < 3
-        or count by(job) (up{job="notifications"}) < 2
-        or absent(up{job="application-http"})
-        or absent(up{job="nas-mqtt-tcp"})
+        or absent(up{job="nas-tcp"})
         or absent(up{job="technitium-dns"})
         or absent(up{job="dns-recursion-udp"})
         or absent(up{job="dns-recursion-tcp"})
-        or absent(up{job="gateway-https"})
-        or absent(up{job="notifications"})
       for: 5m
       labels:
         severity: warning

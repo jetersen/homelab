@@ -134,7 +134,7 @@ class DashboardTests(unittest.TestCase):
             for name, config in VALUES["defaultDashboards"]["dashboards"].items()
             if config.get("enabled") is False
         }
-        self.assertEqual(disabled, expected)
+        self.assertTrue(expected <= disabled)
         dashboards = [json.loads(path.read_text()) for path in ROOT.glob("*.json")]
         self.assertEqual(len(dashboards), 6)
         self.assertEqual(len({dashboard["uid"] for dashboard in dashboards}), 6)

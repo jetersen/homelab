@@ -26,3 +26,8 @@ and [probe configuration](app/probes.yaml). Keep Grafana's
 When slowing a scrape, adjust alert lookbacks and avoid collecting the same
 series in both fast and slow jobs. Preserve the histogram buckets and counters
 used by alerts and [dashboard overrides](../grafana/app/dashboards/README.md).
+
+Synthetic probes cover NAS HTTPS/NFS ports, internal DNS answers, and DNS
+recursion over UDP and TCP. Application availability relies on Kubernetes
+readiness and workload alerts. Probe intervals and targets live in the
+[probe configuration](app/probes.yaml).

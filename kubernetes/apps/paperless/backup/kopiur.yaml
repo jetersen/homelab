@@ -129,7 +129,7 @@ spec:
   verification:
     quick:
       schedule:
-        cron: 20 9 * * *
+        cron: 20 9 * * 0
         jitter: 0s
     successExpr: stats.files > 0 && stats.errors == 0
     verifyFilesPercent: 100

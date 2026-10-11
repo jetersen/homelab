@@ -21,6 +21,17 @@ spec:
         k8s.rules.container_cpu_limits:
           enabled: false
       rules:
+        # One Alertmanager replica needs one delivery-failure alert.
+        AlertmanagerClusterFailedToSendAlerts:
+          enabled: false
+        AlertmanagerFailedToSendAlerts:
+          spec:
+            labels:
+              severity: critical
+        # An idle scheduler has zero histogram observations and no quantile result.
+        RecordingRulesNoData:
+          spec:
+            expr: sum(vmalert_recording_rules_last_evaluation_samples{group!="kube-scheduler.rules"}) without(id) < 1
         # Workloads omit CPU limits; alert on service impact instead of quota throttling.
         CPUThrottlingHigh:
           enabled: false
@@ -95,6 +106,42 @@ spec:
         kubernetes-views-global:
           enabled: false
         kubernetes-views-namespaces:
+          enabled: false
+        # Homelab has one Linux node; these upstream views do not apply.
+        k8s-resources-multicluster:
+          enabled: false
+        k8s-resources-windows-cluster:
+          enabled: false
+        k8s-resources-windows-namespace:
+          enabled: false
+        k8s-resources-windows-pod:
+          enabled: false
+        k8s-windows-cluster-rsrc-use:
+          enabled: false
+        k8s-windows-node-rsrc-use:
+          enabled: false
+        nodes-aix:
+          enabled: false
+        nodes-darwin:
+          enabled: false
+        # Keep the corrected global/namespace views and detailed workload/node views.
+        cluster-total:
+          enabled: false
+        pod-total:
+          enabled: false
+        workload-total:
+          enabled: false
+        namespace-by-pod:
+          enabled: false
+        namespace-by-workload:
+          enabled: false
+        nodes:
+          enabled: false
+        node-cluster-rsrc-use:
+          enabled: false
+        node-rsrc-use:
+          enabled: false
+        kubernetes-system-api-server:
           enabled: false
     vmsingle:
       enabled: true

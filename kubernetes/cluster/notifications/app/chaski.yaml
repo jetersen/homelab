@@ -83,7 +83,6 @@ spec:
             -}}'
         flux:
           target:
-          - phone
           - inbox-activity
           whenExpr: payload.involvedObject.kind == "HelmRelease" && payload.reason in ["InstallSucceeded", "UpgradeSucceeded",
             "RollbackSucceeded"]

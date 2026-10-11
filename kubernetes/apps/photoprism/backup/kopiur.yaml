@@ -191,7 +191,7 @@ spec:
   verification:
     quick:
       schedule:
-        cron: 40 9 * * *
+        cron: 40 9 * * 0
         jitter: 0s
     successExpr: stats.files > 0 && stats.errors == 0
     verifyFilesPercent: 100
@@ -220,6 +220,8 @@ spec:
   mover:
     cache:
       mode: Persistent
+      # Verification reads through file contents; retain only metadata/index caches.
+      contentCacheSizeMb: 0
   adoption: Ignore
   copyMethod: Direct
   defaultDeletionPolicy: Delete
@@ -261,7 +263,7 @@ spec:
   verification:
     quick:
       schedule:
-        cron: 50 9 * * *
+        cron: 50 9 * * 0
         jitter: 0s
     successExpr: stats.errors == 0
     verifyFilesPercent: 100

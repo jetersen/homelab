@@ -13,7 +13,7 @@ spec:
     server:
       vmServiceScrape:
         enabled: true
-      retentionPeriod: 1y
+      retentionPeriod: 90d
       persistentVolume:
         enabled: true
         existingClaim: server-volume-victoria-logs-single-server-0-lvm
