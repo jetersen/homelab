@@ -17,6 +17,7 @@ spec:
   dependsOn:
     - name: openebs-lvm
     - name: victoria-metrics-k8s-stack
+    - name: tuppr
     - name: victoria-logs
     - name: victoria-logs-collector
   path: ./kubernetes/cluster/grafana/app

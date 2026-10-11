@@ -60,6 +60,113 @@ def set_expression(dashboard, title, old_metric, expression, new_title=None):
         panel["title"] = new_title
 
 
+def patch_api_request_panels(dashboard):
+    """Replace bucket-dependent SLO panels using retained request counters/means."""
+    selector = 'job="apiserver",cluster=~"$cluster"'
+
+    def rates(metric, filters="", grouping=""):
+        return f"sum{grouping}(rate({metric}{{{selector}{filters}}}[$__rate_interval]))"
+
+    def errors(filters="", grouping=""):
+        return (
+            rates("apiserver_request_total", filters + ',code=~"5.."', grouping)
+            + " / "
+            + rates("apiserver_request_total", filters, grouping)
+        )
+
+    def mean(filters="", grouping=""):
+        return (
+            rates("apiserver_request_sli_duration_seconds_sum", filters, grouping)
+            + " / "
+            + rates("apiserver_request_sli_duration_seconds_count", filters, grouping)
+        )
+
+    patches = [
+        (
+            "Availability (30d) > 99.000%",
+            "apiserver_request:availability30d",
+            "API server 5xx error ratio",
+            errors(),
+            "percentunit",
+        ),
+        (
+            "Error Budget (30d) > 99.000%",
+            "apiserver_request:availability30d",
+            "API server mean latency",
+            mean(),
+            "s",
+        ),
+    ]
+    for kind, verbs in [("Read", "LIST|GET"), ("Write", "POST|PUT|PATCH|DELETE")]:
+        filters = f',verb=~"{verbs}"'
+        patches.extend(
+            [
+                (
+                    f"{kind} Availability (30d)",
+                    "apiserver_request:availability30d",
+                    f"{kind} mean latency",
+                    mean(filters),
+                    "s",
+                ),
+                (
+                    f"{kind} SLI - Requests",
+                    "code_resource:apiserver_request_total:rate5m",
+                    f"{kind} requests / second",
+                    rates("apiserver_request_total", filters, " by (code)"),
+                    "reqps",
+                ),
+                (
+                    f"{kind} SLI - Errors",
+                    "code_resource:apiserver_request_total:rate5m",
+                    f"{kind} 5xx error ratio",
+                    errors(filters, " by (resource)"),
+                    "percentunit",
+                ),
+                (
+                    f"{kind} SLI - Duration",
+                    "cluster_quantile:apiserver_request_sli_duration_seconds:histogram_quantile",
+                    f"{kind} mean latency by resource",
+                    mean(filters, " by (resource)"),
+                    "s",
+                ),
+            ]
+        )
+    # Validate every expected panel before changing any panel.
+    for title, metric, *_ in patches:
+        panel = one_panel(dashboard, title)
+        targets = panel.get("targets", [])
+        if len(targets) != 1 or metric not in targets[0].get("expr", ""):
+            raise ValueError(f"Unexpected query shape for {title!r}")
+    notice = one_panel(dashboard, "Notice")
+    if "SLO (service level objective)" not in notice.get("options", {}).get("content", ""):
+        raise ValueError("Unexpected API server notice")
+    for title, metric, new_title, expression, unit in patches:
+        panel = one_panel(dashboard, title)
+        set_expression(dashboard, title, metric, expression, new_title)
+        panel["description"] = (
+            "5xx responses divided by all requests; no requests yields no data."
+            if unit == "percentunit"
+            else "Mean latency per request; no requests yields no data. Histogram percentiles and latency SLOs are not collected."
+            if unit == "s"
+            else "API requests per second, grouped by response status."
+        )
+        defaults = panel.setdefault("fieldConfig", {}).setdefault("defaults", {})
+        defaults["unit"] = unit
+        defaults.pop("thresholds", None)
+        panel.pop("thresholds", None)
+        panel["targets"][0]["legendFormat"] = (
+            "{{code}}"
+            if "by (code)" in expression
+            else "{{resource}}"
+            if "by (resource)" in expression
+            else new_title
+        )
+    notice["description"] = notice["options"]["content"] = (
+        "Request rates, 5xx error ratios and mean latency use retained counters and histogram sums/counts. "
+        "Latency percentiles, availability SLOs and burn rates are not collected."
+    )
+
+
 def normalize(value):
     if isinstance(value, str):
         # The etcd mixin calls its job selector "cluster"; use the real label.
@@ -117,6 +224,7 @@ def patched_dashboards():
     }
     kubelet = embedded["kubelet.json"]
     apiserver = embedded["apiserver.json"]
+    patch_api_request_panels(apiserver)
     for resource in ["namespace", "deployment", "statefulset", "daemonset", "networkpolicy"]:
         # Count objects directly; label allowlists are unnecessary for this panel.
         old = f"sum(kube_{resource}_labels"

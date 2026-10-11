@@ -19,7 +19,7 @@
         "type": "datasource",
         "uid": "-- Mixed --"
       },
-      "description": "The SLO (service level objective) and other metrics displayed on this dashboard are for informational purposes only.",
+      "description": "Request rates, 5xx error ratios and mean latency use retained counters and histogram sums/counts. Latency percentiles, availability SLOs and burn rates are not collected.",
       "gridPos": {
         "h": 2,
         "w": 24,
@@ -28,7 +28,7 @@
       },
       "id": 1,
       "options": {
-        "content": "The SLO (service level objective) and other metrics displayed on this dashboard are for informational purposes only."
+        "content": "Request rates, 5xx error ratios and mean latency use retained counters and histogram sums/counts. Latency percentiles, availability SLOs and burn rates are not collected."
       },
       "pluginVersion": "v13.0.0",
       "title": "Notice",
@@ -39,7 +39,7 @@
         "type": "datasource",
         "uid": "-- Mixed --"
       },
-      "description": "How many percent of requests (both read and write) in 30 days have been answered successfully and fast enough?",
+      "description": "5xx responses divided by all requests; no requests yields no data.",
       "fieldConfig": {
         "defaults": {
           "decimals": 3,
@@ -61,10 +61,11 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "apiserver_request:availability30d{verb=\"all\", cluster=~\"$cluster\"}"
+          "expr": "sum(rate(apiserver_request_total{job=\"apiserver\",cluster=~\"$cluster\",code=~\"5..\"}[$__rate_interval])) / sum(rate(apiserver_request_total{job=\"apiserver\",cluster=~\"$cluster\"}[$__rate_interval]))",
+          "legendFormat": "API server 5xx error ratio"
         }
       ],
-      "title": "Availability (30d) > 99.000%",
+      "title": "API server 5xx error ratio",
       "type": "stat"
     },
     {
@@ -72,14 +73,14 @@
         "type": "datasource",
         "uid": "-- Mixed --"
       },
-      "description": "How much error budget is left looking at our 99.000% availability guarantee?",
+      "description": "Mean latency per request; no requests yields no data. Histogram percentiles and latency SLOs are not collected.",
       "fieldConfig": {
         "defaults": {
           "custom": {
             "fillOpacity": 100
           },
           "decimals": 3,
-          "unit": "percentunit"
+          "unit": "s"
         }
       },
       "gridPos": {
@@ -107,11 +108,11 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "100 * (apiserver_request:availability30d{verb=\"all\", cluster=~\"$cluster\"} - 0.990000)",
-          "legendFormat": "error budget"
+          "expr": "sum(rate(apiserver_request_sli_duration_seconds_sum{job=\"apiserver\",cluster=~\"$cluster\"}[$__rate_interval])) / sum(rate(apiserver_request_sli_duration_seconds_count{job=\"apiserver\",cluster=~\"$cluster\"}[$__rate_interval]))",
+          "legendFormat": "API server mean latency"
         }
       ],
-      "title": "Error Budget (30d) > 99.000%",
+      "title": "API server mean latency",
       "type": "timeseries"
     },
     {
@@ -119,11 +120,11 @@
         "type": "datasource",
         "uid": "-- Mixed --"
       },
-      "description": "How many percent of read requests (LIST,GET) in 30 days have been answered successfully and fast enough?",
+      "description": "Mean latency per request; no requests yields no data. Histogram percentiles and latency SLOs are not collected.",
       "fieldConfig": {
         "defaults": {
           "decimals": 3,
-          "unit": "percentunit"
+          "unit": "s"
         }
       },
       "gridPos": {
@@ -141,10 +142,11 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "apiserver_request:availability30d{verb=\"read\", cluster=~\"$cluster\"}"
+          "expr": "sum(rate(apiserver_request_sli_duration_seconds_sum{job=\"apiserver\",cluster=~\"$cluster\",verb=~\"LIST|GET\"}[$__rate_interval])) / sum(rate(apiserver_request_sli_duration_seconds_count{job=\"apiserver\",cluster=~\"$cluster\",verb=~\"LIST|GET\"}[$__rate_interval]))",
+          "legendFormat": "Read mean latency"
         }
       ],
-      "title": "Read Availability (30d)",
+      "title": "Read mean latency",
       "type": "stat"
     },
     {
@@ -152,7 +154,7 @@
         "type": "datasource",
         "uid": "-- Mixed --"
       },
-      "description": "How many read requests (LIST,GET) per second do the apiservers get by code?",
+      "description": "API requests per second, grouped by response status.",
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -239,11 +241,11 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum by (code) (code_resource:apiserver_request_total:rate5m{verb=\"read\", cluster=~\"$cluster\"})",
-          "legendFormat": "{{ code }}"
+          "expr": "sum by (code)(rate(apiserver_request_total{job=\"apiserver\",cluster=~\"$cluster\",verb=~\"LIST|GET\"}[$__rate_interval]))",
+          "legendFormat": "{{code}}"
         }
       ],
-      "title": "Read SLI - Requests",
+      "title": "Read requests / second",
       "type": "timeseries"
     },
     {
@@ -251,7 +253,7 @@
         "type": "datasource",
         "uid": "-- Mixed --"
       },
-      "description": "How many percent of read requests (LIST,GET) per second are returned with errors (5xx)?",
+      "description": "5xx responses divided by all requests; no requests yields no data.",
       "fieldConfig": {
         "defaults": {
           "min": 0,
@@ -283,11 +285,11 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum by (resource) (code_resource:apiserver_request_total:rate5m{verb=\"read\",code=~\"5..\", cluster=~\"$cluster\"}) / sum by (resource) (code_resource:apiserver_request_total:rate5m{verb=\"read\", cluster=~\"$cluster\"})",
-          "legendFormat": "{{ resource }}"
+          "expr": "sum by (resource)(rate(apiserver_request_total{job=\"apiserver\",cluster=~\"$cluster\",verb=~\"LIST|GET\",code=~\"5..\"}[$__rate_interval])) / sum by (resource)(rate(apiserver_request_total{job=\"apiserver\",cluster=~\"$cluster\",verb=~\"LIST|GET\"}[$__rate_interval]))",
+          "legendFormat": "{{resource}}"
         }
       ],
-      "title": "Read SLI - Errors",
+      "title": "Read 5xx error ratio",
       "type": "timeseries"
     },
     {
@@ -295,7 +297,7 @@
         "type": "datasource",
         "uid": "-- Mixed --"
       },
-      "description": "How many seconds is the 99th percentile for reading (LIST|GET) a given resource?",
+      "description": "Mean latency per request; no requests yields no data. Histogram percentiles and latency SLOs are not collected.",
       "fieldConfig": {
         "defaults": {
           "unit": "s"
@@ -326,11 +328,11 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "cluster_quantile:apiserver_request_sli_duration_seconds:histogram_quantile{verb=\"read\", cluster=~\"$cluster\"}",
-          "legendFormat": "{{ resource }}"
+          "expr": "sum by (resource)(rate(apiserver_request_sli_duration_seconds_sum{job=\"apiserver\",cluster=~\"$cluster\",verb=~\"LIST|GET\"}[$__rate_interval])) / sum by (resource)(rate(apiserver_request_sli_duration_seconds_count{job=\"apiserver\",cluster=~\"$cluster\",verb=~\"LIST|GET\"}[$__rate_interval]))",
+          "legendFormat": "{{resource}}"
         }
       ],
-      "title": "Read SLI - Duration",
+      "title": "Read mean latency by resource",
       "type": "timeseries"
     },
     {
@@ -338,11 +340,11 @@
         "type": "datasource",
         "uid": "-- Mixed --"
       },
-      "description": "How many percent of write requests (POST|PUT|PATCH|DELETE) in 30 days have been answered successfully and fast enough?",
+      "description": "Mean latency per request; no requests yields no data. Histogram percentiles and latency SLOs are not collected.",
       "fieldConfig": {
         "defaults": {
           "decimals": 3,
-          "unit": "percentunit"
+          "unit": "s"
         }
       },
       "gridPos": {
@@ -360,10 +362,11 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "apiserver_request:availability30d{verb=\"write\", cluster=~\"$cluster\"}"
+          "expr": "sum(rate(apiserver_request_sli_duration_seconds_sum{job=\"apiserver\",cluster=~\"$cluster\",verb=~\"POST|PUT|PATCH|DELETE\"}[$__rate_interval])) / sum(rate(apiserver_request_sli_duration_seconds_count{job=\"apiserver\",cluster=~\"$cluster\",verb=~\"POST|PUT|PATCH|DELETE\"}[$__rate_interval]))",
+          "legendFormat": "Write mean latency"
         }
       ],
-      "title": "Write Availability (30d)",
+      "title": "Write mean latency",
       "type": "stat"
     },
     {
@@ -371,7 +374,7 @@
         "type": "datasource",
         "uid": "-- Mixed --"
       },
-      "description": "How many write requests (POST|PUT|PATCH|DELETE) per second do the apiservers get by code?",
+      "description": "API requests per second, grouped by response status.",
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -458,11 +461,11 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum by (code) (code_resource:apiserver_request_total:rate5m{verb=\"write\", cluster=~\"$cluster\"})",
-          "legendFormat": "{{ code }}"
+          "expr": "sum by (code)(rate(apiserver_request_total{job=\"apiserver\",cluster=~\"$cluster\",verb=~\"POST|PUT|PATCH|DELETE\"}[$__rate_interval]))",
+          "legendFormat": "{{code}}"
         }
       ],
-      "title": "Write SLI - Requests",
+      "title": "Write requests / second",
       "type": "timeseries"
     },
     {
@@ -470,7 +473,7 @@
         "type": "datasource",
         "uid": "-- Mixed --"
       },
-      "description": "How many percent of write requests (POST|PUT|PATCH|DELETE) per second are returned with errors (5xx)?",
+      "description": "5xx responses divided by all requests; no requests yields no data.",
       "fieldConfig": {
         "defaults": {
           "min": 0,
@@ -502,11 +505,11 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "sum by (resource) (code_resource:apiserver_request_total:rate5m{verb=\"write\",code=~\"5..\", cluster=~\"$cluster\"}) / sum by (resource) (code_resource:apiserver_request_total:rate5m{verb=\"write\", cluster=~\"$cluster\"})",
-          "legendFormat": "{{ resource }}"
+          "expr": "sum by (resource)(rate(apiserver_request_total{job=\"apiserver\",cluster=~\"$cluster\",verb=~\"POST|PUT|PATCH|DELETE\",code=~\"5..\"}[$__rate_interval])) / sum by (resource)(rate(apiserver_request_total{job=\"apiserver\",cluster=~\"$cluster\",verb=~\"POST|PUT|PATCH|DELETE\"}[$__rate_interval]))",
+          "legendFormat": "{{resource}}"
         }
       ],
-      "title": "Write SLI - Errors",
+      "title": "Write 5xx error ratio",
       "type": "timeseries"
     },
     {
@@ -514,7 +517,7 @@
         "type": "datasource",
         "uid": "-- Mixed --"
       },
-      "description": "How many seconds is the 99th percentile for writing (POST|PUT|PATCH|DELETE) a given resource?",
+      "description": "Mean latency per request; no requests yields no data. Histogram percentiles and latency SLOs are not collected.",
       "fieldConfig": {
         "defaults": {
           "unit": "s"
@@ -545,11 +548,11 @@
             "type": "prometheus",
             "uid": "${datasource}"
           },
-          "expr": "cluster_quantile:apiserver_request_sli_duration_seconds:histogram_quantile{verb=\"write\", cluster=~\"$cluster\"}",
-          "legendFormat": "{{ resource }}"
+          "expr": "sum by (resource)(rate(apiserver_request_sli_duration_seconds_sum{job=\"apiserver\",cluster=~\"$cluster\",verb=~\"POST|PUT|PATCH|DELETE\"}[$__rate_interval])) / sum by (resource)(rate(apiserver_request_sli_duration_seconds_count{job=\"apiserver\",cluster=~\"$cluster\",verb=~\"POST|PUT|PATCH|DELETE\"}[$__rate_interval]))",
+          "legendFormat": "{{resource}}"
         }
       ],
-      "title": "Write SLI - Duration",
+      "title": "Write mean latency by resource",
       "type": "timeseries"
     },
     {

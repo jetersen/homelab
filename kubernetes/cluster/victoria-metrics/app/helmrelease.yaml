@@ -17,6 +17,15 @@ spec:
     fullnameOverride: vm
     defaultRules:
       groups:
+        # This single-user cluster has no API availability SLO or error budget.
+        kube-apiserver-availability.rules:
+          enabled: false
+        kube-apiserver-burnrate.rules:
+          enabled: false
+        kube-apiserver-histogram.rules:
+          enabled: false
+        kube-apiserver-slos:
+          enabled: false
         # Workloads omit CPU limits, so these recording rules never produce data.
         k8s.rules.container_cpu_limits:
           enabled: false
@@ -191,7 +200,7 @@ spec:
                 # Retain sums and counts for the diagnostics dashboard's means/rates.
                 - action: drop
                   source_labels: [__name__]
-                  regex: '(apiserver_request_duration_seconds|etcd_request_duration_seconds|apiserver_request_body_size_bytes|apiserver_watch_list_duration_seconds|apiserver_watch_cache_read_wait_seconds|apiserver_response_sizes|apiserver_watch_events_sizes)_bucket'
+                  regex: '(apiserver_request_sli_duration_seconds|apiserver_request_duration_seconds|etcd_request_duration_seconds|apiserver_request_body_size_bytes|apiserver_watch_list_duration_seconds|apiserver_watch_cache_read_wait_seconds|apiserver_response_sizes|apiserver_watch_events_sizes)_bucket'
     kubeControllerManager:
       vmScrape:
         spec:

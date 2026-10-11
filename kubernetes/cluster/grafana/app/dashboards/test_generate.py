@@ -48,12 +48,13 @@ class DashboardTests(unittest.TestCase):
                     r"kube_(namespace|deployment|statefulset|daemonset|networkpolicy)_labels",
                 )
 
-    def test_api_filter_preserves_alert_histograms_and_diagnostic_means(self):
+    def test_api_filter_drops_latency_buckets_and_preserves_means(self):
         regex = VALUES["kubeApiServer"]["vmScrape"]["spec"]["endpoints"][0]["metricRelabelConfigs"][
             0
         ]["regex"]
         for metric in [
             "apiserver_request_duration_seconds",
+            "apiserver_request_sli_duration_seconds",
             "etcd_request_duration_seconds",
             "apiserver_request_body_size_bytes",
             "apiserver_watch_list_duration_seconds",
@@ -65,10 +66,40 @@ class DashboardTests(unittest.TestCase):
             for suffix in ["_sum", "_count"]:
                 self.assertIsNone(re.fullmatch(regex, metric + suffix))
         for metric in [
-            "apiserver_request_sli_duration_seconds_bucket",
             "apiserver_client_certificate_expiration_seconds_bucket",
         ]:
             self.assertIsNone(re.fullmatch(regex, metric))
+
+    def test_api_request_panels_use_means_and_raw_counters(self):
+        dashboard = json.loads((ROOT / "apiserver.json").read_text())
+        self.assertEqual(dashboard["uid"], "09ec8aa1e996d6ffcd6817bbaff4db1b")
+        for target in generate.expressions(dashboard):
+            self.assertNotRegex(
+                target["expr"],
+                r"apiserver_request:|code_resource:apiserver_request|cluster_quantile:apiserver_request",
+            )
+            self.assertNotIn("apiserver_request_sli_duration_seconds_bucket", target["expr"])
+        for kind, verbs in [("Read", "LIST|GET"), ("Write", "POST|PUT|PATCH|DELETE")]:
+            mean = generate.one_panel(dashboard, f"{kind} mean latency by resource")["targets"][0][
+                "expr"
+            ]
+            self.assertIn("apiserver_request_sli_duration_seconds_sum", mean)
+            self.assertIn("apiserver_request_sli_duration_seconds_count", mean)
+            self.assertIn(f'verb=~"{verbs}"', mean)
+            self.assertIn(" / ", mean)
+            error = generate.one_panel(dashboard, f"{kind} 5xx error ratio")["targets"][0]["expr"]
+            self.assertIn('code=~"5.."', error)
+            self.assertEqual(error.count("apiserver_request_total"), 2)
+            self.assertNotIn("histogram_quantile", mean)
+
+    def test_api_panel_patch_rejects_changed_query_before_mutating(self):
+        # A changed pinned source must fail before producing partial output.
+        dashboard = {
+            "panels": [{"title": "Availability (30d) > 99.000%", "targets": [{"expr": "changed"}]}]
+        }
+        with self.assertRaises(ValueError):
+            generate.patch_api_request_panels(dashboard)
+        self.assertEqual(dashboard["panels"][0]["targets"][0]["expr"], "changed")
 
     def test_probe_filter_preserves_failure_history(self):
         filters = VALUES["kubelet"]["vmScrapes"]["probes"]["spec"]["metricRelabelConfigs"]

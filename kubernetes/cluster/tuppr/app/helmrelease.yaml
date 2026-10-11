@@ -21,3 +21,4 @@ spec:
     monitoring:
       dashboards:
         enabled: true
+        namespace: monitoring

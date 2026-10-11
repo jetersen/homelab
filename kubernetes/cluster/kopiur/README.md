@@ -7,8 +7,6 @@ they have succeeded. Offsite recovery depends on successful replication after
 the selected snapshot, including after a manual snapshot. The read-only
 `APPLICATION-offsite` repositories support S3 discovery and recovery. Forgejo
 stages both stores on the NAS and writes its Kopia repository directly to S3.
-Paperless backs up native document exports directly to S3, excluding its live
-SQLite database and working directories.
 
 Kopiur owns snapshot retention and repository maintenance. Native application
 archive retention is separate. The source-scoped keep-latest policy flag prevents
@@ -18,8 +16,8 @@ Nightly quick maintenance handles routine repository cleanup; weekly full
 maintenance performs deeper reclamation. The application repository inputs,
 such as [Home Assistant](../../apps/home-assistant/backup/kopiur.yaml), define the
 schedules and persistent maintenance cache. Reusing that cache avoids formatting
-a fresh local volume for each maintenance run. Paperless export and the two
-PhotoPrism snapshot policies also retain separate policy-owned caches across
+a fresh local volume for each maintenance run. The two PhotoPrism snapshot
+policies also retain separate policy-owned caches across
 runs; verification keeps its disposable cache. Persistent snapshot and
 maintenance caches require distinct controller resource names: the installed
 operator derives the same PVC name from both kinds.

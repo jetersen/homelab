@@ -10,6 +10,9 @@ spec:
     kind: OCIRepository
     name: grafana
   values:
+    rbac:
+      create: false
+    automountServiceAccountToken: false
     testFramework:
       resources:
         requests:
@@ -77,13 +80,77 @@ spec:
             type: victoriametrics-logs-datasource
             url: http://victoria-logs-single-server:9428
             access: proxy
+    # Keep the provider identity while replacing the Kubernetes watcher with files.
+    dashboardProviders:
+      dashboardproviders.yaml:
+        apiVersion: 1
+        providers:
+          - name: sidecarProvider
+            orgId: 1
+            folder: ""
+            type: file
+            disableDeletion: false
+            allowUiUpdates: false
+            # Poll rather than relying on filesystem events for ConfigMap updates.
+            updateIntervalSeconds: 30
+            options:
+              path: /tmp/dashboards
+    # Chart 13.5.0 exposes generic projected volumes through this mount option.
+    # These are ConfigMaps only; no dashboard JSON is copied or downloaded.
+    extraSecretMounts:
+      - name: dashboard-files
+        mountPath: /tmp/dashboards
+        readOnly: true
+        projected:
+          sources:
+            - configMap:
+                name: homelab-alerts-dashboard
+            - configMap:
+                name: homelab-control-plane-dashboards
+            - configMap:
+                name: vm-dashboard-alertmanager-overview
+            - configMap:
+                name: vm-dashboard-controller-manager
+            - configMap:
+                name: vm-dashboard-k8s-resources-cluster
+            - configMap:
+                name: vm-dashboard-k8s-resources-namespace
+            - configMap:
+                name: vm-dashboard-k8s-resources-node
+            - configMap:
+                name: vm-dashboard-k8s-resources-nodes-overview
+            - configMap:
+                name: vm-dashboard-k8s-resources-pod
+            - configMap:
+                name: vm-dashboard-k8s-resources-workload
+            - configMap:
+                name: vm-dashboard-k8s-resources-workloads-namespace
+            - configMap:
+                name: vm-dashboard-kubernetes-system-coredns
+            - configMap:
+                name: vm-dashboard-kubernetes-views-nodes
+            - configMap:
+                name: vm-dashboard-kubernetes-views-pods
+            - configMap:
+                name: vm-dashboard-node-exporter-full
+            - configMap:
+                name: vm-dashboard-persistentvolumesusage
+            - configMap:
+                name: vm-dashboard-prometheus
+            - configMap:
+                name: vm-dashboard-prometheus-remote-write
+            - configMap:
+                name: vm-dashboard-scheduler
+            - configMap:
+                name: vm-dashboard-victoriametrics-operator
+            - configMap:
+                name: vm-dashboard-victoriametrics-single-node
+            - configMap:
+                name: vm-dashboard-victoriametrics-vmagent
+            - configMap:
+                name: vm-dashboard-victoriametrics-vmalert
+            - configMap:
+                name: tuppr-dashboard
     sidecar:
-      resources:
-        requests:
-          cpu: 15m
-          memory: 96Mi
       dashboards:
-        enabled: true
-        searchNamespace: ALL
-        label: grafana_dashboard
-        labelValue: "1"
+        enabled: false
