@@ -13,7 +13,9 @@ spec:
     mode: disabled
   values:
     fullnameOverride: tuppr
-    replicaCount: 0
+    # Helm upgrades must keep an active cluster upgrade running.
+    # Scheduled jobs scale the live Deployment to zero after completion.
+    replicaCount: 1
     resources:
       requests:
         cpu: 20m

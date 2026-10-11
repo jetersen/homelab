@@ -4,9 +4,10 @@ upgrade plans to be `Completed` for their current generation. Pending, running,
 failed, or unreadable plans leave the controller enabled for recovery and alerts.
 
 Version changes made while the controller is off wait for the next scheduled
-window. Helm installs and upgrades set the controller to zero replicas; avoid
-upgrading its chart during an active cluster upgrade. Flux drift correction is
-disabled for this release so it does not undo scheduled scaling.
+window. Helm installs and upgrades enable the controller so a chart update
+cannot stop an active cluster upgrade. The scheduled stop job returns it to
+zero after completion. Flux drift correction is disabled for this release so
+ordinary reconciliation does not undo scheduled scaling.
 
 For an unscheduled run, create a Job from `tuppr-wake` in `system-upgrade`. The
 plans still honor their maintenance windows. Create a Job from `tuppr-sleep`
