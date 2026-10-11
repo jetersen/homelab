@@ -21,7 +21,9 @@ it can be queried. Remote hosting or replication is a separate deployment choice
 
 Scrape intervals and metric filters live in the
 [metrics values](app/helmrelease.yaml), [infrastructure scrapes](app/infrastructure-scrapes.yaml),
-and [probe configuration](app/probes.yaml). Keep Grafana's
+and [probe configuration](app/probes.yaml). Default scrapes and rule evaluations
+run once per minute; inventory and external probes use their slower configured
+intervals. Fixed counter-rate windows span at least five minutes. Keep Grafana's
 [datasource interval](../grafana/app/helmrelease.yaml) aligned with collection.
 When slowing a scrape, adjust alert lookbacks and avoid collecting the same
 series in both fast and slow jobs. Preserve the histogram buckets and counters
@@ -32,6 +34,12 @@ and histogram sums/counts remain available for error rates and mean latency;
 SLI latency buckets and their percentile recording rules are omitted. This
 reduces collection and evaluation work without disabling API-down, certificate,
 workload, storage, or backup alerts.
+
+The [Talos API metrics patch](../../talos/patches/control-plane/api-metrics.yaml)
+disables the unused request-duration histogram at its source. The separate SLI
+histogram still supplies mean request latency. Metric filters also omit unused
+feature inventory, block-I/O series, and diagnostic histogram buckets while
+preserving their sums/counts and garbage-collection metrics.
 
 Synthetic probes cover NAS HTTPS/NFS ports, internal DNS answers, and DNS
 recursion over UDP and TCP. Application availability relies on Kubernetes

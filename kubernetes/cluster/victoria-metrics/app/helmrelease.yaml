@@ -16,6 +16,9 @@ spec:
           cpu: 10m
     fullnameOverride: vm
     defaultRules:
+      group:
+        spec:
+          interval: 60s
       groups:
         # This single-user cluster has no API availability SLO or error budget.
         kube-apiserver-availability.rules:
@@ -30,6 +33,43 @@ spec:
         k8s.rules.container_cpu_limits:
           enabled: false
       rules:
+        # Fixed rate windows need several samples at the one-minute scrape cadence.
+        instance:node_cpu:rate:sum:
+          spec:
+            expr: sum(rate(node_cpu_seconds_total{mode!="idle",mode!="iowait",mode!="steal"}[5m])) by(instance)
+        instance:node_network_receive_bytes:rate:sum:
+          spec:
+            expr: sum(rate(node_network_receive_bytes_total[5m])) by(instance)
+        instance:node_network_transmit_bytes:rate:sum:
+          spec:
+            expr: sum(rate(node_network_transmit_bytes_total[5m])) by(instance)
+        KubeAggregatedAPIErrors:
+          spec:
+            expr: sum(increase(aggregator_unavailable_apiservice_total{job="apiserver"}[5m])) by(cluster,instance,name,reason) > 0
+        NodeNetworkReceiveErrs:
+          spec:
+            expr: (rate(node_network_receive_errs_total{job="node-exporter"}[5m]) / rate(node_network_receive_packets_total{job="node-exporter"}[5m])) > 0.01
+        NodeNetworkTransmitErrs:
+          spec:
+            expr: (rate(node_network_transmit_errs_total{job="node-exporter"}[5m]) / rate(node_network_transmit_packets_total{job="node-exporter"}[5m])) > 0.01
+        NodeCPUHighUsage:
+          spec:
+            expr: (sum(avg(rate(node_cpu_seconds_total{job="node-exporter",mode!~"idle|iowait"}[5m])) without(cpu)) without(mode) * 100) > 90
+        NodeNetworkInterfaceFlapping:
+          spec:
+            expr: changes(node_network_up{job="node-exporter",device!~"veth.+"}[5m]) > 2
+        TooManyErrorLogs:
+          spec:
+            expr: sum(increase(vm_log_messages_total{level=~"error|fatal|panic"}[5m])) without(app_version,is_printed) > 0
+        ConcurrentInsertsHitTheLimit:
+          spec:
+            expr: avg_over_time(vm_concurrent_insert_current[5m]) >= vm_concurrent_insert_capacity
+        PersistentQueueRunsOutOfSpaceIn12Hours:
+          spec:
+            expr: (((sum(vm_persistentqueue_free_disk_space_bytes) by(job,instance,path) / (sum(deriv(vm_persistentqueue_bytes_pending[5m])) by(job,instance,path) > 0)) * on(job,instance,path) group_left(url) ((vmagent_remotewrite_pending_data_bytes * 0) + 1)) < 43200) > 0
+        PersistentQueueRunsOutOfSpaceIn4Hours:
+          spec:
+            expr: (((sum(vm_persistentqueue_free_disk_space_bytes) by(job,instance,path) / (sum(deriv(vm_persistentqueue_bytes_pending[5m])) by(job,instance,path) > 0)) * on(job,instance,path) group_left(url) ((vmagent_remotewrite_pending_data_bytes * 0) + 1)) < 14400) > 0
         # One Alertmanager replica needs one delivery-failure alert.
         AlertmanagerClusterFailedToSendAlerts:
           enabled: false
@@ -174,6 +214,7 @@ spec:
             memory: 2Gi
     vmalert:
       spec:
+        evaluationInterval: 60s
         # Run as UID 65534 with a read-only root filesystem and no capabilities.
         useStrictSecurity: true
         resources:
@@ -237,13 +278,17 @@ spec:
         # Run as UID 65534 with a read-only root filesystem and no capabilities.
         useStrictSecurity: true
         selectAllByDefault: true
-        scrapeInterval: 30s
+        scrapeInterval: 60s
         # Remove this filter to re-enable optional diagnostic series for future samples.
         # Histogram sums/counts, queue latency, and OOM signals remain available.
         inlineRelabelConfig:
           - action: drop
             source_labels: [__name__]
             regex: '(container_tasks_state|container_memory_failures_total|container_file_descriptors|container_sockets|container_threads|container_threads_max|container_ulimits_soft|workqueue_work_duration_seconds_bucket|scheduler_plugin_execution_duration_seconds_bucket)'
+          # Unused inventory and histogram buckets; retain sums/counts and GC diagnostics.
+          - action: drop
+            source_labels: [__name__]
+            regex: '(kubernetes_feature_enabled|container_blkio_device_usage_total|informer_processing_latency_seconds_bucket|rest_client_rate_limiter_duration_seconds_bucket|rest_client_request_size_bytes_bucket|rest_client_response_size_bytes_bucket|gotk_reconcile_duration_seconds_bucket|envoy_cluster_update_duration_bucket)'
         resources:
           requests:
             cpu: 50m
@@ -251,6 +296,9 @@ spec:
           limits:
             memory: 500Mi
     kubelet:
+      vmScrape:
+        spec:
+          interval: 60s
       vmScrapes:
         # cAdvisor supplies the container CPU and memory metrics used by our rules.
         resources:
@@ -292,7 +340,7 @@ spec:
       vmScrape:
         spec:
           endpoints:
-            # Readiness and metadata used by workload joins stay at the default 30s.
+            # Readiness and metadata used by workload joins follow the default 60s.
             - port: http
               honorLabels: true
               metricRelabelConfigs:

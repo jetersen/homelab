@@ -26,6 +26,9 @@ spec:
         reporting_enabled: false
         check_for_updates: false
         check_for_plugin_updates: false
+      # VictoriaMetrics and its Alertmanager own alert evaluation and delivery.
+      unified_alerting:
+        enabled: false
       auth:
         disable_login_form: true
         oauth_auto_login: false
@@ -67,7 +70,7 @@ spec:
             isDefault: true
             access: proxy
             jsonData:
-              timeInterval: 30s
+              timeInterval: 60s
           - name: Alertmanager
             uid: homelab-alertmanager
             type: alertmanager

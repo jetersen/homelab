@@ -1,0 +1,6 @@
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/external/siderolabs/talos/config.schema.json
+apiVersion: v1alpha1
+kind: KubeAPIServerConfig
+extraArgs:
+  # Retain the SLI sums/counts used for mean latency; this duplicate histogram is unused.
+  disabled-metrics: apiserver_request_duration_seconds
