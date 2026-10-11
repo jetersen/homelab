@@ -43,6 +43,11 @@ histogram still supplies mean request latency. Metric filters also omit unused
 feature inventory, block-I/O series, and diagnostic histogram buckets while
 preserving their sums/counts and garbage-collection metrics.
 
+The API server's heap/CPU tradeoff is configured in the
+[Talos GC patch](../../talos/patches/control-plane/api-gc.yaml). `GOGC` controls
+the heap growth target rather than imposing a hard memory limit. Restore `100`
+to use Go's default, and compare memory, CPU, and request latency when tuning it.
+
 Synthetic probes cover NAS HTTPS/NFS ports, internal DNS answers, and DNS
 recursion over UDP and TCP. Application availability relies on Kubernetes
 readiness and workload alerts. Probe intervals and targets live in the

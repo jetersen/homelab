@@ -1,0 +1,6 @@
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/external/siderolabs/talos/config.schema.json
+apiVersion: v1alpha1
+kind: KubeAPIServerConfig
+env:
+  # Trade additional GC work for a smaller heap target; restore 100 to use Go's default.
+  GOGC: "50"
