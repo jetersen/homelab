@@ -40,8 +40,8 @@ use `create.enabled: true` for its first initialization.
 See [Home Assistant and Zigbee backups](/kubernetes/apps/home-assistant/backup/README.md),
 [Sonarr backups](/kubernetes/apps/media/backup/README.md),
 [Forgejo recovery](/kubernetes/apps/forgejo/README.md#backup-and-recovery),
-[PhotoPrism recovery](/kubernetes/apps/photoprism/README.md#backups-and-recovery), and
-[Paperless recovery](/kubernetes/apps/paperless/README.md#backups-and-recovery).
+[PhotoPrism recovery](/kubernetes/apps/photoprism/README.md#backups-and-recovery).
+
 PVC backups do not recover Talos configuration, SOPS keys, unrelated NAS data,
 Pulumi state, or secrets outside those volumes.
 

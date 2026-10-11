@@ -13,7 +13,6 @@ resources:
   - media.yaml
   - monitoring.yaml
   - openspeedtest.yaml
-  - paperless.yaml
   - photoprism.yaml
   - searxng.yaml
   - system-upgrade.yaml

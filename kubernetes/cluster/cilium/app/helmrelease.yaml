@@ -32,6 +32,8 @@ spec:
       enabled: false
     endpointRoutes:
       enabled: true
+    # No L7 policies use the embedded Envoy proxy.
+    l7Proxy: false
     envoy:
       enabled: false
     envoyConfig:
