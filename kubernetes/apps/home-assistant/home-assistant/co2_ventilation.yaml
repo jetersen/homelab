@@ -25,6 +25,37 @@ input_datetime:
     has_date: true
     has_time: true
 
+timer:
+  ventilation_fan_manual_run:
+    name: Fan manual run
+    icon: mdi:timer-outline
+    duration: "01:00:00"
+    restore: true
+
+script:
+  ventilation_fan_add_hour:
+    alias: Fan +1 hour
+    icon: mdi:timer-plus-outline
+    description: Add one hour of manual ventilation, then resume automatic control.
+    mode: queued
+    sequence:
+      - variables:
+          duration: >-
+            {{ 3600 +
+               ([0, as_timestamp(state_attr('timer.ventilation_fan_manual_run', 'finishes_at'), 0)
+                    - as_timestamp(now())] | max | round(0, 'ceil') | int
+                if is_state('timer.ventilation_fan_manual_run', 'active') else 0) }}
+      - action: input_select.select_option
+        target:
+          entity_id: input_select.ventilation_fan_mode
+        data:
+          option: Auto
+      - action: timer.start
+        target:
+          entity_id: timer.ventilation_fan_manual_run
+        data:
+          duration: "{{ duration }}"
+
 template:
   - binary_sensor:
       - name: CO2 ventilation high
@@ -137,13 +168,14 @@ automation:
   - id: ventilation_fan_override
     alias: Ventilation fan override
     description: Manual modes take priority over CO2 and the humidity blueprint.
-    mode: restart
+    mode: queued
+    max_exceeded: silent
     triggers:
       - trigger: state
         entity_id:
           - input_select.ventilation_fan_mode
           - input_boolean.co2_ventilation_demand
-          - input_boolean.ventilation_fan_override
+          - timer.ventilation_fan_manual_run
       - trigger: state
         entity_id: switch.utility_fan_plug
         to:
@@ -159,6 +191,8 @@ automation:
       - if: "{{ trigger is defined and trigger.id == 'startup' }}"
         then:
           - delay: "00:00:10"
+      - variables:
+          override_was_on: "{{ is_state('input_boolean.ventilation_fan_override', 'on') }}"
       - choose:
           - alias: Hold the fan off regardless of humidity or CO2
             conditions:
@@ -172,7 +206,7 @@ automation:
               - action: switch.turn_off
                 target:
                   entity_id: switch.utility_fan_plug
-          - alias: Hold the fan on for a manual override or CO2 demand
+          - alias: Hold the fan on for a manual override, timed run, or CO2 demand
             conditions:
               - condition: or
                 conditions:
@@ -184,9 +218,14 @@ automation:
                       - condition: state
                         entity_id: input_select.ventilation_fan_mode
                         state: Auto
-                      - condition: state
-                        entity_id: input_boolean.co2_ventilation_demand
-                        state: "on"
+                      - condition: or
+                        conditions:
+                          - condition: state
+                            entity_id: input_boolean.co2_ventilation_demand
+                            state: "on"
+                          - condition: state
+                            entity_id: timer.ventilation_fan_manual_run
+                            state: active
             sequence:
               - action: input_boolean.turn_on
                 target:
@@ -202,7 +241,28 @@ automation:
               - condition: state
                 entity_id: input_boolean.co2_ventilation_demand
                 state: "off"
+              - condition: not
+                conditions:
+                  - condition: state
+                    entity_id: timer.ventilation_fan_manual_run
+                    state: active
             sequence:
               - action: input_boolean.turn_off
                 target:
                   entity_id: input_boolean.ventilation_fan_override
+              # Let the blueprint resume before stopping an override with no
+              # usable humidity feedback. Healthy humidity control keeps its run-on.
+              - if: >-
+                  {{ override_was_on and
+                     not is_number(states('sensor.bathroom_sensor_humidity')) }}
+                then:
+                  - delay: "00:00:02"
+                  - condition: template
+                    value_template: >-
+                      {{ is_state('input_select.ventilation_fan_mode', 'Auto') and
+                         is_state('input_boolean.co2_ventilation_demand', 'off') and
+                         not is_state('timer.ventilation_fan_manual_run', 'active') and
+                         not is_number(states('sensor.bathroom_sensor_humidity')) }}
+                  - action: switch.turn_off
+                    target:
+                      entity_id: switch.utility_fan_plug
