@@ -18,5 +18,6 @@ configMapGenerator:
       - homelab_notifications.yaml=notifications.yaml
       - glkvm_certificates.yaml
       - glkvm_certificate_sync.py
+      - co2_ventilation.yaml
     options:
       disableNameSuffixHash: true

@@ -30,6 +30,29 @@ Configure main-LAN Wake-on-LAN targets with the LAN subnet's broadcast address.
 The generic `255.255.255.255` broadcast follows Cilium's primary interface;
 selecting `lan0` for discovery does not change that route.
 
+## CO2 ventilation
+
+The [CO2 package](home-assistant/co2_ventilation.yaml) controls
+`input_boolean.co2_ventilation_demand` from the bedroom AIR sensor. Select
+`input_boolean.ventilation_fan_override` as the existing Bathroom Humidity
+Exhaust Fan blueprint's Bypass Switch, using "Keep the current fan state".
+Disable bypass auto-off and leave the
+"Turn the fan OFF when bypass clears" extra option unselected so humidity
+control resumes when CO2 demand ends. The upstream blueprint remains unchanged.
+
+Use `input_select.ventilation_fan_mode` to select Auto, Always on, or Always off.
+The manual modes take priority over both CO2 and humidity control and persist
+across restarts. Auto gives CO2 demand priority, then returns control to the
+humidity blueprint. The override automation holds the selected fan state while
+the blueprint bypass prevents conflicting humidity actions.
+
+Demand starts after ten minutes above 1,000 ppm and clears after ten minutes
+below 800 ppm, or five minutes without usable sensor readings. Each CO2 override
+is limited to one hour, followed by a one-hour cooldown after a timeout. Restored
+deadlines and periodic reconciliation cover restarts and missed transitions.
+Clearing the bypass allows the blueprint's humidity timeout and run-on delay
+to finish; the override limit is not a hard limit on total fan runtime.
+
 ## KVM certificate delivery
 
 cert-manager issues a dedicated Let's Encrypt certificate for

@@ -1,0 +1,208 @@
+input_boolean:
+  co2_ventilation_demand:
+    name: CO2 ventilation demand
+    icon: mdi:fan
+  ventilation_fan_override:
+    name: Ventilation fan override
+    icon: mdi:fan-auto
+
+input_select:
+  ventilation_fan_mode:
+    name: Ventilation fan mode
+    icon: mdi:fan
+    options:
+      - Auto
+      - Always on
+      - Always off
+
+input_datetime:
+  co2_ventilation_deadline:
+    name: CO2 ventilation deadline
+    has_date: true
+    has_time: true
+  co2_ventilation_next_allowed:
+    name: CO2 ventilation next allowed
+    has_date: true
+    has_time: true
+
+template:
+  - binary_sensor:
+      - name: CO2 ventilation high
+        unique_id: co2_ventilation_high
+        availability: &co2_available >-
+          {%- set value = states('sensor.apollo_air_1_2c778c_co2') -%}
+          {{ is_number(value) and value | float(0) > 0 }}
+        state: >-
+          {{ states('sensor.apollo_air_1_2c778c_co2') | float(0) > 1000 }}
+        delay_on: "00:10:00"
+      - name: CO2 ventilation low
+        unique_id: co2_ventilation_low
+        availability: *co2_available
+        state: >-
+          {{ states('sensor.apollo_air_1_2c778c_co2') | float(0) < 800 }}
+        delay_on: "00:10:00"
+
+automation:
+  - id: co2_ventilation_demand
+    alias: CO2 ventilation demand
+    description: Request bounded CO2 ventilation in Auto mode without notifications.
+    mode: single
+    max_exceeded: silent
+    triggers:
+      - trigger: state
+        entity_id:
+          - binary_sensor.co2_ventilation_high
+          - binary_sensor.co2_ventilation_low
+        to: "on"
+      - trigger: state
+        entity_id: input_boolean.co2_ventilation_demand
+        to:
+          - "on"
+          - "off"
+      - trigger: state
+        entity_id: input_select.ventilation_fan_mode
+      - trigger: time
+        at: input_datetime.co2_ventilation_deadline
+      - trigger: time
+        at: input_datetime.co2_ventilation_next_allowed
+      - trigger: time_pattern
+        minutes: /1
+      - trigger: homeassistant
+        event: start
+        id: startup
+    actions:
+      # Let restored helpers and integrations settle before reconciling demand.
+      - if: "{{ trigger is defined and trigger.id == 'startup' }}"
+        then:
+          - delay: "00:00:10"
+      - variables:
+          co2_valid: *co2_available
+          deadline: >-
+            {{ as_timestamp(states('input_datetime.co2_ventilation_deadline'), 0) }}
+          next_allowed: >-
+            {{ as_timestamp(states('input_datetime.co2_ventilation_next_allowed'), 0) }}
+          co2_unavailable: >-
+            {{ not co2_valid and
+               (as_timestamp(now()) -
+                as_timestamp(states.binary_sensor.co2_ventilation_high.last_changed)) >= 300 }}
+      - choose:
+          - alias: Release CO2 demand after recovery, timeout, or sensor loss
+            conditions:
+              - condition: state
+                entity_id: input_boolean.co2_ventilation_demand
+                state: "on"
+              - condition: template
+                value_template: >-
+                  {{ not is_state('input_select.ventilation_fan_mode', 'Auto') or
+                     is_state('binary_sensor.co2_ventilation_low', 'on') or
+                     as_timestamp(now()) >= deadline | float(0) or
+                     co2_unavailable }}
+            sequence:
+              - action: input_datetime.set_datetime
+                target:
+                  entity_id: input_datetime.co2_ventilation_next_allowed
+                data:
+                  timestamp: >-
+                    {{ as_timestamp(now()) +
+                       (3600 if is_state('input_select.ventilation_fan_mode', 'Auto') and
+                        as_timestamp(now()) >= deadline | float(0) else 0) }}
+              - action: input_boolean.turn_off
+                target:
+                  entity_id: input_boolean.co2_ventilation_demand
+          - alias: Start a bounded ventilation cycle after sustained high CO2
+            conditions:
+              - condition: state
+                entity_id: input_select.ventilation_fan_mode
+                state: Auto
+              - condition: state
+                entity_id: input_boolean.co2_ventilation_demand
+                state: "off"
+              - condition: state
+                entity_id: binary_sensor.co2_ventilation_high
+                state: "on"
+              - condition: template
+                value_template: >-
+                  {{ co2_valid and
+                     states('sensor.apollo_air_1_2c778c_co2') | float(0) > 1000 and
+                     as_timestamp(now()) >= next_allowed | float(0) }}
+            sequence:
+              - action: input_datetime.set_datetime
+                target:
+                  entity_id: input_datetime.co2_ventilation_deadline
+                data:
+                  timestamp: "{{ as_timestamp(now()) + 3600 }}"
+              - action: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.co2_ventilation_demand
+  - id: ventilation_fan_override
+    alias: Ventilation fan override
+    description: Manual modes take priority over CO2 and the humidity blueprint.
+    mode: restart
+    triggers:
+      - trigger: state
+        entity_id:
+          - input_select.ventilation_fan_mode
+          - input_boolean.co2_ventilation_demand
+          - input_boolean.ventilation_fan_override
+      - trigger: state
+        entity_id: switch.utility_fan_plug
+        to:
+          - "on"
+          - "off"
+        for: "00:00:01"
+      - trigger: time_pattern
+        minutes: /1
+      - trigger: homeassistant
+        event: start
+        id: startup
+    actions:
+      - if: "{{ trigger is defined and trigger.id == 'startup' }}"
+        then:
+          - delay: "00:00:10"
+      - choose:
+          - alias: Hold the fan off regardless of humidity or CO2
+            conditions:
+              - condition: state
+                entity_id: input_select.ventilation_fan_mode
+                state: Always off
+            sequence:
+              - action: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.ventilation_fan_override
+              - action: switch.turn_off
+                target:
+                  entity_id: switch.utility_fan_plug
+          - alias: Hold the fan on for a manual override or CO2 demand
+            conditions:
+              - condition: or
+                conditions:
+                  - condition: state
+                    entity_id: input_select.ventilation_fan_mode
+                    state: Always on
+                  - condition: and
+                    conditions:
+                      - condition: state
+                        entity_id: input_select.ventilation_fan_mode
+                        state: Auto
+                      - condition: state
+                        entity_id: input_boolean.co2_ventilation_demand
+                        state: "on"
+            sequence:
+              - action: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.ventilation_fan_override
+              - action: switch.turn_on
+                target:
+                  entity_id: switch.utility_fan_plug
+          - alias: Return control to the humidity blueprint
+            conditions:
+              - condition: state
+                entity_id: input_select.ventilation_fan_mode
+                state: Auto
+              - condition: state
+                entity_id: input_boolean.co2_ventilation_demand
+                state: "off"
+            sequence:
+              - action: input_boolean.turn_off
+                target:
+                  entity_id: input_boolean.ventilation_fan_override
