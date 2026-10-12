@@ -61,6 +61,9 @@ class VentilationTest(unittest.TestCase):
                 value not in ("unknown", "unavailable") and float(value) == float(value)
             ),
             "as_timestamp": timestamp,
+            "state_attr": lambda entity, attribute: (
+                timestamp(states(entity)) if attribute == "timestamp" else None
+            ),
             "now": lambda: NOW,
         }
         automation = PACKAGE["automation"][automation_index]
@@ -125,6 +128,11 @@ class VentilationTest(unittest.TestCase):
             NOW + timedelta(minutes=30)
         ).isoformat()
         self.assertIsNone(self.decision())
+
+    def test_deadlines_use_absolute_timestamps_in_copenhagen(self):
+        self.values["input_boolean.co2_ventilation_demand"] = "on"
+        self.values["input_datetime.co2_ventilation_deadline"] = "2026-10-12T13:59:00+02:00"
+        self.assertEqual(self.decision(), 0)
 
     def test_manual_modes_release_and_prevent_co2_demand(self):
         for mode in ["Always on", "Always off"]:

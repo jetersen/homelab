@@ -78,9 +78,9 @@ automation:
       - variables:
           co2_valid: *co2_available
           deadline: >-
-            {{ as_timestamp(states('input_datetime.co2_ventilation_deadline'), 0) }}
+            {{ state_attr('input_datetime.co2_ventilation_deadline', 'timestamp') | float(0) }}
           next_allowed: >-
-            {{ as_timestamp(states('input_datetime.co2_ventilation_next_allowed'), 0) }}
+            {{ state_attr('input_datetime.co2_ventilation_next_allowed', 'timestamp') | float(0) }}
           co2_unavailable: >-
             {{ not co2_valid and
                (as_timestamp(now()) -
