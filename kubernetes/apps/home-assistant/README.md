@@ -46,11 +46,11 @@ across restarts. Auto gives CO2 demand priority, then returns control to the
 humidity blueprint. The override automation holds the selected fan state while
 the blueprint bypass prevents conflicting humidity actions.
 
-Run `script.ventilation_fan_add_hour` for timed manual ventilation. Each press
+Press `button.ventilation_fan_add_hour` for timed manual ventilation. Each press
 adds an hour to the active timer and selects Auto mode. Cancel
 `timer.ventilation_fan_manual_run` to end it early. Automatic control resumes
 afterward; without usable bathroom humidity feedback, the released override
-turns the fan off unless CO2 demand still requires it. Assign the script, timer,
+turns the fan off unless CO2 demand still requires it. Assign the button, timer,
 and mode selector to Utility Closet for its area controls.
 
 Demand starts after ten minutes above 1,000 ppm and clears after ten minutes

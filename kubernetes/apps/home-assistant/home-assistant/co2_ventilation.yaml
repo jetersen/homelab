@@ -57,7 +57,14 @@ script:
           duration: "{{ duration }}"
 
 template:
-  - binary_sensor:
+  - button:
+      - name: Fan +1 hour
+        unique_id: ventilation_fan_add_hour
+        default_entity_id: button.ventilation_fan_add_hour
+        icon: mdi:timer-plus-outline
+        press:
+          - action: script.ventilation_fan_add_hour
+    binary_sensor:
       - name: CO2 ventilation high
         unique_id: co2_ventilation_high
         availability: &co2_available >-
