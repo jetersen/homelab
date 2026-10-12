@@ -54,19 +54,32 @@ spec:
       fsGroup: 1000
       fsGroupChangePolicy: OnRootMismatch
   maintenance:
-    enabled: true
-    mover:
-      cache:
-        mode: Persistent
+    # Separate resource names keep maintenance and backup cache PVCs distinct.
+    enabled: false
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/kopiur.home-operations.com/maintenance_v1alpha1.json
+apiVersion: kopiur.home-operations.com/v1alpha1
+kind: Maintenance
+metadata:
+  name: forgejo-maintenance
+spec:
+  repository:
+    kind: Repository
+    name: forgejo-backup
+  mover:
+    cache:
+      mode: Persistent
+  ownership:
+    owner: kopiur/forgejo/forgejo-backup
     takeoverPolicy: Force
-    schedule:
-      quick:
-        cron: 0 4 * * *
-        jitter: 0s
-      full:
-        cron: 0 4 * * 0
-        jitter: 0s
-      timezone: Etc/UTC
+  schedule:
+    quick:
+      cron: 0 4 * * *
+      jitter: 0s
+    full:
+      cron: 0 4 * * 0
+      jitter: 0s
+    timezone: Etc/UTC
 ---
 # yaml-language-server: $schema=https://k8s-schemas.home-operations.com/kopiur.home-operations.com/snapshotpolicy_v1alpha1.json
 apiVersion: kopiur.home-operations.com/v1alpha1
@@ -74,6 +87,9 @@ kind: SnapshotPolicy
 metadata:
   name: forgejo-backup
 spec:
+  mover:
+    cache:
+      mode: Persistent
   repository:
     kind: Repository
     name: forgejo-backup
