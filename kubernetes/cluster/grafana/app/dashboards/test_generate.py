@@ -26,7 +26,10 @@ class DashboardTests(unittest.TestCase):
             generate.one_panel({"panels": [{"title": "Depth"}] * 2}, "Depth")
 
     def test_optional_panel_removal_preserves_nested_siblings_and_guards_queries(self):
-        wanted = {"title": "Errors", "targets": [{"expr": "controller_runtime_reconcile_errors_total"}]}
+        wanted = {
+            "title": "Errors",
+            "targets": [{"expr": "controller_runtime_reconcile_errors_total"}],
+        }
         optional = {"title": "Flags", "targets": [{"expr": 'flag{is_set="true"}'}]}
         dashboard = {"panels": [{"title": "Row", "panels": [optional, wanted]}]}
         with self.assertRaises(ValueError):
@@ -51,7 +54,9 @@ class DashboardTests(unittest.TestCase):
         for path in ROOT.glob("*.json"):
             dashboard = json.loads(path.read_text())
             for target in generate.expressions(dashboard):
-                self.assertNotRegex(target["expr"], r"\b(flag|controller_runtime_reconcile_time_seconds_bucket)\b")
+                self.assertNotRegex(
+                    target["expr"], r"\b(flag|controller_runtime_reconcile_time_seconds_bucket)\b"
+                )
 
     def test_dashboard_selectors_match_unlabelled_homelab(self):
         for path in ROOT.glob("*.json"):
