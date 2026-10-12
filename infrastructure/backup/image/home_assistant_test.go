@@ -17,7 +17,7 @@ func tarFixture(t *testing.T, path string, modified time.Time) {
 		t.Fatal(err)
 	}
 	w := tar.NewWriter(f)
-	if err := w.WriteHeader(&tar.Header{Name: "backup.json", Mode: 0600, Size: 2}); err != nil {
+	if err := w.WriteHeader(&tar.Header{Name: "backup.json", Mode: 0600, Size: 2, ModTime: modified}); err != nil {
 		t.Fatal(err)
 	}
 	w.Write([]byte("{}"))

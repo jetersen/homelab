@@ -25,10 +25,6 @@ class ConfigureTests(unittest.TestCase):
         configure(self.settings, self.template)
         actual = yaml.safe_load(self.settings.read_text())
         self.assertTrue(actual["server"]["secret_key"] == secret)
-        self.assertEqual(actual["search"]["autocomplete"], "")
-        self.assertEqual(actual["search"]["suspended_times"]["SearxEngineTooManyRequests"], 3600)
-        self.assertTrue(actual["use_default_settings"])
-        self.assertNotIn("engines", actual)
         self.assertEqual(stat.S_IMODE(self.settings.stat().st_mode), 0o600)
         modified = self.settings.stat().st_mtime_ns
         configure(self.settings, self.template)

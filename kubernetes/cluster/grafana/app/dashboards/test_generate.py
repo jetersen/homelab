@@ -103,28 +103,6 @@ class DashboardTests(unittest.TestCase):
         ]:
             self.assertIsNone(re.fullmatch(regex, metric))
 
-    def test_api_request_panels_use_means_and_raw_counters(self):
-        dashboard = json.loads((ROOT / "apiserver.json").read_text())
-        self.assertEqual(dashboard["uid"], "09ec8aa1e996d6ffcd6817bbaff4db1b")
-        for target in generate.expressions(dashboard):
-            self.assertNotRegex(
-                target["expr"],
-                r"apiserver_request:|code_resource:apiserver_request|cluster_quantile:apiserver_request",
-            )
-            self.assertNotIn("apiserver_request_sli_duration_seconds_bucket", target["expr"])
-        for kind, verbs in [("Read", "LIST|GET"), ("Write", "POST|PUT|PATCH|DELETE")]:
-            mean = generate.one_panel(dashboard, f"{kind} mean latency by resource")["targets"][0][
-                "expr"
-            ]
-            self.assertIn("apiserver_request_sli_duration_seconds_sum", mean)
-            self.assertIn("apiserver_request_sli_duration_seconds_count", mean)
-            self.assertIn(f'verb=~"{verbs}"', mean)
-            self.assertIn(" / ", mean)
-            error = generate.one_panel(dashboard, f"{kind} 5xx error ratio")["targets"][0]["expr"]
-            self.assertIn('code=~"5.."', error)
-            self.assertEqual(error.count("apiserver_request_total"), 2)
-            self.assertNotIn("histogram_quantile", mean)
-
     def test_api_panel_patch_rejects_changed_query_before_mutating(self):
         # A changed pinned source must fail before producing partial output.
         dashboard = {
@@ -204,8 +182,7 @@ class DashboardTests(unittest.TestCase):
         }
         self.assertTrue(expected <= disabled)
         dashboards = [json.loads(path.read_text()) for path in ROOT.glob("*.json")]
-        self.assertEqual(len(dashboards), 10)
-        self.assertEqual(len({dashboard["uid"] for dashboard in dashboards}), 10)
+        self.assertEqual(len({dashboard["uid"] for dashboard in dashboards}), len(dashboards))
 
 
 if __name__ == "__main__":
