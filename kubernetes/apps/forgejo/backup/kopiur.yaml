@@ -46,7 +46,7 @@ spec:
     cache:
       storageClassName: openebs-lvm-ephemeral
       # Kopia cache budgets are soft limits; verification needs burst headroom.
-      capacity: 4Gi
+      capacity: 10Gi
       metadataCacheSizeMb: 64
       contentCacheSizeMb: 128
     ttlSecondsAfterFinished: 1200
@@ -74,10 +74,6 @@ kind: SnapshotPolicy
 metadata:
   name: forgejo-backup
 spec:
-  mover:
-    cache:
-      # Verification reads through file contents; retain only metadata/index caches.
-      contentCacheSizeMb: 0
   repository:
     kind: Repository
     name: forgejo-backup

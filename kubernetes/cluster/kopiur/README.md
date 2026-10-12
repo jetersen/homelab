@@ -22,9 +22,9 @@ runs; verification keeps its disposable cache. Persistent snapshot and
 maintenance caches require distinct controller resource names: the installed
 operator derives the same PVC name from both kinds.
 Cache eviction follows Kopia's cache budgets separately from repository
-maintenance. Full-content verification runs weekly. Forgejo and PhotoPrism
-originals disable file-content caching for policy movers so verification cannot
-fill its disposable cache with downloaded files; metadata and index caching remain.
+maintenance. Full-content verification runs weekly. Size cache volumes with
+headroom above Kopia's soft cache budgets for verification bursts. Keep content
+caching enabled; a zero content-cache budget can crash the installed Kopia version.
 
 ## Storage and credentials
 

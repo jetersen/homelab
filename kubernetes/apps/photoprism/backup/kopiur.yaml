@@ -43,7 +43,8 @@ spec:
   moverDefaults:
     cache:
       storageClassName: openebs-lvm-ephemeral
-      capacity: 1Gi
+      # Kopia cache budgets are soft limits; verification needs burst headroom.
+      capacity: 10Gi
       contentCacheSizeMb: 128
       metadataCacheSizeMb: 64
     resources:
@@ -220,8 +221,6 @@ spec:
   mover:
     cache:
       mode: Persistent
-      # Verification reads through file contents; retain only metadata/index caches.
-      contentCacheSizeMb: 0
   adoption: Ignore
   copyMethod: Direct
   defaultDeletionPolicy: Delete
