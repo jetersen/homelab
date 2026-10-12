@@ -25,6 +25,8 @@ Cache eviction follows Kopia's cache budgets separately from repository
 maintenance. Full-content verification runs weekly. Size cache volumes with
 headroom above Kopia's soft cache budgets for verification bursts. Keep content
 caching enabled; a zero content-cache budget can crash the installed Kopia version.
+When increasing cache capacity, also expand existing persistent cache PVCs;
+Kopiur reuses them without resizing. Filesystem expansion completes on the next mount.
 
 ## Storage and credentials
 
