@@ -55,8 +55,10 @@ and mode selector to Utility Closet for its area controls.
 
 Demand starts after ten minutes above 1,000 ppm and clears after ten minutes
 below 800 ppm, or five minutes without usable sensor readings. Each CO2 override
-is limited to one hour, followed by a one-hour cooldown after a timeout. Restored
-deadlines and periodic reconciliation cover restarts and missed transitions.
+is limited to one hour, followed by a one-hour cooldown after a timeout. Sensor
+and mode changes drive control; restored deadlines fire once for the cutoff and
+cooldown. Startup reconciles restored state without periodic polling. Fan commands
+run only when the selected override requires a different switch state.
 With usable humidity feedback, clearing the bypass allows the blueprint's
 humidity timeout and run-on delay to finish; the override limit is not a hard
 limit on total fan runtime.

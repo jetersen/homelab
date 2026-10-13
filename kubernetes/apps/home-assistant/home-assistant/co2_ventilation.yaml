@@ -93,18 +93,17 @@ automation:
           - binary_sensor.co2_ventilation_low
         to: "on"
       - trigger: state
-        entity_id: input_boolean.co2_ventilation_demand
-        to:
-          - "on"
-          - "off"
+        entity_id: binary_sensor.co2_ventilation_high
+        to: unavailable
+        for: "00:05:00"
+        id: sensor_lost
       - trigger: state
         entity_id: input_select.ventilation_fan_mode
+        to: null
       - trigger: time
         at: input_datetime.co2_ventilation_deadline
       - trigger: time
         at: input_datetime.co2_ventilation_next_allowed
-      - trigger: time_pattern
-        minutes: /1
       - trigger: homeassistant
         event: start
         id: startup
@@ -121,8 +120,9 @@ automation:
             {{ state_attr('input_datetime.co2_ventilation_next_allowed', 'timestamp') | float(0) }}
           co2_unavailable: >-
             {{ not co2_valid and
-               (as_timestamp(now()) -
-                as_timestamp(states.binary_sensor.co2_ventilation_high.last_changed)) >= 300 }}
+               ((trigger is defined and trigger.id == 'sensor_lost') or
+                (as_timestamp(now()) -
+                 as_timestamp(states.binary_sensor.co2_ventilation_high.last_changed)) >= 300) }}
       - choose:
           - alias: Release CO2 demand after recovery, timeout, or sensor loss
             conditions:
@@ -177,23 +177,41 @@ automation:
     description: Manual modes take priority over CO2 and the humidity blueprint.
     mode: queued
     max_exceeded: silent
+    variables:
+      fan_required: >-
+        {{ is_state('input_select.ventilation_fan_mode', 'Always on') or
+           (is_state('input_select.ventilation_fan_mode', 'Auto') and
+            (is_state('input_boolean.co2_ventilation_demand', 'on') or
+             is_state('timer.ventilation_fan_manual_run', 'active'))) }}
+      override_required: >-
+        {{ fan_required or is_state('input_select.ventilation_fan_mode', 'Always off') }}
     triggers:
       - trigger: state
         entity_id:
           - input_select.ventilation_fan_mode
           - input_boolean.co2_ventilation_demand
           - timer.ventilation_fan_manual_run
-      - trigger: state
-        entity_id: switch.utility_fan_plug
-        to:
-          - "on"
-          - "off"
+        to: null
+      # React only to a conflicting physical switch state, not our own commands.
+      - trigger: template
+        value_template: >-
+          {{ (is_state('input_select.ventilation_fan_mode', 'Always off') and
+              is_state('switch.utility_fan_plug', 'on')) or
+             ((is_state('input_select.ventilation_fan_mode', 'Always on') or
+               (is_state('input_select.ventilation_fan_mode', 'Auto') and
+                (is_state('input_boolean.co2_ventilation_demand', 'on') or
+                 is_state('timer.ventilation_fan_manual_run', 'active')))) and
+              is_state('switch.utility_fan_plug', 'off')) }}
         for: "00:00:01"
-      - trigger: time_pattern
-        minutes: /1
       - trigger: homeassistant
         event: start
         id: startup
+    conditions:
+      - condition: template
+        value_template: >-
+          {{ is_state('input_boolean.ventilation_fan_override', 'on') != override_required or
+             (override_required and
+              is_state('switch.utility_fan_plug', 'off' if fan_required else 'on')) }}
     actions:
       - if: "{{ trigger is defined and trigger.id == 'startup' }}"
         then:
@@ -207,12 +225,16 @@ automation:
                 entity_id: input_select.ventilation_fan_mode
                 state: Always off
             sequence:
-              - action: input_boolean.turn_on
-                target:
-                  entity_id: input_boolean.ventilation_fan_override
-              - action: switch.turn_off
-                target:
-                  entity_id: switch.utility_fan_plug
+              - if: "{{ is_state('input_boolean.ventilation_fan_override', 'off') }}"
+                then:
+                  - action: input_boolean.turn_on
+                    target:
+                      entity_id: input_boolean.ventilation_fan_override
+              - if: "{{ is_state('switch.utility_fan_plug', 'on') }}"
+                then:
+                  - action: switch.turn_off
+                    target:
+                      entity_id: switch.utility_fan_plug
           - alias: Hold the fan on for a manual override, timed run, or CO2 demand
             conditions:
               - condition: or
@@ -234,12 +256,16 @@ automation:
                             entity_id: timer.ventilation_fan_manual_run
                             state: active
             sequence:
-              - action: input_boolean.turn_on
-                target:
-                  entity_id: input_boolean.ventilation_fan_override
-              - action: switch.turn_on
-                target:
-                  entity_id: switch.utility_fan_plug
+              - if: "{{ is_state('input_boolean.ventilation_fan_override', 'off') }}"
+                then:
+                  - action: input_boolean.turn_on
+                    target:
+                      entity_id: input_boolean.ventilation_fan_override
+              - if: "{{ is_state('switch.utility_fan_plug', 'off') }}"
+                then:
+                  - action: switch.turn_on
+                    target:
+                      entity_id: switch.utility_fan_plug
           - alias: Return control to the humidity blueprint
             conditions:
               - condition: state
@@ -269,7 +295,8 @@ automation:
                       {{ is_state('input_select.ventilation_fan_mode', 'Auto') and
                          is_state('input_boolean.co2_ventilation_demand', 'off') and
                          not is_state('timer.ventilation_fan_manual_run', 'active') and
-                         not is_number(states('sensor.bathroom_sensor_humidity')) }}
+                         not is_number(states('sensor.bathroom_sensor_humidity')) and
+                         is_state('switch.utility_fan_plug', 'on') }}
                   - action: switch.turn_off
                     target:
                       entity_id: switch.utility_fan_plug
