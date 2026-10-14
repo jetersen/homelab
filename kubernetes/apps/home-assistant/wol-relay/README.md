@@ -10,6 +10,11 @@ The relay accepts exactly the configured target's magic packet and sends it from
 its secondary IoT address to the local broadcast address. SecureOn packets are
 not supported. The target MAC is stored in a SOPS-encrypted Secret.
 
+Readiness checks that the configured IoT source address is present. Liveness
+checks only the process: restarting a container cannot restore a missing pod
+network attachment. If the attachment is missing, check that Multus is ready
+and recreate the relay pod to attach it again.
+
 Multus attaches a macvlan interface using the Talos VLAN link. Keep that link
 without node addresses or DHCP, disable IPv6 on that host link to prevent a
 link-local address, permit its tag on the switch path, and reserve

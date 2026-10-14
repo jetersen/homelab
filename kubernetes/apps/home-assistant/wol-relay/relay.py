@@ -24,9 +24,24 @@ def forward_packet(data, expected, source, broadcast):
     return True
 
 
+def source_available(source):
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+            sock.bind((source, 0))
+    except OSError:
+        return False
+    return True
+
+
 class HealthHandler(BaseHTTPRequestHandler):
     def do_GET(self):
-        self.send_response(200 if self.path == "/healthz" else 404)
+        if self.path == "/healthz":
+            status = 200 if source_available(os.environ["IOT_SOURCE_IP"]) else 503
+        elif self.path == "/livez":
+            status = 200
+        else:
+            status = 404
+        self.send_response(status)
         self.end_headers()
 
     def log_message(self, *_args):

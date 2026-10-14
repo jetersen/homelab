@@ -61,7 +61,7 @@ spec:
               port: http
           livenessProbe:
             httpGet:
-              path: /healthz
+              path: /livez
               port: http
           resources:
             requests:
