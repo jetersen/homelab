@@ -113,6 +113,7 @@ spec:
   files:
     ignoreRules:
     - /.forgejo-staging
+    - /current/nas/packages/
     ignoreCacheDirs: false
   extraArgs:
   - --inherit=false

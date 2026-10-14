@@ -37,6 +37,12 @@ validates SQLite on local storage, and resumes Forgejo before Kopiur uploads the
 staged copy to S3. Staging is not an independent backup. If a backup pod dies
 while Forgejo is paused, the `ForgejoStopped` alert fires after 15 minutes.
 
+Snapshots exclude registry payloads under `current/nas/packages/`; the package
+metadata remains in SQLite. Rebuild and republish the images and Flux artifacts
+from their source revisions after recovery. Builds may produce different image
+digests, so update pinned references when needed. Existing snapshots retain any
+registry payloads they already contain until normal retention removes them.
+
 Provision a separate staging dataset with room for both stores. See the
 [shared backup setup](../../cluster/kopiur/README.md#storage-and-credentials)
 for repository initialization and credentials.
