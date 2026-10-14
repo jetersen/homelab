@@ -18,4 +18,4 @@ jobs:
         with:
           persist-credentials: false
       - run: npm run check:javascript
-      - run: node --test .ci/setup-tool.test.mjs infrastructure/dns/creds.test.mjs
+      - run: node --test .ci/setup-tool.test.mjs .ci/image-retention.test.mjs infrastructure/dns/creds.test.mjs

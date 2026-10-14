@@ -30,6 +30,20 @@ it and preserve published image digests. Kubernetes pins versions and digests;
 Renovate updates them. The `main` image tag advances only while component inputs
 are still current.
 
+After image publication, [image retention](image-retention.mjs) keeps the newest
+three stable releases of each workload image, `main` and `keep-*` tags, and versions
+under 30 days old. It protects version and digest pins in Kubernetes manifests and
+the Rocket runner configuration and running CI containers, including child manifests
+of retained OCI indexes.
+Cleanup refuses stale checkouts and changing inventories. The native Forgejo Flux
+cleanup rule remains separate. Retention runs after publication or a manual rerun
+of the image publication workflow; it does not run on a daily timer.
+
+Preview workload image retention locally with `npm exec -- varlock run -- node
+.ci/image-retention.mjs`. Add `--apply` to delete eligible versions from a checkout
+at `origin/main`. Rebuild deleted releases from their source tags when needed;
+rebuilt digests may differ.
+
 The [runner image](../infrastructure/forgejo/runner/Dockerfile) bundles build and
 style tools, Pulumi, Flux, and git-cliff. `setup-tool` reads versions from its
 Dockerfile and uses upstream setup actions only when the bundled version differs.
@@ -97,7 +111,7 @@ automerge rules in repository presets.
 
 ```sh
 node --test .ci/renovate-upgrade-policy.test.mjs .ci/setup-tool.test.mjs
-node --test .ci/image-publishing.test.mjs
+node --test .ci/image-publishing.test.mjs .ci/image-retention.test.mjs
 go -C infrastructure/backup/image test -race ./...
 go -C infrastructure/backup/image vet ./...
 ```

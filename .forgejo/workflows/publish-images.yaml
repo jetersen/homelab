@@ -20,6 +20,8 @@ on:
       - .ci/image-release.sh
       - .ci/publish-image.sh
       - .ci/image-publishing.test.mjs
+      - .ci/image-retention.mjs
+      - .ci/image-retention.test.mjs
       - .forgejo/workflows/publish-images.yaml
   workflow_dispatch:
     inputs:
@@ -55,7 +57,7 @@ jobs:
         with:
           tool: git-cliff
       - name: Test image publication
-        run: node --test .ci/image-publishing.test.mjs
+        run: node --test .ci/image-publishing.test.mjs .ci/image-retention.test.mjs
       - name: Allocate image releases
         shell: bash
         run: |
@@ -79,3 +81,10 @@ jobs:
         with:
           registry: forgejo.jetersen.dev
           repository: ${{ forgejo.repository }}
+      - name: Retain workload image releases
+        env:
+          FORGEJO_HOST: https://forgejo.jetersen.dev
+          FORGEJO_OWNER: ${{ forgejo.repository_owner }}
+          FORGEJO_REPOSITORY: ${{ forgejo.event.repository.name }}
+          FORGEJO_TOKEN: ${{ steps.auth.outputs.token }}
+        run: node .ci/image-retention.mjs --apply
