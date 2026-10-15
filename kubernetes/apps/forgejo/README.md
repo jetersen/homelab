@@ -23,8 +23,10 @@ once. Keep the local administrator login available for recovery.
 Application and chart major upgrades require Renovate dashboard approval and
 manual merge because upgrades can change the database schema.
 
-PR merges and branch updates default to Rebase. Existing repositories keep their
-own settings; `homelab` and `dotfiles` use Rebase and disable merge-commit methods.
+PR merges and branch updates default to Rebase. Enable Rebase, Squash, and
+Fast-forward only in repository settings; disable Merge and Rebase with merge
+commit to keep history linear. These restrictions are per repository; the
+instance default does not disable merge methods in newly created repositories.
 The shared Renovate preset uses `automergeStrategy: "fast-forward"`, which maps
 to Forgejo's plain rebase. Renovate's `"rebase"` strategy adds a merge commit.
 

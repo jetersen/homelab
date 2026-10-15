@@ -23,6 +23,7 @@
 
 - Use conventional commits.
 - Keep history linear: rebase onto upstream and never create merge commits.
+- When creating Forgejo repositories, set the merge and branch-update defaults to Rebase and disable Merge and Rebase with merge commit. Renovate must use `automergeStrategy: "fast-forward"` for Forgejo's plain rebase.
 - Amending local commits and force-pushing amended or rebased commits are permitted. Fetch and inspect remote changes first, preserve unrelated work, and use `--force-with-lease` for force pushes.
 - Keep one-off setup, migration, inspection, and recovery helpers outside the repository. Commit scripts only when maintained automation or deployed workloads require them.
 
