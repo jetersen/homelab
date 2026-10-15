@@ -81,6 +81,11 @@ Renovate bot and is limited to this main-branch workflow; repository collaborato
 permissions control which repositories it can change. The allowed post-upgrade
 command refreshes Claude Code's upstream manifest after its version changes.
 
+GitHub dependency lookups use a separate metadata-read-only GitHub App installed
+on a public repository. Set `GH_READ_APP_CLIENT_ID` and
+`GH_READ_APP_PRIVATE_KEY` in this repository's Forgejo Actions settings. The job
+requests short-lived installation tokens; it does not write to GitHub.
+
 See [DNS setup](../infrastructure/dns/README.md) and
 [TrueNAS setup](../infrastructure/truenas/README.md) for their deployment credentials.
 
