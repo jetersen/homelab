@@ -15,8 +15,8 @@ container:
   docker_host: tcp://docker:2375
   options: --add-host=docker:host-gateway --dns-option=ndots:1 --dns-search=.
   privileged: false
-  # Nix jobs persist compressed store paths and fetched inputs inside Docker's
-  # existing persistent data volume. Credentials stay in disposable job storage.
+  # Serialized Nix jobs retain their store and fetched inputs in Docker's
+  # persistent data volume. Credentials stay in disposable job storage.
   valid_volumes:
     - dotfiles-nix-cache
   force_pull: true

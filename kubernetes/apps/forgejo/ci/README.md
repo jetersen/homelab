@@ -39,9 +39,10 @@ exits.
 
 New Kubernetes workers download dependencies and images into their isolated
 store. Rocket retains Docker image layers and permits the `dotfiles-nix-cache`
-named volume for Nix jobs. That volume holds a local binary cache and fetched
-inputs; jobs retain their own Nix store database. Job credentials must stay
-outside this shared volume. The volume belongs to Rocket's nested Docker daemon
+named volume for serialized Nix jobs. That volume holds the Nix store, its
+database, and fetched inputs. A preparation job registers each CI image's paths
+before the build job mounts the store. Job credentials must stay outside this
+shared volume. The volume belongs to Rocket's nested Docker daemon
 and survives runner and daemon restarts through its persistent Docker data.
 
 The KEDA release is reconciled before this pool. To stop new workers while
