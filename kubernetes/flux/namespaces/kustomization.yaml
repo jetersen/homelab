@@ -12,6 +12,7 @@ resources:
   - kopiur-system.yaml
   - media.yaml
   - monitoring.yaml
+  - nix-cache.yaml
   - openspeedtest.yaml
   - photoprism.yaml
   - searxng.yaml
