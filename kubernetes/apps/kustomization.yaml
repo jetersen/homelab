@@ -8,6 +8,7 @@ resources:
   - homepage/flux-ks.yaml
   - konflate/flux-ks.yaml
   - media/flux-ks.yaml
+  - music-assistant/flux-ks.yaml
   - nix-cache/flux-ks.yaml
   - openspeedtest/flux-ks.yaml
   - photoprism/flux-ks.yaml

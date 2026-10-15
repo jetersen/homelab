@@ -1,0 +1,17 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: music-assistant
+spec:
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: envoy-proxy
+    namespace: kube-system
+    sectionName: https
+  hostnames:
+  - music.jetersen.dev
+  rules:
+  - backendRefs:
+    - name: music-assistant
+      port: 8095

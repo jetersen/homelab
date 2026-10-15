@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: music-assistant-pot
+spec:
+  replicas: 1
+  selector:
+    matchLabels: &id001
+      app.kubernetes.io/name: music-assistant-pot
+  template:
+    metadata:
+      labels: *id001
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: pot
+        image: docker.io/brainicism/bgutil-ytdlp-pot-provider:1.2.1@sha256:7064546d70a58680aec236b50859c4fca065092d7ed462c85ea5d897b003095e
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 10m
+            memory: 64Mi
+          limits:
+            memory: 512Mi
+        ports:
+        - name: http
+          containerPort: 4416
+        readinessProbe:
+          httpGet:
+            path: /ping
+            port: http
+        livenessProbe:
+          httpGet:
+            path: /ping
+            port: http
+          initialDelaySeconds: 15
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: tmp
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: music-assistant-pot
+spec:
+  selector:
+    app.kubernetes.io/name: music-assistant-pot
+  ports:
+  - name: http
+    port: 4416
+    targetPort: http
