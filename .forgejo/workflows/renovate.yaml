@@ -50,6 +50,26 @@ jobs:
           script: |
             if (!process.env.AUDIENCE) throw new Error('Configure the Authorized Integration audience');
             core.setOutput('token', await core.getIDToken(process.env.AUDIENCE));
+      - name: Identify the GitHub dependency App
+        if: inputs.dry_run == true
+        uses: https://github.com/actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          APP_CLIENT_ID: ${{ vars.GH_READ_APP_CLIENT_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.GH_READ_APP_PRIVATE_KEY }}
+        with:
+          script: |
+            const crypto = require('node:crypto');
+            const now = Math.floor(Date.now() / 1000);
+            const header = Buffer.from(JSON.stringify({alg: 'RS256', typ: 'JWT'})).toString('base64url');
+            const payload = Buffer.from(JSON.stringify({iat: now - 60, exp: now + 300, iss: process.env.APP_CLIENT_ID})).toString('base64url');
+            const body = `${header}.${payload}`;
+            const signature = crypto.sign('RSA-SHA256', Buffer.from(body), process.env.APP_PRIVATE_KEY).toString('base64url');
+            const token = `${body}.${signature}`;
+            core.setSecret(token);
+            const response = await fetch('https://api.github.com/app', {headers: {Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json'}});
+            const app = await response.json();
+            if (!response.ok) throw new Error(`App identity lookup failed: ${response.status}`);
+            core.info(JSON.stringify({slug: app.slug, owner: app.owner.login, url: app.html_url}));
       - name: Authenticate GitHub dependency lookups
         id: github
         uses: https://github.com/actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
