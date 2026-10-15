@@ -37,7 +37,12 @@ The daemon puts nested containers under its own cgroup so its memory limit cover
 the entire job. The Docker sidecar stops automatically after the one-job runner
 exits.
 
-New workers download dependencies and images into their isolated store.
+New Kubernetes workers download dependencies and images into their isolated
+store. Rocket retains Docker image layers and permits the `dotfiles-nix-cache`
+named volume for Nix jobs. That volume holds a local binary cache and fetched
+inputs; jobs retain their own Nix store database. Job credentials must stay
+outside this shared volume. The volume belongs to Rocket's nested Docker daemon
+and survives runner and daemon restarts through its persistent Docker data.
 
 The KEDA release is reconciled before this pool. To stop new workers while
 allowing active jobs to finish, set `autoscaling.keda.sh/paused: "true"` on the
