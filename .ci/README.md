@@ -76,6 +76,11 @@ Use Renovate's `dry_run` input to inspect updates without writing branches or PR
 Token requests use `actions/github-script` with `core.getIDToken(audience)`, which
 also masks the token in runner logs.
 
+The Renovate job also updates `jetersen/dotfiles`. Its identity belongs to the
+Renovate bot and is limited to this main-branch workflow; repository collaborator
+permissions control which repositories it can change. The allowed post-upgrade
+command refreshes Claude Code's upstream manifest after its version changes.
+
 See [DNS setup](../infrastructure/dns/README.md) and
 [TrueNAS setup](../infrastructure/truenas/README.md) for their deployment credentials.
 
