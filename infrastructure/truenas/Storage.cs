@@ -33,6 +33,25 @@ static class Storage
             Quota = 100L * 1024 * 1024 * 1024,
         }, provider);
 
+        var nixCache = Dataset("nix-cache-dataset", new TrueNas.DatasetArgs
+        {
+            Name = "nvme/nix-cache",
+            Acltype = "posix",
+            Aclmode = "DISCARD",
+            Atime = "OFF",
+            Exec = "OFF",
+            Sync = "STANDARD",
+            Quota = 256L * 1024 * 1024 * 1024,
+        }, provider);
+
+        _ = new TrueNas.FilesystemPermissions("nix-cache-permissions", new TrueNas.FilesystemPermissionsArgs
+        {
+            Path = nixCache.Mountpoint,
+            Uid = 568,
+            Gid = 568,
+            Mode = "0755",
+        }, Retained(provider));
+
         _ = Dataset("apps-dataset", new TrueNas.DatasetArgs
         {
             Name = "nvme/apps",
@@ -108,6 +127,16 @@ static class Storage
             Enabled = true,
             Running = true,
         }, Retained(provider));
+
+        Share("nix-cache-nfs", new TrueNas.NfsShareArgs
+        {
+            Path = nixCache.Mountpoint,
+            Comment = "Forgejo Nix binary cache on Rocket",
+            Hosts = { "192.168.1.128" },
+            MapallUser = "apps",
+            MapallGroup = "apps",
+            Securities = { "SYS" },
+        }, provider);
 
         Share("git-nfs", new TrueNas.NfsShareArgs
         {

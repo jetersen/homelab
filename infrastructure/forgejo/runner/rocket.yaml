@@ -19,4 +19,5 @@ container:
   # persistent data volume. Credentials stay in disposable job storage.
   valid_volumes:
     - dotfiles-nix-cache
+    - /var/cache/nix-nas
   force_pull: true

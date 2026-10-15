@@ -44,6 +44,13 @@ database, and fetched inputs. A preparation job registers each CI image's paths
 before the build job mounts the store. Job credentials must stay outside this
 shared volume. The volume belongs to Rocket's nested Docker daemon
 and survives runner and daemon restarts through its persistent Docker data.
+The runner's [Compose configuration](../../../../infrastructure/forgejo/runner/compose.yaml)
+also mounts the NAS Nix binary cache at `/var/cache/nix-nas` inside the nested
+Docker daemon. Jobs may bind that path to refill their working store and retain
+build inputs and outputs. Pulumi manages its quota-limited dataset and NFS export
+in [Storage.cs](../../../../infrastructure/truenas/Storage.cs). The cache is
+disposable; stop Nix jobs before clearing it. Attic independently retains signed
+workstation closures for deployment.
 
 The KEDA release is reconciled before this pool. To stop new workers while
 allowing active jobs to finish, set `autoscaling.keda.sh/paused: "true"` on the
