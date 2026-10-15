@@ -53,6 +53,13 @@ afterward; without usable bathroom humidity feedback, the released override
 turns the fan off unless CO2 demand still requires it. Assign the button, timer,
 and mode selector to Utility Closet for its area controls.
 
+`sensor.utility_fan_reason` explains the current fan state, including simultaneous
+CO2 and timed manual demand. Bathroom humidity and its run-on delay share one
+reason while the humidity automation is running without a bypass. An unexplained
+on state is reported as unknown. Assign the sensor to Utility Closet and add it
+to the dashboard favorites to keep it beside the fan controls. Its attributes
+include the manual timer's finish time and bathroom humidity readings.
+
 Demand starts after ten minutes above 1,000 ppm and clears after ten minutes
 below 800 ppm, or five minutes without usable sensor readings. Each CO2 override
 is limited to one hour, followed by a one-hour cooldown after a timeout. Sensor

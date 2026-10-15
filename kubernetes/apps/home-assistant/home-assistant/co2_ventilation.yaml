@@ -64,6 +64,45 @@ template:
         icon: mdi:timer-plus-outline
         press:
           - action: script.ventilation_fan_add_hour
+    sensor:
+      - name: Utility fan reason
+        unique_id: utility_fan_reason
+        default_entity_id: sensor.utility_fan_reason
+        icon: mdi:fan-auto
+        availability: >-
+          {{ states('switch.utility_fan_plug') in ['on', 'off'] }}
+        state: >-
+          {% if is_state('switch.utility_fan_plug', 'off') %}
+            Off
+          {% elif is_state('input_select.ventilation_fan_mode', 'Always off') %}
+            On despite Always off
+          {% elif is_state('input_select.ventilation_fan_mode', 'Always on') %}
+            Always on
+          {% elif is_state('input_select.ventilation_fan_mode', 'Auto') %}
+            {% set reasons = namespace(items=[]) %}
+            {% if is_state('timer.ventilation_fan_manual_run', 'active') %}
+              {% set reasons.items = reasons.items + ['Timed manual run'] %}
+            {% endif %}
+            {% if is_state('input_boolean.co2_ventilation_demand', 'on') %}
+              {% set reasons.items = reasons.items + ['CO2 ventilation'] %}
+            {% endif %}
+            {% if is_state('input_boolean.ventilation_fan_override', 'off') and
+                  is_state('automation.bathroom_humidity_exhaust_fan', 'on') and
+                  state_attr('automation.bathroom_humidity_exhaust_fan', 'current') | int(0) > 0 %}
+              {% set reasons.items = reasons.items + ['Bathroom humidity / run-on'] %}
+            {% endif %}
+            {{ reasons.items | join(' + ') if reasons.items else 'On (reason unknown)' }}
+          {% else %}
+            On (control state unavailable)
+          {% endif %}
+        attributes:
+          mode: "{{ states('input_select.ventilation_fan_mode') }}"
+          co2_demand: "{{ states('input_boolean.co2_ventilation_demand') }}"
+          manual_timer: "{{ states('timer.ventilation_fan_manual_run') }}"
+          manual_run_finishes_at: >-
+            {{ state_attr('timer.ventilation_fan_manual_run', 'finishes_at') }}
+          bathroom_humidity: "{{ states('sensor.bathroom_sensor_humidity') }}"
+          humidity_change_per_minute: "{{ states('sensor.humidity_derivative_sensor') }}"
     binary_sensor:
       - name: CO2 ventilation high
         unique_id: co2_ventilation_high
