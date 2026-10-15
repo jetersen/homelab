@@ -101,7 +101,7 @@ spec:
                 mountPath: /var/lib/docker
         containers:
           - name: runner
-            image: forgejo.jetersen.dev/jetersen/homelab/runner-job:1.4.0@sha256:b37fa670d98a1dcaa6d7593da076658210ce5fad9f1a6eb97e2dbf105835aa41
+            image: forgejo.jetersen.dev/jetersen/homelab/runner-job:1.4.1@sha256:d0e384fcf0c301a758c568e0092bcdb20ace6fe0d4ea9749e6ddd72f2eeed95a39
             command: [/bin/bash, -ec]
             # Exit status 2 means Rocket claimed the queued task first; finish without a failed Job.
             args:
