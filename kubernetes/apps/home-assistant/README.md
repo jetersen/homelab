@@ -32,43 +32,38 @@ selecting `lan0` for discovery does not change that route.
 
 ## CO2 ventilation
 
-The [CO2 package](home-assistant/co2_ventilation.yaml) controls
-`input_boolean.co2_ventilation_demand` from the bedroom AIR sensor. Select
-`input_boolean.ventilation_fan_override` as the existing Bathroom Humidity
-Exhaust Fan blueprint's Bypass Switch, using "Keep the current fan state".
-Disable bypass auto-off and leave the
-"Turn the fan OFF when bypass clears" extra option unselected so humidity
-control resumes when CO2 demand ends. The upstream blueprint remains unchanged.
+The [ventilation package](home-assistant/co2_ventilation.yaml) combines independent
+humidity, CO2, and timed manual demand. The Bathroom Humidity Exhaust Fan blueprint
+must target `input_boolean.humidity_ventilation_demand` as its Fan Switch, with its
+bypass disabled and no physical fan in its targets. The upstream blueprint retains
+its humidity thresholds, safeguard, and run-on delays. It continues tracking humidity
+during manual and CO2 ventilation; those demands do not restart its cycle.
 
 Use `input_select.ventilation_fan_mode` to select Auto, Always on, or Always off.
-The manual modes take priority over both CO2 and humidity control and persist
-across restarts. Auto gives CO2 demand priority, then returns control to the
-humidity blueprint. The override automation holds the selected fan state while
-the blueprint bypass prevents conflicting humidity actions.
+The manual modes take priority and persist across restarts. In Auto, the controller
+runs `switch.utility_fan_plug` while any demand remains active. Only this controller
+should operate the physical fan. It reacts to demand, mode, and switch changes and
+reconciles restored state at startup without periodic polling.
 
 Press `button.ventilation_fan_add_hour` for timed manual ventilation. Each press
 adds an hour to the active timer and selects Auto mode. Cancel
-`timer.ventilation_fan_manual_run` to end it early. Automatic control resumes
-afterward; without usable bathroom humidity feedback, the released override
-turns the fan off unless CO2 demand still requires it. Assign the button, timer,
-and mode selector to Utility Closet for its area controls.
+`timer.ventilation_fan_manual_run` to end it early. Canceling or finishing the timer
+stops a manual-only run immediately; active humidity or CO2 demand keeps the fan
+running. Assign the button, timer, and mode selector to Utility Closet for its
+area controls.
 
-`sensor.utility_fan_reason` explains the current fan state, including simultaneous
-CO2 and timed manual demand. Bathroom humidity and its run-on delay share one
-reason while the humidity automation is running without a bypass. An unexplained
-on state is reported as unknown. Assign the sensor to Utility Closet and add it
-to the dashboard favorites to keep it beside the fan controls. Its attributes
-include the manual timer's finish time and bathroom humidity readings.
+`sensor.utility_fan_reason` explains the current fan state and lists simultaneous
+demands. Bathroom humidity and its run-on delay share one reason, based on the
+explicit humidity demand rather than whether an automation is running. An
+unexplained on state is reported as unknown. Assign the sensor to Utility Closet
+and add it to the dashboard favorites beside the fan controls. Its attributes
+include demand states, the manual timer's finish time, and bathroom humidity readings.
 
-Demand starts after ten minutes above 1,000 ppm and clears after ten minutes
-below 800 ppm, or five minutes without usable sensor readings. Each CO2 override
-is limited to one hour, followed by a one-hour cooldown after a timeout. Sensor
-and mode changes drive control; restored deadlines fire once for the cutoff and
-cooldown. Startup reconciles restored state without periodic polling. Fan commands
-run only when the selected override requires a different switch state.
-With usable humidity feedback, clearing the bypass allows the blueprint's
-humidity timeout and run-on delay to finish; the override limit is not a hard
-limit on total fan runtime.
+CO2 demand starts after ten minutes above 1,000 ppm and clears after ten minutes
+below 800 ppm, or five minutes without usable sensor readings. Each CO2 cycle
+is limited to one hour, followed by a one-hour cooldown after a timeout. Restored
+deadlines fire once for the cutoff and cooldown. These limits apply to CO2 demand;
+independent humidity or manual demand can keep the fan running longer.
 
 ## KVM certificate delivery
 
