@@ -17,8 +17,10 @@ FROM registry.k8s.io/kubectl:v1.37.1@sha256:b7cab618e281b1ee7484e7b706a96e2135fb
 FROM docker.io/library/node:24.21.0-trixie-slim@sha256:173f125896c3b47ddf056734c7ea789d04595a6a08769a8f78e0df642781fb66
 
 RUN apt-get update \
-    && apt-get install --no-install-recommends -y bash ca-certificates curl git jq openssh-client tar gzip python3 python3-venv libicu76 gcc libc6-dev libssl3t64 libstdc++6 zlib1g \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get install --no-install-recommends -y bash ca-certificates curl git jq openssh-client tar gzip python3 python3-venv libicu76 gcc libc6-dev libssl3t64 libstdc++6 zlib1g nix-bin \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /etc/nix \
+    && printf 'build-users-group =\n' > /etc/nix/nix.conf
 COPY --from=docker /usr/local/bin/docker /usr/local/bin/docker
 COPY --from=docker /usr/local/libexec/docker/cli-plugins/docker-buildx /usr/local/lib/docker/cli-plugins/docker-buildx
 COPY --from=kubectl /bin/kubectl /usr/local/bin/kubectl
@@ -29,6 +31,7 @@ COPY --from=pulumi /pulumi/bin/ /usr/local/bin/
 COPY --from=flux /usr/local/bin/flux /usr/local/bin/flux
 COPY --from=git-cliff /usr/local/bin/git-cliff /usr/local/bin/git-cliff
 ENV DOTNET_ROOT=/usr/share/dotnet \
+    NIX_SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt \
     DOTNET_CLI_TELEMETRY_OPTOUT=1 \
     DOTNET_NOLOGO=1 \
     PATH="/opt/homelab-tools/node_modules/.bin:/opt/homelab-tools/python/bin:/usr/local/go/bin:/usr/share/dotnet:${PATH}"
@@ -39,7 +42,7 @@ RUN cd /opt/homelab-tools \
     && python3 -m venv python \
     && python/bin/pip install --no-cache-dir --disable-pip-version-check -r requirements-dev.txt \
     && go version && dotnet --version && ruff --version && biome --version \
-    && pulumi version && flux --version && git-cliff --version
+    && pulumi version && flux --version && git-cliff --version && nix --version
 
 ARG REVISION
 ARG VERSION

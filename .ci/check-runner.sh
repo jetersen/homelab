@@ -20,3 +20,4 @@ pulumi version
 command -v pulumi-language-dotnet
 flux --version
 git-cliff --version
+nix --version
