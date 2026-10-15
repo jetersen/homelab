@@ -72,7 +72,9 @@ Restrict claims to this repository, `refs/heads/main`, and the listed workflows.
 Publishers need `push` and `workflow_dispatch`; Renovate needs `schedule` and
 `workflow_dispatch`. Renovate's Forgejo API token does not authenticate Docker
 lookups, which use the separate package integration through `hostRules`.
-Use Renovate's `dry_run` input to inspect updates without writing branches or PRs.
+The scheduled Renovate run scans both repositories. Manual runs can select one
+repository with the `repository` input; `all` keeps the shared run. Use `dry_run`
+to inspect updates without writing branches or PRs.
 Token requests use `actions/github-script` with `core.getIDToken(audience)`, which
 also masks the token in runner logs.
 

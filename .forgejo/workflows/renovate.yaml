@@ -4,6 +4,14 @@ on:
     - cron: '17 6 * * *'
   workflow_dispatch:
     inputs:
+      repository:
+        description: Repositories to update
+        type: choice
+        default: all
+        options:
+          - all
+          - jetersen/homelab
+          - jetersen/dotfiles
       dry_run:
         description: Inspect dependencies without writing branches or pull requests
         type: boolean
@@ -72,10 +80,19 @@ jobs:
           RENOVATE_ONBOARDING: 'false'
           RENOVATE_GIT_AUTHOR: 'renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>'
           DRY_RUN: ${{ inputs.dry_run }}
+          REPOSITORY: ${{ inputs.repository }}
           REGISTRY_USERNAME: ${{ forgejo.repository_owner }}
           REGISTRY_TOKEN: ${{ steps.packages.outputs.token }}
         run: |
           set -euo pipefail
+          case "$REPOSITORY" in
+            jetersen/homelab|jetersen/dotfiles)
+              RENOVATE_REPOSITORIES=$(jq -cn --arg repository "$REPOSITORY" '[$repository]')
+              export RENOVATE_REPOSITORIES
+              ;;
+            all|'') ;;
+            *) echo 'Unknown repository selection' >&2; exit 1 ;;
+          esac
           # Renovate has no "none" dry-run mode; normal runs must leave it unset.
           unset RENOVATE_DRY_RUN
           if [ "$DRY_RUN" = true ]; then
