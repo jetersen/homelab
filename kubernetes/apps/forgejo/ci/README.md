@@ -40,9 +40,9 @@ exits.
 New Kubernetes workers download dependencies and images into their isolated
 store. Rocket retains Docker image layers and permits the `dotfiles-nix-cache`
 named volume for serialized Nix jobs. That volume holds the Nix store, its
-database, and fetched inputs. A preparation job registers each CI image's paths
-before the build job mounts the store. Job credentials must stay outside this
-shared volume. The volume belongs to Rocket's nested Docker daemon
+database, and fetched inputs. The shared Debian job image includes Nix outside
+the store, so it can mount either a fresh or retained store directly. Job
+credentials must stay outside this shared volume. The volume belongs to Rocket's nested Docker daemon
 and survives runner and daemon restarts through its persistent Docker data.
 The runner's [Compose configuration](../../../../infrastructure/forgejo/runner/compose.yaml)
 also mounts the NAS Nix binary cache at `/var/cache/nix-nas` inside the nested
@@ -51,6 +51,11 @@ build inputs and outputs. Pulumi manages its quota-limited dataset and NFS expor
 in [Storage.cs](../../../../infrastructure/truenas/Storage.cs). The cache is
 disposable; stop Nix jobs before clearing it. Attic independently retains signed
 workstation closures for deployment.
+
+Rocket's nested containers use Tailscale's DNS resolver for MagicDNS, with LAN
+resolvers for other names. Use fully qualified Tailscale names in repository
+variables because job DNS searches are disabled. The NFS cache uses LAN DNS
+names to keep cache transfers on the local network.
 
 The KEDA release is reconciled before this pool. To stop new workers while
 allowing active jobs to finish, set `autoscaling.keda.sh/paused: "true"` on the

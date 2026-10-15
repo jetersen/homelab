@@ -132,7 +132,7 @@ static class Storage
         {
             Path = nixCache.Mountpoint,
             Comment = "Forgejo Nix binary cache on Rocket",
-            Hosts = { "192.168.1.128" },
+            Hosts = { "rocket.lan.jetersen.dev" },
             MapallUser = "apps",
             MapallGroup = "apps",
             Securities = { "SYS" },

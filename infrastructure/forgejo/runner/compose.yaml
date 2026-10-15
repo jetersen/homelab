@@ -9,7 +9,7 @@ services:
     restart: unless-stopped
     environment:
       DOCKER_TLS_CERTDIR: ''
-    command: [--tls=false, --storage-driver=overlay2, --dns=192.168.1.21, --dns=192.168.1.2]
+    command: [--tls=false, --storage-driver=overlay2, --dns=100.100.100.100, --dns=192.168.1.21, --dns=192.168.1.2]
     volumes:
       - docker-cache:/var/lib/docker
       - nix-nas-cache:/var/cache/nix-nas
@@ -41,7 +41,7 @@ volumes:
     driver: local
     driver_opts:
       type: nfs
-      o: addr=192.168.1.2,nfsvers=4,rw
+      o: addr=truenas.lan.jetersen.dev,nfsvers=4,rw
       device: :/mnt/nvme/nix-cache
   docker-cache:
   runner-data:
