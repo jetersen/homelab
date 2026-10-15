@@ -120,6 +120,7 @@ spec:
           DEFAULT_BRANCH: main
           ENABLE_PUSH_CREATE_USER: true
         repository.pull-request:
+          # Plain rebase keeps history linear; Renovate calls this strategy "fast-forward".
           DEFAULT_MERGE_STYLE: rebase
           DEFAULT_UPDATE_STYLE: rebase
         repository.signing:

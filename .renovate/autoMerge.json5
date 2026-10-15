@@ -3,7 +3,8 @@
   // Use platform-native auto-merge by default; pace container and chart updates through Renovate.
   automerge: true,
   automergeType: "pr",
-  automergeStrategy: "rebase",
+  // Forgejo's plain rebase is named "fast-forward" in Renovate; "rebase" adds a merge commit.
+  automergeStrategy: "fast-forward",
   platformAutomerge: true,
   packageRules: [
     {
