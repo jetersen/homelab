@@ -20,7 +20,12 @@ RUN apt-get update \
     && apt-get install --no-install-recommends -y bash ca-certificates curl git jq openssh-client tar gzip python3 python3-venv libicu76 gcc libc6-dev libssl3t64 libstdc++6 zlib1g nix-bin \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /etc/nix \
-    && printf 'build-users-group =\n' > /etc/nix/nix.conf
+    && groupadd --system nixbld \
+    && for builder in $(seq 1 10); do \
+      useradd --system --gid nixbld --groups nixbld --no-create-home \
+        --home-dir /var/empty --shell /usr/sbin/nologin "nixbld${builder}"; \
+    done \
+    && printf 'build-users-group = nixbld\n' > /etc/nix/nix.conf
 COPY --from=docker /usr/local/bin/docker /usr/local/bin/docker
 COPY --from=docker /usr/local/libexec/docker/cli-plugins/docker-buildx /usr/local/lib/docker/cli-plugins/docker-buildx
 COPY --from=kubectl /bin/kubectl /usr/local/bin/kubectl

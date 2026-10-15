@@ -21,3 +21,5 @@ command -v pulumi-language-dotnet
 flux --version
 git-cliff --version
 nix --version
+test "$(nix --extra-experimental-features nix-command config show build-users-group)" = nixbld
+test -n "$(getent group nixbld | cut -d: -f4)"
