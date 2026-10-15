@@ -27,8 +27,8 @@ jobs:
           persist-credentials: false
       - name: Check JavaScript style
         run: npm run check:javascript
-      - name: Test DNS credentials
-        run: node --test infrastructure/dns/creds.test.mjs
+      - name: Test DNS configuration and credentials
+        run: node --test infrastructure/dns/*.test.mjs
       - uses: ./infrastructure/dns
         with:
           directory: ${{ runner.temp }}/dnscontrol-tools

@@ -126,5 +126,36 @@
       "name": "jellyfin-iot.lan.jetersen.dev",
       "ipv4": "192.168.1.22"
     }
+  ],
+  "gatewayNames": [
+    "dns.jetersen.dev",
+    "dns.lan.jetersen.dev",
+    "flux-mcp.jetersen.dev",
+    "flux-mcp.lan.jetersen.dev",
+    "flux-operator.jetersen.dev",
+    "flux-operator.lan.jetersen.dev",
+    "forgejo.jetersen.dev",
+    "gotify.jetersen.dev",
+    "grafana.jetersen.dev",
+    "home.jetersen.dev",
+    "homeassistant.jetersen.dev",
+    "jellyfin.jetersen.dev",
+    "jellyfin.lan.jetersen.dev",
+    "konflate.jetersen.dev",
+    "openspeedtest.jetersen.dev",
+    "photos.jetersen.dev",
+    "prowlarr.jetersen.dev",
+    "prowlarr.lan.jetersen.dev",
+    "qbittorrent.jetersen.dev",
+    "qbittorrent.lan.jetersen.dev",
+    "radarr.jetersen.dev",
+    "radarr.lan.jetersen.dev",
+    "search.jetersen.dev",
+    "sonarr.jetersen.dev",
+    "sonarr.lan.jetersen.dev",
+    "upgrade-versions.jetersen.dev",
+    "upgrade-versions.lan.jetersen.dev",
+    "webhook.jetersen.dev",
+    "zigbee2mqtt.jetersen.dev"
   ]
 }

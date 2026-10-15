@@ -4,10 +4,13 @@ DNSControl manages public Cloudflare records and separate internal views on
 Technitium and UniFi. The NAS receives Technitium's zones through catalog
 replication; UniFi provides an independent copy during NAS or Kubernetes outages.
 
-Edit [settings.json](settings.json) for desired records. Internal wildcards cover
-routes automatically; add public aliases alongside their routes. DNSControl does
-not discover routes or wait for them to become ready. Both `jetersen.dev` and
-`lan.jetersen.dev` need wildcards because Technitium serves them as separate zones.
+Edit [settings.json](settings.json) for desired records. Technitium uses a
+wildcard for application names under `jetersen.dev`, with a separate authoritative
+`lan.jetersen.dev` zone containing only explicit names. UniFi uses explicit names
+in both views because its wildcard policies also match descendants of LAN search
+domains. Add gateway hostnames to `gatewayNames` alongside their routes, including
+supported legacy redirects. DNSControl does not discover routes or wait for them
+to become ready. Never add wildcards beneath a DHCP search suffix.
 
 Kubernetes apps use `*.jetersen.dev`. Former `*.lan.jetersen.dev` app URLs
 permanently redirect to their canonical names, preserving paths and queries.
@@ -15,9 +18,8 @@ Physical LAN devices keep their existing names. Both Jellyfin IoT names point to
 the dedicated IPv4 address so redirects stay reachable from the IoT network.
 
 Validate both address families for explicit IPv4-only names. Technitium suppresses
-the wildcard AAAA at an existing name, while UniFi can still return its wildcard
-IPv6 address. Keep IPv4-only isolated endpoints on Technitium DNS; UniFi's fallback
-view is not equivalent for those names.
+the application wildcard AAAA at an existing name; UniFi has no wildcard to
+synthesize an address. Keep dedicated endpoints IPv4-only in both views.
 
 ## Validation
 

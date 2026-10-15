@@ -50,7 +50,21 @@ function publicRecord(record) {
 }
 
 function internalZone(zone, provider, skipClientNames) {
-  var records = [A("*", settings.envoyIPv4), AAAA("*", settings.envoyIPv6)];
+  var isLanZone = zone === "lan." + settings.domain;
+  // UniFi wildcard policies also capture descendants of LAN search domains.
+  // Technitium's separate authoritative LAN zone blocks the parent wildcard.
+  var records =
+    !isLanZone && provider === "technitium"
+      ? [A("*", settings.envoyIPv4), AAAA("*", settings.envoyIPv6)]
+      : [];
+  settings.gatewayNames.forEach(function (name) {
+    var isLan = name.slice(-(".lan." + settings.domain).length) === ".lan." + settings.domain;
+    if (isLan !== isLanZone || (!isLanZone && provider === "technitium")) {
+      return;
+    }
+    records.push(A(relative(name, zone), settings.envoyIPv4));
+    records.push(AAAA(relative(name, zone), settings.envoyIPv6));
+  });
   settings.infrastructure.forEach(function (record) {
     var isLan =
       record.name.slice(-(".lan." + settings.domain).length) === ".lan." + settings.domain;
