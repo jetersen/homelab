@@ -21,7 +21,7 @@
     }
   },
   "tailscale": {
-    "accept_dns": false,
+    "accept_dns": true,
     "accept_routes": false,
     "additional_envs": [
       {
