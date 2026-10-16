@@ -14,6 +14,8 @@ spec:
       labels: *id001
     spec:
       automountServiceAccountToken: false
+      imagePullSecrets:
+      - name: homelab-oci-auth
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
       nodeSelector:
@@ -23,7 +25,14 @@ spec:
           type: RuntimeDefault
       containers:
       - name: app
-        image: forgejo.jetersen.dev/jetersen/homelab/music-assistant:2.10.6-videos.1@sha256:2466729f9b3cd7757be8f6a39109922bf1abe764dd63d7ac4b73307056ace7ee
+        image: forgejo.jetersen.dev/jetersen/music-assistant:2.10.6-private.2@sha256:ae21d4d7cd2c6093a91bafa9b78d4a6637f21c0c55f50ef7e99d501b3da95948
+        env:
+        - name: MA_TRACK_CACHE_DIR
+          value: /track-cache
+        - name: MA_TRACK_CACHE_MAX_BYTES
+          value: "19327352832"
+        - name: MA_TRACK_CACHE_MEMORY_BYTES
+          value: "134217728"
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
@@ -55,7 +64,12 @@ spec:
         volumeMounts:
         - name: data
           mountPath: /data
+        - name: track-cache
+          mountPath: /track-cache
       volumes:
       - name: data
         persistentVolumeClaim:
           claimName: music-assistant
+      - name: track-cache
+        persistentVolumeClaim:
+          claimName: music-assistant-track-cache
