@@ -23,7 +23,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: app
-        image: ghcr.io/music-assistant/server:2.10.6@sha256:45fdb050e06962097a07feeb092606ad119fac17965c8228a57146448d5fa772
+        image: forgejo.jetersen.dev/jetersen/homelab/music-assistant:2.10.6-videos.1@sha256:2466729f9b3cd7757be8f6a39109922bf1abe764dd63d7ac4b73307056ace7ee
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
