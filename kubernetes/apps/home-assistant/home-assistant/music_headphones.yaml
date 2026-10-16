@@ -1,0 +1,168 @@
+script:
+  music_headphones_prompt:
+    alias: Music headphones prompt
+    mode: restart
+    sequence:
+      - action: notify.mobile_app_oneplus_nord_5
+        data:
+          title: WH-1000XM6 connected
+          message: Resume your phone queue or bring your desktop music with you.
+          data:
+            tag: music-headphones
+            channel: Music
+            notification_icon: mdi:headphones
+            ttl: 0
+            priority: high
+            timeout: 300
+            clickAction: deep-link://musicassistant://app/players?player=My%20Phone
+            actions:
+              - action: MUSIC_HEADPHONES_RESUME
+                title: Resume phone
+              - action: MUSIC_HEADPHONES_TRANSFER
+                title: Transfer desktop
+              - action: URI
+                title: Open app
+                uri: deep-link://musicassistant://app/players?player=My%20Phone
+
+  music_headphones_play:
+    alias: Play music through connected headphones
+    mode: single
+    fields:
+      operation:
+        required: true
+        selector:
+          select:
+            options: [resume, transfer]
+    sequence:
+      - condition: template
+        value_template: >-
+          {{ 'WH-1000XM6' in (state_attr('sensor.cph2709_bluetooth_connection',
+             'connected_paired_devices') or []) | join(' ') }}
+      - variables:
+          problem: ""
+      - choose:
+          - conditions: "{{ not has_value('media_player.my_phone') }}"
+            sequence:
+              - variables:
+                  problem: Open Music Assistant to reconnect the phone, then try again.
+        default:
+          - choose:
+              - conditions: "{{ operation == 'resume' }}"
+                sequence:
+                  - action: music_assistant.get_queue
+                    target:
+                      entity_id: media_player.my_phone
+                    response_variable: phone_queue
+                  - if: "{{ phone_queue['media_player.my_phone']['items'] > 0 }}"
+                    then:
+                      - action: media_player.media_play
+                        target:
+                          entity_id: media_player.my_phone
+                    else:
+                      - variables:
+                          problem: The phone queue is empty. Use Transfer desktop to bring your music over.
+              - conditions: "{{ operation == 'transfer' }}"
+                sequence:
+                  - action: music_assistant.get_queue
+                    target:
+                      entity_id: media_player.rocket
+                    response_variable: rocket_queue
+                    continue_on_error: true
+                  - action: music_assistant.get_queue
+                    target:
+                      entity_id: media_player.framework
+                    response_variable: framework_queue
+                    continue_on_error: true
+                  - variables:
+                      source: >-
+                        {% set queues = dict(rocket_queue | default({}),
+                                             **(framework_queue | default({}))) %}
+                        {% set candidates = namespace(playing=[], other=[]) %}
+                        {% for entity in ['media_player.rocket', 'media_player.framework'] %}
+                          {% if has_value(entity) and queues.get(entity, {}).get('items', 0) > 0 %}
+                            {% if is_state(entity, 'playing') %}
+                              {% set candidates.playing = candidates.playing + [entity] %}
+                            {% else %}
+                              {% set candidates.other = candidates.other + [entity] %}
+                            {% endif %}
+                          {% endif %}
+                        {% endfor %}
+                        {{ (candidates.playing + candidates.other) | first | default('') }}
+                  - if: "{{ source != '' }}"
+                    then:
+                      - action: music_assistant.transfer_queue
+                        target:
+                          entity_id: media_player.my_phone
+                        data:
+                          source_player: "{{ source }}"
+                          auto_play: true
+                    else:
+                      - variables:
+                          problem: Neither desktop has an available music queue. Open Music Assistant to choose music.
+      - if: "{{ problem != '' }}"
+        then:
+          - action: notify.mobile_app_oneplus_nord_5
+            data:
+              title: Music Assistant
+              message: "{{ problem }}"
+              data:
+                tag: music-headphones-help
+                channel: Music
+                notification_icon: mdi:headphones
+                clickAction: deep-link://musicassistant://app/players?player=My%20Phone
+                actions:
+                  - action: URI
+                    title: Open app
+                    uri: deep-link://musicassistant://app/players?player=My%20Phone
+
+automation:
+  - id: music_headphones_connected
+    alias: Offer music when headphones connect
+    mode: restart
+    triggers:
+      - trigger: template
+        value_template: >-
+          {{ 'WH-1000XM6' in (state_attr('sensor.cph2709_bluetooth_connection',
+             'connected_paired_devices') or []) | join(' ') }}
+        for: "00:00:02"
+    actions:
+      - action: script.music_headphones_prompt
+
+  - id: music_headphones_disconnected
+    alias: Clear music prompt when headphones disconnect
+    mode: restart
+    triggers:
+      - trigger: template
+        value_template: >-
+          {{ 'WH-1000XM6' not in (state_attr('sensor.cph2709_bluetooth_connection',
+             'connected_paired_devices') or []) | join(' ') }}
+    actions:
+      - repeat:
+          for_each: [music-headphones, music-headphones-help]
+          sequence:
+            - action: notify.mobile_app_oneplus_nord_5
+              data:
+                message: clear_notification
+                data:
+                  tag: "{{ repeat.item }}"
+
+  - id: music_headphones_notification_action
+    alias: Handle headphone music notification
+    mode: single
+    triggers:
+      - trigger: event
+        event_type: mobile_app_notification_action
+        event_data:
+          action: MUSIC_HEADPHONES_RESUME
+          tag: music-headphones
+        id: resume
+      - trigger: event
+        event_type: mobile_app_notification_action
+        event_data:
+          action: MUSIC_HEADPHONES_TRANSFER
+          tag: music-headphones
+        id: transfer
+    actions:
+      - action: script.music_headphones_play
+        data:
+          operation: "{{ trigger.id }}"
