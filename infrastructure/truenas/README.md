@@ -28,8 +28,9 @@ HTTPS with a trusted hostname; the provider connects over `wss://HOST/api/curren
 
 The Tailscale app accepts tailnet DNS. The NAS host must also use
 `100.100.100.100` as its primary resolver, with the LAN resolver as fallback;
-the container cannot update the host's resolver configuration. Add the tailnet
-suffix to the NAS's additional DNS search domains for short hostnames.
+the container cannot update the host's resolver configuration. Keep the LAN
+domain and add the tailnet suffix in the NAS's additional DNS search domains;
+that list replaces the resolver's default search domain.
 
 The [provider](https://github.com/jetersen/pulumi-truenas) is restored from a
 checksum-verified release asset, avoiding a GitHub Packages credential. To upgrade
