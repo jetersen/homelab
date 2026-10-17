@@ -7,6 +7,8 @@
   // Forgejo's plain rebase is named "fast-forward" in Renovate; "rebase" adds a merge commit.
   automergeStrategy: "fast-forward",
   platformAutomerge: true,
+  // Forgejo's scheduled fast-forward merges cannot merge a diverged branch.
+  rebaseWhen: "behind-base-branch",
   packageRules: [
     {
       description: "Prefer the newest eligible release instead of competing version PRs",
@@ -20,7 +22,6 @@
       description: "Pace container image and Helm chart upgrades through Renovate",
       matchDatasources: ["docker", "helm"],
       platformAutomerge: false,
-      rebaseWhen: "behind-base-branch",
     },
     {
       description: "Separate operating-system and Kubernetes patch updates from reviewed minor upgrades",

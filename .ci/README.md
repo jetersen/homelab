@@ -73,7 +73,8 @@ Publishers need `push` and `workflow_dispatch`; Renovate needs `schedule` and
 `workflow_dispatch`. Renovate's Forgejo API token does not authenticate Docker
 lookups, which use the separate package integration through `hostRules`.
 Homelab [update rules](../.renovate/autoMerge.json5) prefer the newest eligible
-release instead of competing major, minor, and patch PRs. Talos and Kubernetes
+release instead of competing major, minor, and patch PRs. Renovate rebases
+outdated branches before queuing Forgejo's fast-forward auto-merge. Talos and Kubernetes
 retain separate patch PRs so reviewed minor upgrades do not block maintenance
 of the running minor. Compatibility constraints and approval gates still apply. Sonarr's
 numeric image tags do not identify prereleases, so the policy generator restricts
