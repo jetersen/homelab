@@ -49,5 +49,3 @@ require (
 	mellium.im/xmlstream v0.15.4 // indirect
 	mellium.im/xmpp v0.23.0 // indirect
 )
-
-replace codeberg.org/miekg/dns => codeberg.org/TomOnTime/dns v0.6.116-0.20260921184638-5907cf25e1ba
