@@ -43,6 +43,22 @@
   ],
   "packageRules": [
     {
+      "description": "Restore NuGet locks with the verified local TrueNAS SDK feed",
+      "matchManagers": [
+        "nuget"
+      ],
+      "skipArtifactsUpdate": true,
+      "postUpgradeTasks": {
+        "commands": [
+          "bash .ci/renovate-dotnet-locks.sh"
+        ],
+        "fileFilters": [
+          "**/packages.lock.json"
+        ],
+        "executionMode": "branch"
+      }
+    },
+    {
       "description": "TrueNAS SDK upgrades use GitHub release assets and a reviewed lockfile update",
       "matchDatasources": [
         "nuget"

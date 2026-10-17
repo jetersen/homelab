@@ -89,7 +89,10 @@ The Renovate job also updates `jetersen/dotfiles`. Its identity belongs to the
 Renovate bot and is limited to this main-branch workflow; repository collaborator
 permissions control which repositories it can change. Allowed post-upgrade
 commands refresh Claude Code's upstream manifest and regenerate `flake.lock`
-after a pinned upstream release tag changes.
+after a pinned upstream release tag changes. Homelab NuGet updates run
+[the solution lockfile restore](renovate-dotnet-locks.sh) with the selected SDK
+and verified TrueNAS release package because Renovate's built-in restore omits
+local package feeds. CI continues to restore in locked mode.
 
 GitHub dependency lookups use a separate metadata-read-only GitHub App installed
 on a public repository. Set `GH_READ_APP_CLIENT_ID` and
