@@ -20,7 +20,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: pot
-        image: docker.io/brainicism/bgutil-ytdlp-pot-provider:1.2.1@sha256:7064546d70a58680aec236b50859c4fca065092d7ed462c85ea5d897b003095e
+        image: docker.io/brainicism/bgutil-ytdlp-pot-provider:2.0.2@sha256:d7d34108b76e52c7d3b575fe9e797e4bf41c1b2a08f80c5292eff6f851ce8472
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
