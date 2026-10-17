@@ -118,6 +118,10 @@ fallback; Git push events can arrive before the artifact is published.
 
 ## Live upgrade policy
 
+A missing Cilium patch entry can reuse a cached matrix only after fetching that
+exact release's upstream document and verifying its SHA-256 matches the cached
+document. Changed matrices and new minors still require a catalog refresh.
+
 Renovate reads deployed versions from Kromgo and support matrices from the
 [kubernetes-compatibility cache](https://forgejo.jetersen.dev/jetersen/kubernetes-compatibility).
 The [policy generator](renovate-upgrade-policy.mjs) defines the version endpoint,

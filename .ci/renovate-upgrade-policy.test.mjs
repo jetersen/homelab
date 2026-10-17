@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import test from "node:test";
 import {
   cachedMatrices,
+  completeCiliumPatchMatrix,
   liveVersions,
   policy,
   sonarrStableRule,
@@ -243,4 +245,52 @@ test("Sonarr allows only the latest stable upstream release despite numeric beta
   ]) {
     assert.throws(() => sonarrStableRule(release));
   }
+});
+
+test("missing Cilium patches require the exact released matrix to match the cached document", async () => {
+  const text = "released compatibility document";
+  const cache = {
+    projects: {
+      cilium: {
+        source:
+          "https://raw.githubusercontent.com/cilium/cilium/v1.20.2/Documentation/network/kubernetes/compatibility.rst",
+        versions: {
+          "v1.20.2": {
+            sourceSha256: createHash("sha256").update(text).digest("hex"),
+            supportedKubernetes: ["1.35", "1.36"],
+          },
+        },
+      },
+    },
+  };
+  const live = { cilium: version("1.20.3") };
+  const result = await completeCiliumPatchMatrix(cache, live, async (url) => {
+    assert.equal(
+      url,
+      "https://raw.githubusercontent.com/cilium/cilium/v1.20.3/Documentation/network/kubernetes/compatibility.rst",
+    );
+    return text;
+  });
+  assert.deepEqual(result.projects.cilium.versions["v1.20.3"].supportedKubernetes, [
+    "1.35",
+    "1.36",
+  ]);
+  assert.equal(cache.projects.cilium.versions["v1.20.3"], undefined);
+  await assert.rejects(completeCiliumPatchMatrix(cache, live, async () => "changed matrix"));
+  await assert.rejects(
+    completeCiliumPatchMatrix(cache, live, async () => {
+      throw new Error("unavailable");
+    }),
+  );
+  await assert.rejects(
+    completeCiliumPatchMatrix(cache, { cilium: version("1.21.0") }, async () => {
+      assert.fail("must not fetch an unreviewed minor");
+    }),
+  );
+  assert.equal(
+    await completeCiliumPatchMatrix(result, live, async () => {
+      assert.fail("existing entries must still use normal cache validation");
+    }),
+    result,
+  );
 });

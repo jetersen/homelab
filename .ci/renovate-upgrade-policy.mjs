@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { writeFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 
@@ -160,6 +161,36 @@ export function sonarrStableRule(release) {
   };
 }
 
+export async function completeCiliumPatchMatrix(catalog, live, fetcher = fetchText) {
+  const project = catalog?.projects?.cilium;
+  const tag = `v${live.cilium.text}`;
+  if (project?.versions?.[tag] !== undefined) {
+    return catalog;
+  }
+  const source =
+    /^https:\/\/raw\.githubusercontent\.com\/cilium\/cilium\/(v\d+\.\d+\.\d+)\/Documentation\/network\/kubernetes\/compatibility\.rst$/.exec(
+      project?.source ?? "",
+    );
+  const base = source && project.versions?.[source[1]];
+  if (!base || base.unavailable || version(source[1]).line !== live.cilium.line) {
+    throw new Error("Missing released Cilium minor matrix; refresh the compatibility catalog");
+  }
+  const url = project.source.replace(source[1], tag);
+  const text = await fetcher(url);
+  // Reuse parsed data only when the exact released document is byte-identical.
+  // New or changed support matrices still require a reviewed catalog refresh.
+  if (createHash("sha256").update(text).digest("hex") !== base.sourceSha256) {
+    throw new Error("Released Cilium matrix changed; refresh the compatibility catalog");
+  }
+  return {
+    ...catalog,
+    projects: {
+      ...catalog.projects,
+      cilium: { ...project, versions: { ...project.versions, [tag]: { ...base, source: url } } },
+    },
+  };
+}
+
 async function fetchText(url, headers = {}) {
   let response;
   try {
@@ -190,8 +221,9 @@ export async function generate(base = "https://upgrade-versions.jetersen.dev") {
     "https://forgejo.jetersen.dev/api/v1/repos/jetersen/kubernetes-compatibility/raw/catalog.json?ref=main";
   // The repository is public, but this Forgejo instance requires sign-in.
   const token = process.env.RENOVATE_TOKEN || process.env.FORGEJO_TOKEN;
-  const catalog = JSON.parse(
-    await fetchText(cacheUrl, token ? { Authorization: `token ${token}` } : {}),
+  const catalog = await completeCiliumPatchMatrix(
+    JSON.parse(await fetchText(cacheUrl, token ? { Authorization: `token ${token}` } : {})),
+    live,
   );
   const matrices = cachedMatrices(catalog, live);
   const result = {
