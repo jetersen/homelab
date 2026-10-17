@@ -23,6 +23,8 @@ spec:
         cpu: 10m
     autoDirectNodeRoutes: true
     bpf:
+      # Use host routing for correct MTU handling when forwarding into Tailscale TUN.
+      hostLegacyRouting: true
       masquerade: true
       # Preserve service load-balancing behavior independently of Gateway API.
       lbAlgorithmAnnotation: true
