@@ -72,6 +72,11 @@ Restrict claims to this repository, `refs/heads/main`, and the listed workflows.
 Publishers need `push` and `workflow_dispatch`; Renovate needs `schedule` and
 `workflow_dispatch`. Renovate's Forgejo API token does not authenticate Docker
 lookups, which use the separate package integration through `hostRules`.
+Homelab [update rules](../.renovate/autoMerge.json5) prefer the newest eligible
+release instead of competing major, minor, and patch PRs. Talos and Kubernetes
+retain separate patch PRs so reviewed minor upgrades do not block maintenance
+of the running minor. Compatibility constraints and approval gates still apply.
+
 The scheduled Renovate run scans both repositories. Manual runs can select one
 repository with the `repository` input; `all` keeps the shared run. Use `dry_run`
 to inspect updates without writing branches or PRs.
