@@ -8,6 +8,14 @@
   platformAutomerge: true,
   packageRules: [
     {
+      description: "Prefer the newest eligible release instead of competing version PRs",
+      matchPackageNames: ["*"],
+      separateMajorMinor: false,
+      separateMinorPatch: false,
+      separateMultipleMajor: false,
+      separateMultipleMinor: false,
+    },
+    {
       description: "Pace container image and Helm chart upgrades through Renovate",
       matchDatasources: ["docker", "helm"],
       platformAutomerge: false,
@@ -16,6 +24,7 @@
     {
       description: "Separate operating-system and Kubernetes patch updates from reviewed minor upgrades",
       matchPackageNames: ["siderolabs/talos", "ghcr.io/siderolabs/talos", "kubernetes/kubernetes", "ghcr.io/siderolabs/kubelet"],
+      separateMajorMinor: true,
       separateMinorPatch: true,
       minimumReleaseAge: "3 days",
     },

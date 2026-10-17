@@ -53,13 +53,6 @@
       "enabled": false
     },
     {
-      "description": "GitHub Actions: prefer the latest update over separate major and minor PRs",
-      "matchManagers": [
-        "github-actions"
-      ],
-      "separateMajorMinor": false
-    },
-    {
       "description": "Update GitHub and Forgejo references to each GitHub action together",
       "matchManagers": [
         "github-actions"
