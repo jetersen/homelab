@@ -1,6 +1,7 @@
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
   // Use platform-native auto-merge by default; pace container and chart updates through Renovate.
+  ignoreUnstable: true,
   automerge: true,
   automergeType: "pr",
   // Forgejo's plain rebase is named "fast-forward" in Renovate; "rebase" adds a merge commit.

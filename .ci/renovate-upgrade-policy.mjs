@@ -144,6 +144,22 @@ export function policy(live, matrices, talosLines = [live.talos.line]) {
   return { supported, packageRules };
 }
 
+// Sonarr's four-part Docker tags do not encode GitHub's prerelease flag.
+export function sonarrStableRule(release) {
+  if (
+    release?.prerelease !== false ||
+    release?.draft !== false ||
+    !/^v\d+\.\d+\.\d+\.\d+$/.test(release?.tag_name ?? "")
+  ) {
+    throw new Error("Missing or invalid stable Sonarr release metadata");
+  }
+  return {
+    description: "Only propose Sonarr images matching the latest upstream stable release",
+    matchPackageNames: ["ghcr.io/home-operations/sonarr"],
+    allowedVersions: `/^${release.tag_name.slice(1).replaceAll(".", "\\.")}$/`,
+  };
+}
+
 async function fetchText(url, headers = {}) {
   let response;
   try {
@@ -178,7 +194,7 @@ export async function generate(base = "https://upgrade-versions.jetersen.dev") {
     await fetchText(cacheUrl, token ? { Authorization: `token ${token}` } : {}),
   );
   const matrices = cachedMatrices(catalog, live);
-  return {
+  const result = {
     live,
     cacheUrl,
     cacheRefreshedAt: catalog.refreshedAt,
@@ -197,6 +213,12 @@ export async function generate(base = "https://upgrade-versions.jetersen.dev") {
         .map(([tag]) => tag.slice(1)),
     ),
   };
+  result.packageRules.push(
+    sonarrStableRule(
+      JSON.parse(await fetchText("https://api.github.com/repos/Sonarr/Sonarr/releases/latest")),
+    ),
+  );
+  return result;
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

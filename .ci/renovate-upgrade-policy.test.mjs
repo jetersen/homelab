@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { cachedMatrices, liveVersions, policy, version } from "./renovate-upgrade-policy.mjs";
+import {
+  cachedMatrices,
+  liveVersions,
+  policy,
+  sonarrStableRule,
+  version,
+} from "./renovate-upgrade-policy.mjs";
 
 const badges = () => ({
   node: {
@@ -214,4 +220,27 @@ test("uses minor compatibility without patch floors for current and next-minor v
     Object.values(matrices).map((entry) => entry.supportedKubernetes),
   );
   assert.equal(result.packageRules[2].allowedVersions, ">=1.35.0 <1.37.0");
+});
+
+test("Sonarr allows only the latest stable upstream release despite numeric beta image tags", () => {
+  const rule = sonarrStableRule({ tag_name: "v4.0.20.3014", prerelease: false, draft: false });
+  const pattern = new RegExp(rule.allowedVersions.slice(1, -1));
+  assert.ok(pattern.test("4.0.20.3014"));
+  for (const tag of ["5.0.0.2635", "4.0.21.1", "4x0x20x3014", "4.0.20.3014-beta"]) {
+    assert.equal(pattern.test(tag), false);
+  }
+  // A future stable major is allowed automatically, while migration review remains separate.
+  assert.match(
+    sonarrStableRule({ tag_name: "v5.0.1.3000", prerelease: false, draft: false }).allowedVersions,
+    /5/,
+  );
+  for (const release of [
+    null,
+    {},
+    { tag_name: "v5.0.0.2635", prerelease: true, draft: false },
+    { tag_name: "v4.0.20.3014", prerelease: false, draft: true },
+    { tag_name: "v4.0.20.3014-beta", prerelease: false, draft: false },
+  ]) {
+    assert.throws(() => sonarrStableRule(release));
+  }
 });
