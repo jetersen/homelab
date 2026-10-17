@@ -87,4 +87,9 @@ jobs:
           FORGEJO_OWNER: ${{ forgejo.repository_owner }}
           FORGEJO_REPOSITORY: ${{ forgejo.event.repository.name }}
           FORGEJO_TOKEN: ${{ steps.auth.outputs.token }}
-        run: node .ci/image-retention.mjs --apply
+        run: |
+          # Publication can finish after another PR merges. Plan cleanup from the
+          # latest pins; retention still refuses any subsequent head change.
+          git fetch --no-tags origin refs/heads/main
+          git checkout --detach FETCH_HEAD
+          node .ci/image-retention.mjs --apply

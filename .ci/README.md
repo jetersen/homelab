@@ -35,7 +35,8 @@ three stable releases of each workload image, `main` and `keep-*` tags, and vers
 under 30 days old. It protects version and digest pins in Kubernetes manifests and
 the Rocket runner configuration and running CI containers, including child manifests
 of retained OCI indexes.
-Cleanup refuses stale checkouts and changing inventories. The native Forgejo Flux
+Publication refreshes its checkout before planning cleanup. Cleanup still refuses
+stale checkouts and changing inventories. The native Forgejo Flux
 cleanup rule remains separate. Retention runs after publication or a manual rerun
 of the image publication workflow; it does not run on a daily timer.
 
