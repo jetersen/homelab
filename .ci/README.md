@@ -77,9 +77,9 @@ Homelab [update rules](../.renovate/autoMerge.json5) prefer the newest eligible
 release instead of competing major, minor, and patch PRs. Renovate rebases
 outdated branches before queuing Forgejo's fast-forward auto-merge. Talos and Kubernetes
 retain separate patch PRs so reviewed minor upgrades do not block maintenance
-of the running minor. Compatibility constraints and approval gates still apply. Sonarr's
+of the running minor. Compatibility constraints and approval gates still apply. Sonarr, Radarr, and Prowlarr's
 numeric image tags do not identify prereleases, so the policy generator restricts
-them to the latest stable GitHub release; major migrations still require review.
+them to the latest stable GitHub release. Sonarr major migrations still require review.
 
 The scheduled Renovate run scans both repositories. Manual runs can select one
 repository with the `repository` input; `all` keeps the shared run. Use `dry_run`

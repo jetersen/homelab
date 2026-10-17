@@ -145,18 +145,27 @@ export function policy(live, matrices, talosLines = [live.talos.line]) {
   return { supported, packageRules };
 }
 
-// Sonarr's four-part Docker tags do not encode GitHub's prerelease flag.
-export function sonarrStableRule(release) {
+// Arr applications publish numeric Docker tags for both stable and prerelease builds.
+const arrProjects = {
+  sonarr: "Sonarr/Sonarr",
+  radarr: "Radarr/Radarr",
+  prowlarr: "Prowlarr/Prowlarr",
+};
+
+export function arrStableRule(project, release) {
+  if (!Object.hasOwn(arrProjects, project)) {
+    throw new Error("Unknown Arr project");
+  }
   if (
     release?.prerelease !== false ||
     release?.draft !== false ||
     !/^v\d+\.\d+\.\d+\.\d+$/.test(release?.tag_name ?? "")
   ) {
-    throw new Error("Missing or invalid stable Sonarr release metadata");
+    throw new Error(`Missing or invalid stable ${project} release metadata`);
   }
   return {
-    description: "Only propose Sonarr images matching the latest upstream stable release",
-    matchPackageNames: ["ghcr.io/home-operations/sonarr"],
+    description: `Only propose ${project} images matching the latest upstream stable release`,
+    matchPackageNames: [`ghcr.io/home-operations/${project}`],
     allowedVersions: `/^${release.tag_name.slice(1).replaceAll(".", "\\.")}$/`,
   };
 }
@@ -246,9 +255,14 @@ export async function generate(base = "https://upgrade-versions.jetersen.dev") {
     ),
   };
   result.packageRules.push(
-    sonarrStableRule(
-      JSON.parse(await fetchText("https://api.github.com/repos/Sonarr/Sonarr/releases/latest")),
-    ),
+    ...(await Promise.all(
+      Object.entries(arrProjects).map(async ([project, repository]) =>
+        arrStableRule(
+          project,
+          JSON.parse(await fetchText(`https://api.github.com/repos/${repository}/releases/latest`)),
+        ),
+      ),
+    )),
   );
   return result;
 }
