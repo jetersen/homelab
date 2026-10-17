@@ -2,6 +2,13 @@
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
   packageRules: [
     {
+      description: "Review Sonarr major upgrades before database migrations",
+      matchPackageNames: ["ghcr.io/home-operations/sonarr"],
+      matchUpdateTypes: ["major"],
+      dependencyDashboardApproval: true,
+      automerge: false,
+    },
+    {
       description: "Track homelab image SemVer releases",
       matchDatasources: ["docker"],
       matchPackageNames: [
