@@ -10,6 +10,8 @@ spec:
     name: cilium
     kind: OCIRepository
   values:
+    # Match the LAN underlay instead of auto-detecting the Tailscale TUN MTU.
+    MTU: 1500
     cni:
       exclusive: false
       resources:

@@ -31,6 +31,11 @@ does not protect direct access to backend Pod addresses; workload policy is a
 separate control. IPv4 and IPv6 routes, source addresses, and return paths must be
 considered together. See [Talos networking](kubernetes/talos/README.md).
 
+Cilium pins the Pod MTU to the LAN underlay and uses host-stack routing for
+traffic crossing lower-MTU TUN interfaces. Keep ICMP Packet Too Big feedback
+working across these paths; matching the LAN MTU does not raise Tailscale's MTU.
+Validate both address families when changing either setting.
+
 Prefer direct Tailscale connections to enrolled hosts. Advertise narrow host or
 service routes for destinations without a client. Route approval establishes
 reachability; tailnet grants establish permission. Subnet routers normally
