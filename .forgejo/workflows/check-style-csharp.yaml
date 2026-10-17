@@ -17,6 +17,10 @@ jobs:
       - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      # SDK upgrades must validate before the rebuilt runner is deployed.
+      - uses: https://github.com/actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          global-json-file: global.json
       - name: Restore projects
         run: |
           python3 infrastructure/truenas/restore-provider.py
