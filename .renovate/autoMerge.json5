@@ -1,6 +1,6 @@
 {
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
-  // Use platform-native auto-merge by default; pace container and chart updates through Renovate.
+  // Use platform-native auto-merge for eligible updates, including images and charts.
   ignoreUnstable: true,
   automerge: true,
   automergeType: "pr",
@@ -17,11 +17,6 @@
       separateMinorPatch: false,
       separateMultipleMajor: false,
       separateMultipleMinor: false,
-    },
-    {
-      description: "Pace container image and Helm chart upgrades through Renovate",
-      matchDatasources: ["docker", "helm"],
-      platformAutomerge: false,
     },
     {
       description: "Separate operating-system and Kubernetes patch updates from reviewed minor upgrades",
