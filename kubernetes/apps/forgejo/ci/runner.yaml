@@ -5,8 +5,8 @@ runner:
   timeout: 45m
   shutdown_timeout: 1m
   labels:
-    - linux-docker:docker://forgejo.jetersen.dev/jetersen/homelab/runner-job:1.6.0@sha256:982aa86491ece674f10acb6a1227f9d825cd5ab1700415e3df58678dc8768abd
-    - runner-kubernetes:docker://forgejo.jetersen.dev/jetersen/homelab/runner-job:1.6.0@sha256:982aa86491ece674f10acb6a1227f9d825cd5ab1700415e3df58678dc8768abd
+    - linux-docker:docker://forgejo.jetersen.dev/jetersen/homelab/runner-job:1.7.0@sha256:bf1f2c8190a86eb5126985b01652a7d65004669c8fee772bd6d010393cc73199
+    - runner-kubernetes:docker://forgejo.jetersen.dev/jetersen/homelab/runner-job:1.7.0@sha256:bf1f2c8190a86eb5126985b01652a7d65004669c8fee772bd6d010393cc73199
   envs:
     DOCKER_HOST: tcp://docker:2375
 cache:
