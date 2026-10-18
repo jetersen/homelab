@@ -4,6 +4,7 @@ namespace: homepage
 resources:
 - deployment.yaml
 - service.yaml
+- networkpolicy.yaml
 - httproute.yaml
 - rbac.yaml
 - secret.sops.yaml
