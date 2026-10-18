@@ -11,7 +11,7 @@ Varlock resolves credentials for local commands.
 
 [PR checks](../.forgejo/workflows/pr-checks.yaml) selects reusable checks using
 [pr-checks.json](pr-checks.json). Its final `Required PR checks` job succeeds only
-when every selected check succeeds. Unselected checks must be skipped. Branch
+when every selected check succeeds. Forgejo reports unselected reusable checks as successful wrappers around skipped jobs. Branch
 protection requires this aggregate status and Konflate. Keep the selection rules
 in sync when adding checks or changing their scope; push and manual triggers stay
 in the individual workflows.

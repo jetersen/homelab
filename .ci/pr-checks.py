@@ -24,9 +24,9 @@ def verify_checks(results):
         raise ValueError("PR check selection did not succeed")
     selected = results["changes"]["outputs"]
     for name, required in selected.items():
-        expected = "success" if required == "true" else "skipped"
-        if required not in {"true", "false"} or results.get(name, {}).get("result") != expected:
-            raise ValueError(f"PR check {name} did not finish as {expected}")
+        expected = {"success"} if required == "true" else {"success", "skipped"}
+        if required not in {"true", "false"} or results.get(name, {}).get("result") not in expected:
+            raise ValueError(f"PR check {name} did not finish with an allowed result")
     if set(results) != {"changes", *selected}:
         raise ValueError("PR check results do not match selected checks")
 

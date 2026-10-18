@@ -29,12 +29,14 @@ class PrChecksTests(unittest.TestCase):
             "runner": {"result": "skipped"},
         }
         checks.verify_checks(valid)
+        valid["runner"]["result"] = "success"
+        checks.verify_checks(valid)
         for name, state in [
             ("changes", "failure"),
             ("truenas", "failure"),
             ("truenas", "cancelled"),
             ("truenas", "skipped"),
-            ("runner", "success"),
+            ("runner", "failure"),
         ]:
             invalid = json.loads(json.dumps(valid))
             invalid[name]["result"] = state
