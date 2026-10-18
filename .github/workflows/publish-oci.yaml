@@ -4,15 +4,13 @@ on:
   push:
     branches: [main]
     paths:
-      - kubernetes/apps/**
-      - kubernetes/cluster/**
-      - kubernetes/components/**
-      - kubernetes/flux/**
+      - kubernetes/**
       - .ci/actions/publish-oci/**
       - .ci/actions/setup-tool/**
       - infrastructure/forgejo/runner/Dockerfile
       - .forgejo/workflows/publish-oci.yaml
       - .github/workflows/publish-oci.yaml
+      - "!**/*.md"
   workflow_dispatch:
 permissions:
   contents: read

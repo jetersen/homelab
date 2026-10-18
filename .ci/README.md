@@ -10,8 +10,8 @@ Varlock resolves credentials for local commands.
 ## Publication
 
 The Flux publisher runs when packaged Kubernetes manifests or publication inputs
-change, or on manual dispatch. Documentation and unrelated infrastructure changes
-do not trigger publication. It validates manifests, retains `sha-<commit>` tags,
+change, or on manual dispatch. Markdown files and unrelated infrastructure changes do not trigger publication.
+Scripts, templates, and other assets under `kubernetes/` remain publication inputs. It validates manifests, retains `sha-<commit>` tags,
 and advances `main` only while its publication inputs match the branch head. Remote Kustomize dependencies must be
 bundled during publication so Flux can build without network access. Helm charts
 and container images are fetched separately.
