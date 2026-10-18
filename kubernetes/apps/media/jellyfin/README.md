@@ -1,8 +1,6 @@
 # Hardware transcoding
 
-Jellyfin requests an Intel GPU from the Flux-managed `intel-gpu-plugin`.
-The plugin runs on `talos01`, whose Talos image includes `siderolabs/i915`.
-The render device is accessible to Jellyfin's non-root user without extra groups.
+See the [HelmRelease](helmrelease.yaml) for GPU and storage configuration.
 
 In Dashboard → Playback → Transcoding, select Intel Quick Sync (QSV) and
 `/dev/dri/renderD128`. Enable hardware decoding only for codecs reported by
@@ -16,12 +14,9 @@ FFmpeg log for the QSV hardware encoder. Direct Play does not use the transcoder
 
 ## Transcode storage
 
-The HelmRelease mounts a dedicated scratch directory from the existing NAS
-export at `/cache/transcodes`. The init container creates it as Jellyfin's user;
-the application retains read-only access to the media library. Keep the database
-and image cache on their local PVCs. Transcodes use NAS disk space and network
-bandwidth without a RAM-backed volume; ordinary filesystem buffering still uses
-memory. The NFS hard mount can stall transcoding while the NAS is unavailable.
+Keep the database and image cache separate from transcode scratch storage.
+NAS-backed scratch storage consumes network bandwidth; its NFS hard mount can
+stall transcoding while the NAS is unavailable.
 
 Keep the Transcode path unset in Dashboard → Playback → Transcoding so Jellyfin
 uses `/cache/transcodes`. Enable Throttle Transcodes to limit how far FFmpeg runs
@@ -36,10 +31,7 @@ Reverting the mount restores local transcode storage without moving the database
 ## IoT access
 
 For IoT clients, use the dedicated endpoint defined in the
-[HelmRelease](helmrelease.yaml). DNSControl maps its hostname
-to a dedicated IPv4 LoadBalancer Service. It forwards standard HTTPS to a
-separate Envoy listener that accepts only the Jellyfin hostname and route.
-The existing Jellyfin endpoint remains available for other clients.
+[HelmRelease](helmrelease.yaml).
 
 Permit IoT clients to reach only this Service address on TCP 443 through UniFi.
 Keep DNS access to Technitium. A firewall rule allowing the shared ingress

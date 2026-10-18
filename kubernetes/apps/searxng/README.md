@@ -1,26 +1,16 @@
 # SearXNG
 
-SearXNG is available at `https://search.jetersen.dev` through the existing Envoy
-gateway and wildcard certificate. Internal DNS resolves the gateway VIP, which
-Talos advertises to Tailscale. The route allows private LAN, tailnet, and cluster
-clients; other sources are denied. No public DNS alias or tunnel is configured.
-Linux Tailscale clients must accept subnet routes and use tailnet DNS.
+Edit the [managed settings](app/config/settings.yml) for instance defaults and the
+[deployment](app/deployment.yaml) for runtime configuration.
 
-The official image generates `settings.yml` and a random application secret on
-first boot. The retained [configuration PVC](app/pvc.yaml) preserves them across upgrades.
-The init container applies [managed settings](app/config/settings.yml) on each
-start while retaining that secret. Edit the managed template rather than the
-PVC file; ConfigMap changes trigger a rollout. Do not print the PVC settings file
-or commit it unencrypted. The cache is disposable.
-There is no search history database or account setup.
+Edit the managed template rather than the generated PVC settings file, which
+contains the application secret. Preserve the [configuration PVC](app/pvc.yaml)
+across upgrades; do not print its settings file or commit it unencrypted.
 
-Deployment environment variables set the base URL and enable image proxying.
-The limiter and public-instance features are disabled for private use, so Valkey
-is not required. Engine and interface preferences can be changed in the browser.
-See the managed settings for engine defaults and request backoff. Saved browser
-preferences can override the defaults. Upstream rate limits and CAPTCHAs can
-still prevent searches; browser cookies are not shared with SearXNG.
+Keep the instance private while the limiter and public-instance features are
+disabled. Linux Tailscale clients need subnet routes and tailnet DNS for access.
+Browser preferences can override managed defaults. Upstream rate limits and
+CAPTCHAs can still prevent searches; browser cookies are not shared with SearXNG.
 
-The image is pinned by version and digest. See the upstream
-[container documentation](https://docs.searxng.org/admin/installation-docker.html)
+See the upstream [container documentation](https://docs.searxng.org/admin/installation-docker.html)
 and [settings reference](https://docs.searxng.org/admin/settings/).
