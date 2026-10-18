@@ -103,7 +103,7 @@ of the running minor. Compatibility constraints and approval gates still apply. 
 numeric image tags do not identify prereleases, so the policy generator restricts
 them to the latest stable GitHub release. Sonarr major migrations still require review.
 
-The scheduled Renovate run scans both repositories. Manual runs can select one
+The scheduled Renovate run scans homelab, dotfiles, and the private Music Assistant fork. Manual runs can select one
 repository with the `repository` input; `all` keeps the shared run. Use `dry_run`
 to inspect updates without writing branches or PRs.
 Token requests use `actions/github-script` with `core.getIDToken(audience)`, which
