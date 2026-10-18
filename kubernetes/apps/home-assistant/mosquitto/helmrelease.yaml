@@ -48,6 +48,24 @@ spec:
                     printf 'topic readwrite #\n'
                     # Preserve other integrations; deployment updates belong to CI.
                     printf 'topic deny +/button/update/command\n'
+                  elif [ "$username" = pc2mqtt-rocket ]; then
+                    printf 'topic write rocket/state\n'
+                    printf 'topic write rocket/binary_sensor/availability\n'
+                    printf 'topic write homeassistant/binary_sensor/63fbeebb-f107-4903-ab36-6104b9d802b0/rocket_sensor_power/config\n'
+                    printf 'topic write homeassistant/button/63fbeebb-f107-4903-ab36-6104b9d802b0/rocket_button_shutdown/config\n'
+                    printf 'topic write homeassistant/button/63fbeebb-f107-4903-ab36-6104b9d802b0/rocket_button_reboot/config\n'
+                    printf 'topic read rocket/button/shutdown/command\n'
+                    printf 'topic read rocket/button/reboot/command\n'
+                    printf 'topic read rocket/button/update/command\n'
+                  elif [ "$username" = pc2mqtt-framework ]; then
+                    printf 'topic write framework/state\n'
+                    printf 'topic write framework/binary_sensor/availability\n'
+                    printf 'topic write homeassistant/binary_sensor/fbce0afd-c66f-4a56-b8aa-0e1561ac1837/framework_sensor_power/config\n'
+                    printf 'topic write homeassistant/button/fbce0afd-c66f-4a56-b8aa-0e1561ac1837/framework_button_shutdown/config\n'
+                    printf 'topic write homeassistant/button/fbce0afd-c66f-4a56-b8aa-0e1561ac1837/framework_button_reboot/config\n'
+                    printf 'topic read framework/button/shutdown/command\n'
+                    printf 'topic read framework/button/reboot/command\n'
+                    printf 'topic read framework/button/update/command\n'
                   else
                     printf 'topic readwrite #\n'
                   fi
