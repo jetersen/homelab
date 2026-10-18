@@ -45,9 +45,7 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
             self.hass.services.async_register(domain, service, record)
         for entity in [PHONE, ROCKET, FRAMEWORK]:
             self.hass.states.async_set(entity, "paused")
-        self.hass.states.async_set(
-            BLUETOOTH, "1", {"connected_paired_devices": ["WH-1000XM6"]}
-        )
+        self.hass.states.async_set(BLUETOOTH, "1", {"connected_paired_devices": ["WH-1000XM6"]})
         self.script = Script(
             self.hass,
             cv.SCRIPT_SCHEMA(PACKAGE["script"]["music_headphones_play"]["sequence"]),
