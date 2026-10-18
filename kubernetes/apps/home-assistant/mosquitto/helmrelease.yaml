@@ -37,7 +37,8 @@ spec:
               - |
                 umask 077
                 cp /mqtt-auth/passwd /mosquitto/secrets/passwd
-                chmod 0600 /mosquitto/secrets/passwd
+                cp /mosquitto/config/acl /mosquitto/secrets/acl
+                chmod 0600 /mosquitto/secrets/passwd /mosquitto/secrets/acl
             securityContext:
               allowPrivilegeEscalation: false
               readOnlyRootFilesystem: true
@@ -89,6 +90,9 @@ spec:
           mosquitto:
             app:
               - path: /mosquitto/config
+            password-file:
+              - path: /mosquitto/config
+                readOnly: true
       data:
         existingClaim: mosquitto-lvm
         type: persistentVolumeClaim
@@ -125,7 +129,7 @@ spec:
             log_dest stdout
             allow_anonymous false
             password_file /mosquitto/secrets/passwd
-            acl_file /mosquitto/config/acl
+            acl_file /mosquitto/secrets/acl
             listener 1883
             listener 9001
             protocol websockets
