@@ -18,10 +18,11 @@ until docker info >/dev/null 2>&1; do
     kill -0 "$daemon"
     sleep 1
 done
-# No runner starts until stale containers and job volumes have been removed.
+# Preserve explicitly labelled caches while removing disposable job volumes.
 docker container prune --force
 docker network prune --force
-docker volume prune --all --force
+docker volume create --label ci.persistent=true dotfiles-nix-cache >/dev/null
+docker volume prune --all --force --filter label!=ci.persistent=true
 touch /tmp/cache-ready
 # Bound growth without throwing away a warm cache after every job.
 (
