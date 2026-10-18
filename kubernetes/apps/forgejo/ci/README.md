@@ -7,7 +7,8 @@ explicitly. `runner-kubernetes` selects only the Kubernetes pool. Combine it aft
 task already claimed by Rocket exits successfully. The [ScaledJob](scaledjob.yaml)
 and [dotfiles ScaledJob](dotfiles-scaledjob.yaml) define polling, concurrency,
 job lifetime, and rollout behavior;
-[runner.yaml](runner.yaml) defines the executor.
+[runner.yaml](runner.yaml) and [dotfiles-runner.yaml](dotfiles-runner.yaml) define
+the executors.
 
 The KEDA Forgejo query lists `linux-docker,runner-kubernetes`. Forgejo returns a
 waiting job when every label requested by the job is present in the query, so this
@@ -52,7 +53,7 @@ database, and fetched inputs. The Debian job image includes Nix outside
 the store, so it can mount either a fresh or retained store directly. Job
 credentials must stay outside this shared volume. Each backend owns a separate
 store; serialize jobs that mount it. Kubernetes startup labels this volume to
-preserve it during cleanup. The Nix workflow grants its job the namespace
+preserve it during cleanup. The dedicated Nix runner grants its jobs the namespace
 permissions needed for strict Nix sandboxing without making every job privileged.
 The runner's [Compose configuration](../../../../infrastructure/forgejo/runner/compose.yaml)
 also mounts the NAS Nix binary cache at `/var/cache/nix-nas` inside the nested

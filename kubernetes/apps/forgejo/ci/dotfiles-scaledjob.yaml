@@ -68,7 +68,7 @@ spec:
             args:
               - |
                 until docker --host=tcp://forgejo-ci-docker:2375 info > /dev/null 2>&1; do sleep 2; done
-                /runner/forgejo-runner --config /config/runner.yaml one-job --url https://forgejo.jetersen.dev --uuid "$(cat /registration/uuid)" --token-url file:/registration/token &
+                /runner/forgejo-runner --config /config/dotfiles-runner.yaml one-job --url https://forgejo.jetersen.dev --uuid "$(cat /registration/uuid)" --token-url file:/registration/token &
                 runner=$!
                 trap 'kill -TERM "$runner" 2>/dev/null' TERM INT
                 status=0

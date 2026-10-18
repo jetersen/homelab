@@ -12,6 +12,7 @@ configMapGenerator:
   - name: forgejo-ci-config
     files:
       - runner.yaml
+      - dotfiles-runner.yaml
       - docker-entrypoint.sh
       - docker.json
 generatorOptions:

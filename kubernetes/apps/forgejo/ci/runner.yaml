@@ -2,7 +2,7 @@ log:
   level: info
 runner:
   capacity: 1
-  timeout: 90m
+  timeout: 45m
   shutdown_timeout: 1m
   labels:
     - linux-docker:docker://forgejo.jetersen.dev/jetersen/homelab/runner-job:1.8.0@sha256:a6a8fdf9a7b4914434835fbd3763da496f27797c160123d7386af8cfb711aff9
@@ -15,8 +15,7 @@ container:
   docker_host: tcp://forgejo-ci-docker:2375
   options: --add-host=docker:host-gateway --dns-option=ndots:1 --dns-search=.
   privileged: false
-  valid_volumes:
-    - dotfiles-nix-cache
+  valid_volumes: []
   force_pull: true
 # Docker execution still stages action sources in the runner's writable directory.
 host:

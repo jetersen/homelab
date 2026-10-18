@@ -1,0 +1,26 @@
+log:
+  level: info
+runner:
+  capacity: 1
+  timeout: 90m
+  shutdown_timeout: 1m
+  labels:
+    - linux-docker:docker://forgejo.jetersen.dev/jetersen/homelab/runner-job:1.8.0@sha256:a6a8fdf9a7b4914434835fbd3763da496f27797c160123d7386af8cfb711aff9
+    - runner-kubernetes:docker://forgejo.jetersen.dev/jetersen/homelab/runner-job:1.8.0@sha256:a6a8fdf9a7b4914434835fbd3763da496f27797c160123d7386af8cfb711aff9
+  envs:
+    DOCKER_HOST: tcp://docker:2375
+cache:
+  enabled: false
+container:
+  docker_host: tcp://forgejo-ci-docker:2375
+  # Nix needs mount/network namespaces and pivot_root for strict sandboxing.
+  options: >-
+    --add-host=docker:host-gateway --dns-option=ndots:1 --dns-search=.
+    --cap-add=SYS_ADMIN --cap-add=NET_ADMIN --security-opt=seccomp=unconfined
+  privileged: false
+  valid_volumes:
+    - dotfiles-nix-cache
+  force_pull: true
+# Docker execution still stages action sources in the runner's writable directory.
+host:
+  workdir_parent: /data/workspace
