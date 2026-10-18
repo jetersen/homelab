@@ -1,204 +1,85 @@
 # Networking
 
-This document describes component responsibilities and constraints for network
-changes. Addresses and deployed settings belong in their existing configuration
-sources. Keep live inventories, access rules, and operational audits outside the
-repository.
-
-## Responsibilities
-
-| Component | Responsibility |
-| --- | --- |
-| UniFi | LAN routing, VLANs, DHCP, and firewall policy between routed networks |
-| Tailscale | Authenticated remote connectivity and access policy for tailnet traffic |
-| Cilium | Kubernetes Pod and Service networking, load-balancer address announcements, and workload policy |
-| Envoy Gateway | Application ingress and route-specific access controls |
-| Technitium | Internal DNS zones, recursive resolution, and DNS blocking |
-| CoreDNS | Kubernetes service discovery and forwarding external queries |
-| DNSControl | Desired public records and separate internal DNS views |
-
-These controls apply at different points. A VLAN creates a separate Layer 2
-network; firewall rules determine which routed connections can cross its boundary.
-Traffic within a VLAN can bypass the gateway. Use host firewalls or supported
-switch/AP isolation when that traffic also needs restrictions. See
-[UniFi's isolation layers](https://help.ui.com/hc/en-us/articles/18965560820247-Implementing-Network-and-Client-Isolation-in-UniFi).
+Use maintained configuration for deployed addresses, routes, and access rules.
+This document covers constraints for changing network boundaries. Do not create
+separate inventories or operational audits unless explicitly requested.
 
 ## Application and remote access
 
-Cilium uses native dual-stack routing and advertises Service addresses onto the
-LAN. Envoy routes application requests to their backends. Gateway authorization
-does not protect direct access to backend Pod addresses; workload policy is a
-separate control. IPv4 and IPv6 routes, source addresses, and return paths must be
-considered together. See [Talos networking](kubernetes/talos/README.md).
+Gateway authorization does not protect direct access to backend Pod addresses;
+workload policy is a separate control. Check IPv4 and IPv6 routes, source
+addresses, and return paths together. See [Talos networking](kubernetes/talos/README.md).
 
-Cilium pins the Pod MTU to the LAN underlay and uses host-stack routing for
-traffic crossing lower-MTU TUN interfaces. Keep ICMP Packet Too Big feedback
-working across these paths; matching the LAN MTU does not raise Tailscale's MTU.
-Validate both address families when changing either setting.
+Keep ICMP Packet Too Big feedback working across lower-MTU tunnels. Matching a
+LAN MTU does not raise a tunnel's MTU. Validate both address families after changes.
 
 Prefer direct Tailscale connections to enrolled hosts. Advertise narrow host or
 service routes for destinations without a client. Route approval establishes
-reachability; tailnet grants establish permission. Subnet routers normally
-translate source addresses, so downstream rules may see the router rather than
-the original client. Check the observed source before writing allowlists. See
+reachability; tailnet grants establish permission. Subnet routers may translate
+source addresses, so check the observed source before writing allowlists. See
 [Tailscale subnet routers](https://tailscale.com/docs/features/subnet-routers).
 
-Ordinary SSH can run over Tailscale with the destination's existing SSH server
-and authentication. Tailscale SSH is a separate authentication option. Neither
-tailnet policy nor VLAN placement replaces restrictions on a host's LAN-facing
-services. See [SSH over Tailscale](https://tailscale.com/docs/reference/ssh-over-tailscale).
+Neither tailnet policy nor VLAN placement replaces restrictions on LAN-facing
+services. Ordinary SSH over Tailscale uses the destination's existing SSH server
+and authentication; Tailscale SSH is a separate authentication option.
 
 ## DNS and filtering
 
-```mermaid
-flowchart LR
-    LAN[LAN clients] --> DNS[Technitium resolvers]
-    Remote[Remote clients] --> Tail[Tailscale DNS configuration]
-    Tail --> DNS
-    Pods[Ordinary cluster workloads] --> Core[CoreDNS]
-    Core --> DNS
-    DNS --> Zones[Internal zones]
-    DNS --> Filter[Blocking and upstream resolution]
-    Core -. outage fallback .-> Gateway[UniFi DNS]
-```
-
-Technitium runs in Kubernetes and independently on the NAS. Catalog replication
-distributes internal zones. DNSControl also maintains an independent internal
-record view on UniFi. Zone replication and blocking configuration are distinct;
-verify both resolvers enforce the intended filtering. See
+Keep bootstrap DNS independent of workloads running on the node being bootstrapped.
+Zone replication and blocking configuration are separate concerns; matching
+internal records does not imply matching blocklists. See
 [CoreDNS](kubernetes/cluster/coredns/README.md) and
-[DNSControl](infrastructure/dns/README.md).
+[DNSControl](infrastructure/dns/README.md) for configuration requirements.
 
-CoreDNS tries the configured upstreams sequentially, falling back on connection
-failure, `SERVFAIL`, or `REFUSED`. Negative answers do not trigger fallback.
-UniFi's independent record view provides availability; matching internal records
-does not imply matching blocklists. Keep Talos bootstrap DNS independent of
-workloads running on that node.
-
-Clients should use resolvers with equivalent filtering when filtering must be
-preserved. Do not rely on DHCP or Tailscale resolver order as strict failover.
-For remote filtering, use reachable filtered global nameservers; split DNS for
-internal domains alone leaves other queries to other resolvers. See
+Do not rely on DHCP or Tailscale resolver order as strict failover. Use resolvers
+with equivalent filtering when filtering must survive fallback. Split DNS for
+internal domains alone does not filter other queries. See
 [Tailscale DNS behavior](https://tailscale.com/docs/reference/dns-in-tailscale).
 
-Allow DNS over both UDP and TCP. Account for workloads with explicit DNS settings
-and infrastructure that intentionally queries another resolver. Restrictions on
-ports 53 and 853 do not cover DNS over HTTPS or DNS carried through a VPN.
-
-For equivalent fallback filtering, prefer another independent Technitium instance
-with synchronized settings. A gateway using a filtered external resolver is an
-alternative when reduced filtering parity is acceptable; its lists, exceptions,
-and internal records need separate validation. UniFi's built-in content filtering
-uses its own database and redirects DNS, so enabling it can change the path to
-existing internal resolvers. See
-[UniFi content filtering](https://help.ui.com/hc/en-us/articles/12568927589143-Content-and-Domain-Filtering-in-UniFi).
-Avoid forwarding loops when combining gateway and local resolvers.
+Allow DNS over both UDP and TCP. Restrictions on ports 53 and 853 do not cover
+DNS over HTTPS or DNS carried through a VPN. Avoid forwarding loops and verify
+both internal resolution and filtering after changing resolver paths.
 
 ## Kubernetes policy and additional interfaces
 
-With Cilium's default enforcement mode, workloads remain unrestricted until
-selected by a policy. Introduce ingress and egress restrictions per application,
-allowing its gateway, DNS, dependencies, monitoring, and required external access.
-Inspect actual flows before enforcement. See
+Introduce restrictions per application, allowing its gateway, DNS, dependencies,
+monitoring, and required external access. Verify the configured enforcement mode
+and inspect flows before enforcement. See
 [Cilium policy enforcement](https://docs.cilium.io/en/stable/security/policy/intro/).
 
-Jellyfin, PhotoPrism, and SearXNG accept application traffic from the Envoy
-gateway pods on their HTTP ports. Jellyfin also permits the monitoring
-blackbox exporter. Use their gateway URLs for clients and integrations;
-direct Pod or Service access from other workloads is intentionally blocked.
-These policies preserve node-originated health checks and do not isolate
-host-networked processes from workloads on the same node.
+L3/L4 policies cannot distinguish HTTPS hostnames sharing a listener. Pod egress
+policy does not restrict node-mounted storage, and network policy does not make
+privileged CI workers safe for untrusted workflows. Validate application
+authentication separately from TCP listener availability.
 
-SearXNG, Jellyfin, and PhotoPrism egress permits their configured DNS resolvers
-over UDP/TCP and public HTTP/HTTPS destinations, excluding private networks and
-the homelab's public IPv6 allocation. Jellyfin queries Technitium directly;
-the others use CoreDNS. Keep the exclusions aligned with address changes.
-This permits metadata, geocoding, and plugin downloads while limiting access to
-internal services. NFS-backed files remain accessible through node-mounted
-volumes; pod egress policy does not restrict that storage path. New local media
-sources or integration callbacks need an explicit exception.
+Use additional interfaces only when direct attachment is required; routed access
+does not require Multus. Verify policy coverage for every interface. Policy on the
+primary Cilium interface does not automatically protect secondary interfaces.
+Keep default routes and DNS on the primary network, and restrict application
+listeners on secondary networks. See
+[Multus on Talos](https://docs.siderolabs.com/kubernetes-guides/cni/multus) and
+[Home Assistant setup constraints](kubernetes/apps/home-assistant/README.md).
 
-Both Forgejo runner pools deny ingress and restrict egress to CoreDNS, public
-HTTP/HTTPS, and Envoy's HTTPS listener for Forgejo and its registry. The
-deployment/build runner additionally permits the TrueNAS and UniFi HTTPS APIs
-and Technitium DNS updates. CI workers do not receive those exceptions.
-The shared Envoy listener also serves other applications: these L3/L4 policies
-do not distinguish HTTPS hostnames. The privileged Docker sidecar remains a
-separate trust consideration; network policy does not make untrusted workflows
-safe to execute there.
-
-Mosquitto requires password authentication on both its MQTT and WebSocket
-listeners. Home Assistant, Rocket's pc2mqtt, Zigbee2MQTT, and backup helpers
-must supply credentials from their existing configuration or Secrets. A TCP
-monitoring probe only checks listener availability; validate MQTT authentication
-separately after broker changes.
-
-Home Assistant uses Cilium for its primary pod network and a Multus macvlan
-attachment for discovery on the main LAN. Its Service and ingress use the Cilium
-address; the LAN attachment has no default route and is selected explicitly in
-Home Assistant's Network settings. See the
-[runtime configuration](kubernetes/apps/home-assistant/README.md).
-
-Multus attaches additional interfaces through other CNI plugins. Consider it only
-when a workload requires direct attachment to another network; routed access does
-not require it. An additional interface needs its own verified policy coverage.
-Do not assume policy on the primary Cilium interface protects a secondary one.
-See [Multus on Talos](https://docs.siderolabs.com/kubernetes-guides/cni/multus).
-
-A server VLAN can contain the cluster nodes and NAS while UniFi routes selected
-connections to trusted clients and IoT devices. Cilium remains the primary pod
-network. For direct LAN access, Multus can attach a
-[macvlan interface](https://www.cni.dev/plugins/current/main/macvlan/) through a
-VLAN interface on the node; the switch port must carry that VLAN. Keep the pod's
-default route and DNS on its primary network. Moving the nodes to a dedicated
-server VLAN remains an optional design.
-
-Home Assistant attaches directly to both the main LAN and IoT VLAN for local
-integration discovery and Wake-on-LAN. Its default route and DNS stay on Cilium;
-forwarding is disabled. Traffic through its secondary interfaces bypasses UniFi's
-routed firewall and Cilium policy. IoT devices can initiate connections to integration listeners on the IoT
-address; this is not an outbound-only attachment. Home Assistant's HTTP server
-binds only to loopback and Cilium addresses, excluding both secondary LANs.
-The Kubernetes Service and Envoy HTTPRoute provide web access.
-Continue using Technitium for DNS.
-
-IoT firewall validation must include the gateway itself as well as other VLANs:
-blocking IoT-to-LAN traffic does not restrict gateway management or gateway DNS.
-Keep DHCP and required discovery available while restricting management and
-requiring clients to use the filtered resolvers. Port-based DNS restrictions do
-not prevent DNS over HTTPS. Test exceptions from the intended device and deny
-cases from a different IoT client; a TV-specific allowance should not admit
-every device on its network.
+A VLAN separates Layer 2 networks; routed firewall rules do not restrict traffic
+within a VLAN. Use supported switch/AP isolation or host firewalls where needed.
+IoT validation must cover gateway management and DNS as well as other VLANs.
+Test device-specific exceptions from another client to verify their scope. See
+[UniFi's isolation layers](https://help.ui.com/hc/en-us/articles/18965560820247-Implementing-Network-and-Client-Isolation-in-UniFi).
 
 ## Discovery and wake-on-LAN
 
-mDNS discovery, application connections, and wake-on-LAN are separate flows.
-UniFi can selectively proxy mDNS between networks, but that does not relay
-wake-on-LAN broadcasts. Permit the application connections needed after discovery.
-See [UniFi mDNS](https://help.ui.com/hc/en-us/articles/12648701398807-UniFi-Gateway-Multicast-DNS-mDNS-Proxy)
+mDNS discovery, application connections, and wake-on-LAN require separate paths.
+An mDNS proxy does not relay wake-on-LAN broadcasts. Permit the required application
+connections after discovery. See
+[UniFi mDNS](https://help.ui.com/hc/en-us/articles/12648701398807-UniFi-Gateway-Multicast-DNS-mDNS-Proxy)
 and [Home Assistant wake-on-LAN](https://www.home-assistant.io/integrations/wake_on_lan/).
 
-Home Assistant sends TV wake packets directly through `iot0` to
-`192.168.20.255:9`. Select `lan0` and `iot0` in Home Assistant's network settings
-for discovery. Use subnet-specific broadcast addresses for Wake-on-LAN;
-`255.255.255.255` follows the primary Cilium interface.
+Use subnet-specific broadcast addresses. A generic broadcast follows the sender's
+selected route. Before separating a wake target from its sender, provide a tested
+wake path, such as a narrowly authorized relay or a dedicated sender interface.
+An ordinary UDP allow rule does not establish directed broadcast forwarding.
+Test after a long sleep as well as immediately after shutdown.
 
-Before separating a wake target from Home Assistant, provide a tested wake path.
-Options include a narrowly authorized relay on the destination LAN or a dedicated
-interface for the sender. Directed broadcast forwarding requires explicit router
-support; an ordinary UDP allow rule alone does not establish it. Test after a
-long sleep as well as immediately after shutdown.
-
-An always-on ESPHome device is one possible local sender. Its
-[wake-on-LAN button](https://esphome.io/components/button/wake_on_lan/) can expose a
-fixed wake target to Home Assistant. Home Assistant initiates the
-[native API connection](https://esphome.io/components/api/), normally on TCP 6053;
-the device sends the broadcast on its own LAN. Use API encryption and restrict
-which hosts can reach that API. The sender and target must share the intended
-broadcast domain, and WiFi isolation or broadcast filtering must permit delivery.
-This is a design option, not a deployed relay.
-
-When changing a boundary, verify allowed and denied connections from each
-affected network, both address families, remote access, DNS filtering and
-fallback, device control, discovery, and waking sleeping targets. Keep a working
-management path and reverse one boundary change at a time if validation fails.
+When changing a boundary, verify allowed and denied connections from each affected
+network, both address families, remote access, DNS filtering and fallback,
+discovery, and device control. Preserve a working management path for rollback.

@@ -21,7 +21,7 @@ spec:
     adoption: Ignore
     periodicRefresh: true
     refreshInterval: 24h
-  # Failed backups re-probe immediately, and backup alerts cover the nightly runs.
+  # Re-probe failed backups immediately.
   health:
     probe:
       interval: 24h
@@ -87,7 +87,7 @@ spec:
     adoption: Ignore
     periodicRefresh: true
     refreshInterval: 24h
-  # Failed backups re-probe immediately, and backup alerts cover the nightly runs.
+  # Re-probe failed backups immediately.
   health:
     probe:
       interval: 24h
@@ -287,7 +287,7 @@ spec:
     adoption: Ignore
     periodicRefresh: true
     refreshInterval: 24h
-  # Failed backups re-probe immediately, and backup alerts cover the nightly runs.
+  # Re-probe failed backups immediately.
   health:
     probe:
       interval: 24h
@@ -353,7 +353,7 @@ spec:
     adoption: Ignore
     periodicRefresh: true
     refreshInterval: 24h
-  # Failed backups re-probe immediately, and backup alerts cover the nightly runs.
+  # Re-probe failed backups immediately.
   health:
     probe:
       interval: 24h
