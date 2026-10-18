@@ -9,12 +9,17 @@ Varlock resolves credentials for local commands.
 
 ## Pull request checks
 
-[PR checks](../.forgejo/workflows/pr-checks.yaml) selects reusable checks using
+[PR checks](../.forgejo/workflows/pr-checks.yaml) selects checks using
 [pr-checks.json](pr-checks.json). Its final `Required PR checks` job succeeds only
-when every selected check succeeds. Forgejo reports unselected reusable checks as successful wrappers around skipped jobs. Branch
-protection requires this aggregate status and Konflate. Keep the selection rules
-in sync when adding checks or changing their scope; push and manual triggers stay
-in the individual workflows.
+when every selected check succeeds and unrelated jobs are skipped. Branch protection
+requires this aggregate status and Konflate. The gate runs inline in a pinned Node
+container without checking out the repository.
+
+Edit check steps in their individual workflows, then run
+`node .ci/generate-pr-checks.mjs` to update the ordinary PR jobs. The generator
+preserves the gate's runtime image so Renovate can update its pin. JavaScript CI
+rejects stale generated jobs. Keep path selection rules in sync when adding checks
+or changing their scope; push and manual triggers stay in the individual workflows.
 
 Forgejo must allow plain Rebase and disable strict fast-forward-only merges for
 Renovate PR automerge. Renovate's `fast-forward` strategy otherwise prefers the

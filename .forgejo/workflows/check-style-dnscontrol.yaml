@@ -3,7 +3,6 @@ on:
   push:
     branches: [main]
     paths: ['infrastructure/dns/compat/**', 'infrastructure/dns/install.sh', '.ci/actions/check-go/**', '.editorconfig', '.forgejo/workflows/check-style-dnscontrol.yaml']
-  workflow_call:
   workflow_dispatch:
 concurrency:
   group: code-style-dnscontrol-${{ forgejo.ref }}

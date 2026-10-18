@@ -1,7 +1,7 @@
 name: Runner image
 # Main pushes validate the runner while publishing its image.
 on:
-  workflow_call:
+  workflow_dispatch:
 concurrency:
   group: runner-image-${{ forgejo.ref }}
   cancel-in-progress: true

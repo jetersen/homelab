@@ -22,30 +22,6 @@ class PrChecksTests(unittest.TestCase):
         self.assertFalse(any(checks.select_checks(["README.md"], RULES).values()))
         self.assertTrue(all(checks.select_checks([".ci/pr-checks.py"], RULES).values()))
 
-    def test_requires_success_for_selected_checks_and_skip_for_others(self):
-        valid = {
-            "changes": {"result": "success", "outputs": {"truenas": "true", "runner": "false"}},
-            "truenas": {"result": "success"},
-            "runner": {"result": "skipped"},
-        }
-        checks.verify_checks(valid)
-        valid["runner"]["result"] = "success"
-        checks.verify_checks(valid)
-        for name, state in [
-            ("changes", "failure"),
-            ("truenas", "failure"),
-            ("truenas", "cancelled"),
-            ("truenas", "skipped"),
-            ("runner", "failure"),
-        ]:
-            invalid = json.loads(json.dumps(valid))
-            invalid[name]["result"] = state
-            with self.assertRaises(ValueError):
-                checks.verify_checks(invalid)
-        del valid["truenas"]
-        with self.assertRaises(ValueError):
-            checks.verify_checks(valid)
-
 
 if __name__ == "__main__":
     unittest.main()
