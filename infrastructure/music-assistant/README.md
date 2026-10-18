@@ -26,8 +26,9 @@ other allocations. No IoT interface is attached, and IP forwarding is disabled.
 A short-lived route init container keeps replies to the parent node on Cilium;
 the application itself has no Linux capabilities or Kubernetes API token.
 
-Use `http://music-assistant.home-assistant.svc.cluster.local:8095` for the Home
-Assistant integration and `https://music.jetersen.dev` for browser access.
+Set the webserver Base URL to `https://music.jetersen.dev` so discovery advertises
+a stable address rather than a changing pod IP. Use that URL for Home Assistant
+and browser access; Envoy forwards requests to the Kubernetes Service.
 Players fetch streams through the LAN address on port 8097. Direct LAN traffic
 bypasses Cilium NetworkPolicy and the router's inter-VLAN firewall.
 
