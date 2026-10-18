@@ -14,3 +14,13 @@ spec:
     resources:
       requests:
         cpu: 10m
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: towonel-system-homelab-b679ec58
+  namespace: towonel-system
+  annotations:
+    kustomize.toolkit.fluxcd.io/prune: disabled
+# Node autodiscovery is disabled; the connector does not need API credentials.
+automountServiceAccountToken: false
