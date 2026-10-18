@@ -50,6 +50,7 @@ spec:
             - secretRef:
                 name: photoprism-admin
             securityContext:
+              readOnlyRootFilesystem: true
               allowPrivilegeEscalation: false
               capabilities:
                 drop:
@@ -113,6 +114,10 @@ spec:
             request: 0s
             backendRequest: 0s
     persistence:
+      home:
+        type: emptyDir
+        globalMounts:
+        - path: /home/user-568
       storage:
         existingClaim: photoprism-lvm
         type: persistentVolumeClaim
