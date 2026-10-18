@@ -26,10 +26,11 @@ cannot directly reach its parent host. A short-lived init container uses
 so kubelet probe replies keep working. Home Assistant itself keeps all Linux
 capabilities dropped. Both secondary interfaces bypass UniFi's routed firewall;
 IoT devices can reach integrations that listen on all addresses. The HTTP server
-binds only to `192.168.1.11`, loopback, and the pod hostname `home-assistant`,
-which resolves to its Cilium addresses. Configure those hosts under Settings >
-System > Network > HTTP server; keep the pod hostname in the list so ingress and
-kubelet probes work after pod replacement. Port `8123` does not listen on IoT.
+binds only to loopback and the pod hostname `home-assistant`, which resolves to
+its Cilium addresses. Configure those hosts under Settings > System > Network >
+HTTP server; the pod hostname keeps Service access and kubelet probes working
+after pod replacement. Access the web UI through the Kubernetes Service and
+Envoy HTTPRoute. Port `8123` does not listen on either secondary LAN interface.
 See the [networking overview](../../../NETWORKING.md).
 
 Configure Wake-on-LAN targets with their subnet's broadcast address: `192.168.1.255`

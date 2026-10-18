@@ -158,7 +158,8 @@ integration discovery and Wake-on-LAN. Its default route and DNS stay on Cilium;
 forwarding is disabled. Traffic through its secondary interfaces bypasses UniFi's
 routed firewall and Cilium policy. IoT devices can initiate connections to integration listeners on the IoT
 address; this is not an outbound-only attachment. Home Assistant's HTTP server
-binds to its main-LAN, loopback, and Cilium addresses, excluding IoT.
+binds only to loopback and Cilium addresses, excluding both secondary LANs.
+The Kubernetes Service and Envoy HTTPRoute provide web access.
 Continue using Technitium for DNS.
 
 IoT firewall validation must include the gateway itself as well as other VLANs:
