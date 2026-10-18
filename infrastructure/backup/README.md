@@ -1,6 +1,7 @@
 # OVHcloud backup infrastructure
 
-Pulumi manages private Frankfurt One Zone buckets for Kopia and Pulumi state.
+Pulumi manages private OVHcloud object-storage buckets for Kopia and Pulumi state.
+See [Pulumi.yaml](Pulumi.yaml) for region and backend defaults.
 An OVHcloud European Public Cloud project with billing and region activation is
 required. The buckets use separate scoped credentials.
 

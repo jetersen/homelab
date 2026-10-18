@@ -35,11 +35,12 @@ Reverting the mount restores local transcode storage without moving the database
 
 ## IoT access
 
-Use `https://jellyfin-iot.jetersen.dev` for the TV. DNSControl maps this name
+For IoT clients, use the dedicated endpoint defined in the
+[HelmRelease](helmrelease.yaml). DNSControl maps its hostname
 to a dedicated IPv4 LoadBalancer Service. It forwards standard HTTPS to a
 separate Envoy listener that accepts only the Jellyfin hostname and route.
 The existing Jellyfin endpoint remains available for other clients.
 
-Permit the TV to reach only this Service address on TCP 443 through UniFi.
+Permit IoT clients to reach only this Service address on TCP 443 through UniFi.
 Keep DNS access to Technitium. A firewall rule allowing the shared ingress
 address would also expose other applications on that listener.

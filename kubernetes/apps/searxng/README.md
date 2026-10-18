@@ -17,12 +17,9 @@ There is no search history database or account setup.
 Deployment environment variables set the base URL and enable image proxying.
 The limiter and public-instance features are disabled for private use, so Valkey
 is not required. Engine and interface preferences can be changed in the browser.
-Upstream engine defaults remain enabled, including DuckDuckGo and Brave.
-Autocomplete is off, and engines reporting HTTP 429 are suspended for an hour.
-These settings reduce unnecessary requests but cannot prevent upstream CAPTCHAs.
-Saved browser preferences can override the defaults. Manually solving a challenge
-from the instance's public egress IP can help, but browser cookies are not shared
-with SearXNG and some challenges will recur.
+See the managed settings for engine defaults and request backoff. Saved browser
+preferences can override the defaults. Upstream rate limits and CAPTCHAs can
+still prevent searches; browser cookies are not shared with SearXNG.
 
 The image is pinned by version and digest. See the upstream
 [container documentation](https://docs.searxng.org/admin/installation-docker.html)

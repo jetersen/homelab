@@ -49,14 +49,10 @@ per-volume trim schedule. The node patch enables trimming only for EPHEMERAL;
 it does not schedule trims for application PVCs. Talos chooses a stable time
 within the interval and skips an immediate trim when the controller starts.
 
-Kubelet begins image garbage collection at 65% image-filesystem usage and removes
-least-recently-used unused images until usage falls below 50%. This leaves a wider
-reclaim window before the 15% free-space eviction threshold. The separate
-`imageMaximumGCAge: 168h` setting remains as a seven-day backstop. Running
-containers keep their images; later rollbacks can pull removed images from the
-registry. Kubelet restarts reset age tracking. Serialize image pulls to limit
-temporary disk use from concurrent downloads on the single node; large cold starts
-may take longer to populate images.
+The [kubelet patch](patches/all/01-kubelet.yaml) defines image garbage-collection
+thresholds and maximum age. Running containers keep their images; later rollbacks
+can require fresh pulls. Kubelet restarts reset age tracking. Serialized image
+pulls limit temporary disk use, but large cold starts may take longer.
 
 ## Dual-stack networking
 
@@ -81,8 +77,9 @@ MTU overhead can reduce Pod routes below IPv6's minimum MTU when combined with
 Tailscale. Recheck MTU and both address families when changing routing features.
 
 Address-family changes on an existing cluster require a separate migration plan
-that preserves local-volume bindings and management access. Keep machine-specific
-routes, ISP settings, and recovery material outside the repository.
+that preserves local-volume bindings and management access. Omit machine-specific
+routing and ISP notes from public documentation; retain required recovery material
+outside the repository.
 
 ## Cluster upgrades
 

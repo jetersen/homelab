@@ -1,6 +1,6 @@
-Tuppr runs for the Sunday maintenance window. Two short CronJobs wake it at
-03:55 and stop it at 06:15 in `Europe/Copenhagen`. The stop job requires both
-upgrade plans to be `Completed` for their current generation. Pending, running,
+Tuppr runs around the configured maintenance window. The
+[controller schedule](app/schedule.yaml) wakes and stops it. The stop job requires
+both upgrade plans to be `Completed` for their current generation. Pending, running,
 failed, or unreadable plans leave the controller enabled for recovery and alerts.
 
 Version changes made while the controller is off wait for the next scheduled

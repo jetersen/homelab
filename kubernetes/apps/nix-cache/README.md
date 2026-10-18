@@ -2,7 +2,7 @@
 
 Attic stores prebuilt workstation systems published by Forgejo Actions. Access
 requires a cache token and is restricted to the same private networks as Forgejo.
-The laptop trusts the cache's Nix signing key and uses a read-only token;
+Clients must trust the cache's Nix signing key and use read-only tokens;
 CI receives a separate token with push access to the `workstations` cache.
 
 The retained PVC contains both the object store and SQLite database. The database

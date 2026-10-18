@@ -19,11 +19,9 @@ token in the SOPS-encrypted Secret. Only runner credentials are mounted in
 workers. The scaler credential stays with KEDA.
 
 Workers connect to a shared [Docker backend](docker-backend.yaml), which retains
-image layers on a private 20 GiB `openebs-lvm-thin` PVC. Only worker pods can reach
-its Docker API. The backend has no runner registration, Kubernetes token, host
-socket, or node containerd socket mounted. Its privileged daemon is confined by
-the aggregate memory budget previously allocated to the two disposable daemons.
-CPU quotas remain omitted.
+image layers on a persistent PVC. Only worker pods can reach its Docker API. The backend has no runner registration, Kubernetes token, host
+socket, or node containerd socket mounted. Its privileged daemon has a configured
+memory limit; CPU quotas remain omitted.
 
 This pool is for trusted repository workflows. Jobs share a Docker engine and can
 inspect or control each other's CI containers. They retain separate job networks
@@ -37,8 +35,8 @@ endpoints used by the workers.
 The PVC survives backend pod replacement. Never mount its Docker data directory
 into multiple daemons. [Startup](docker-entrypoint.sh) removes stale stopped
 containers, networks, and job volumes before becoming ready, while retaining image
-layers. BuildKit has a 4 GB cache budget. With less than 4 GiB free, periodic cleanup
-removes unused images older than 24 hours. Monitor PVC and thin-pool capacity.
+layers. Cache budgets are defined in the backend configuration; startup and
+periodic cleanup are defined in the entrypoint. Monitor PVC and thin-pool capacity.
 
 The backend uses `OnDelete` updates to avoid restarting the shared engine during
 CI. For an engine or configuration update, pause KEDA, let active Kubernetes jobs

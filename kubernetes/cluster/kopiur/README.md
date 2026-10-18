@@ -1,8 +1,8 @@
 # Application backups with Kopiur
 
 Home Assistant, Zigbee2MQTT, Sonarr, and PhotoPrism write encrypted repositories to retained
-NAS PVCs. `RepositoryReplication` mirrors each repository to S3 nightly. Its timer
-runs independently of snapshots and maintenance; scheduled timing does not ensure
+NAS PVCs. `RepositoryReplication` mirrors each repository to S3 on its configured
+schedule. Its timer runs independently of snapshots and maintenance; scheduled timing does not ensure
 they have succeeded. Offsite recovery depends on successful replication after
 the selected snapshot, including after a manual snapshot. The read-only
 `APPLICATION-offsite` repositories support S3 discovery and recovery. Forgejo
@@ -12,8 +12,8 @@ Kopiur owns snapshot retention and repository maintenance. Native application
 archive retention is separate. The source-scoped keep-latest policy flag prevents
 Kopia's pruning from competing with Kopiur's retention.
 
-Nightly quick maintenance handles routine repository cleanup; weekly full
-maintenance performs deeper reclamation. The application repository inputs,
+Quick maintenance handles routine repository cleanup; full maintenance performs
+deeper reclamation. The application repository inputs,
 such as [Home Assistant](../../apps/home-assistant/backup/kopiur.yaml), define the
 schedules and persistent maintenance cache. Reusing that cache avoids formatting
 a fresh local volume for each maintenance run. Forgejo and the two PhotoPrism
@@ -23,8 +23,8 @@ so its name differs from the backup policy. Persistent snapshot and
 maintenance caches require distinct controller resource names: the installed
 operator derives the same PVC name from both kinds.
 Cache eviction follows Kopia's cache budgets separately from repository
-maintenance. Full-content verification runs weekly. Size cache volumes with
-headroom above Kopia's soft cache budgets for verification bursts. Keep content
+maintenance. Verification schedules are defined in the repository inputs. Size
+cache volumes with headroom above Kopia's soft cache budgets for verification bursts. Keep content
 caching enabled; a zero content-cache budget can crash the installed Kopia version.
 When increasing cache capacity, also expand existing persistent cache PVCs;
 Kopiur reuses them without resizing. Filesystem expansion completes on the next mount.

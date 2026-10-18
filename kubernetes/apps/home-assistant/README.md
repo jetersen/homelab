@@ -33,8 +33,7 @@ after pod replacement. Access the web UI through the Kubernetes Service and
 Envoy HTTPRoute. Port `8123` does not listen on either secondary LAN interface.
 See the [networking overview](../../../NETWORKING.md).
 
-Configure Wake-on-LAN targets with their subnet's broadcast address: `192.168.1.255`
-for the main LAN and `192.168.20.255` for IoT, on UDP port `9`.
+Configure Wake-on-LAN targets with their subnet's broadcast address on UDP port `9`.
 The generic `255.255.255.255` broadcast follows Cilium's primary interface;
 selecting discovery interfaces does not change that route.
 

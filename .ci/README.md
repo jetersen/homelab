@@ -103,15 +103,16 @@ of the running minor. Compatibility constraints and approval gates still apply. 
 numeric image tags do not identify prereleases, so the policy generator restricts
 them to the latest stable GitHub release. Sonarr major migrations still require review.
 
-The scheduled Renovate run scans homelab, dotfiles, and the private Music Assistant fork. Manual runs can select one
-repository with the `repository` input; `all` keeps the shared run. Use `dry_run`
-to inspect updates without writing branches or PRs.
+The [Renovate workflow](../.forgejo/workflows/renovate.yaml) defines the repository
+selection. Manual runs can select one repository with the `repository` input;
+`all` keeps the shared run. Use `dry_run` to inspect updates without writing
+branches or PRs.
 Token requests use `actions/github-script` with `core.getIDToken(audience)`, which
 also masks the token in runner logs.
 
-The Renovate job also updates `jetersen/dotfiles`. Its identity belongs to the
-Renovate bot and is limited to this main-branch workflow; repository collaborator
-permissions control which repositories it can change. Allowed post-upgrade
+The Renovate identity belongs to the bot and is limited to this main-branch
+workflow; repository collaborator permissions control which repositories it can
+change. Allowed post-upgrade
 commands refresh Claude Code's upstream manifest and regenerate `flake.lock`
 after a pinned upstream release tag changes. Homelab NuGet updates run
 [the solution lockfile restore](renovate-dotnet-locks.sh) with the selected SDK
