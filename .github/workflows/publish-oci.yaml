@@ -11,6 +11,10 @@ on:
       - .forgejo/workflows/publish-oci.yaml
       - .github/workflows/publish-oci.yaml
       - "!**/*.md"
+      - "!kubernetes/talos/**"
+      - "!**/test_*.py"
+      - "!**/bootstrap*.fish"
+      - "!kubernetes/cluster/grafana/app/dashboards/generate.py"
   workflow_dispatch:
 permissions:
   contents: read
