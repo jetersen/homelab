@@ -51,9 +51,15 @@ runs:
         flux pull artifact "oci://$package/flux:sha-$revision" --output="$verification"
         diff -qr "$OCI_DIRECTORY/kubernetes" "$verification/kubernetes"
         test "$(find "$verification" -mindepth 1 -maxdepth 1 -printf '%f\n')" = kubernetes
-        remote_revision=$(git ls-remote origin refs/heads/main | cut -f1)
-        if [ "$remote_revision" != "$revision" ]; then
-          echo 'A newer commit exists; keeping revision tags without advancing main.'
+        # A newer unrelated commit does not get its own publish job.
+        git fetch --no-tags --depth=1 origin refs/heads/main
+        remote_revision=$(git rev-parse FETCH_HEAD)
+        if ! git diff --quiet "$revision" "$remote_revision" -- \
+          kubernetes/apps kubernetes/cluster kubernetes/components kubernetes/flux \
+          .ci/actions/publish-oci .ci/actions/setup-tool \
+          .forgejo/workflows/publish-oci.yaml .github/workflows/publish-oci.yaml \
+          infrastructure/forgejo/runner/Dockerfile; then
+          echo 'Newer publication inputs exist; keeping revision tags without advancing main.'
           exit 0
         fi
         flux tag artifact "oci://$package/flux:sha-$revision" --tag=main

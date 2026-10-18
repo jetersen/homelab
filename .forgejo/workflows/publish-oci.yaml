@@ -2,6 +2,16 @@ name: Publish Flux OCI
 on:
   push:
     branches: [main]
+    paths:
+      - kubernetes/apps/**
+      - kubernetes/cluster/**
+      - kubernetes/components/**
+      - kubernetes/flux/**
+      - .ci/actions/publish-oci/**
+      - .ci/actions/setup-tool/**
+      - infrastructure/forgejo/runner/Dockerfile
+      - .forgejo/workflows/publish-oci.yaml
+      - .github/workflows/publish-oci.yaml
   workflow_dispatch:
     inputs:
       runner:
