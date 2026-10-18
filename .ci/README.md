@@ -12,12 +12,11 @@ Varlock resolves credentials for local commands.
 [PR checks](../.forgejo/workflows/pr-checks.yaml) selects checks using
 [pr-checks.json](pr-checks.json). Its final `Required PR checks` job succeeds only
 when every selected check succeeds and unrelated jobs are skipped. Branch protection
-requires this aggregate status and Konflate. The gate runs inline in a pinned Node
-container without checking out the repository.
+requires this aggregate status and Konflate. The gate runs inline in the pool's
+existing runner image without checking out the repository.
 
 Edit check steps in their individual workflows, then run
-`node .ci/generate-pr-checks.mjs` to update the ordinary PR jobs. The generator
-preserves the gate's runtime image so Renovate can update its pin. JavaScript CI
+`node .ci/generate-pr-checks.mjs` to update the ordinary PR jobs. JavaScript CI
 rejects stale generated jobs. Keep path selection rules in sync when adding checks
 or changing their scope; push and manual triggers stay in the individual workflows.
 

@@ -67,38 +67,6 @@ spec:
             volumeMounts:
               - name: binary
                 mountPath: /runner
-          # Restartable init sidecar stops automatically when the one-job runner exits.
-          - name: docker
-            image: docker.io/library/docker:29.9.1-dind@sha256:3e5756e2b6dad6a5f1f5deacf0a19f9eaa2581b76ae092b2d4a118162e1d4d4e
-            restartPolicy: Always
-            command: [/bin/sh, -ec]
-            args:
-              - |
-                parent=$(awk -F: '$1 == "0" {print $3}' /proc/self/cgroup)
-                test -n "$parent" && test "$parent" != /
-                exec dockerd-entrypoint.sh --tls=false --storage-driver=overlay2 --dns=172.23.0.10 --cgroup-parent="$parent"
-            env:
-              - name: DOCKER_TLS_CERTDIR
-                value: ''
-            securityContext:
-              runAsUser: 0
-              runAsGroup: 0
-              runAsNonRoot: false
-              privileged: true
-            startupProbe:
-              exec:
-                command: [docker, --host=tcp://127.0.0.1:2375, info]
-              periodSeconds: 2
-              failureThreshold: 60
-            resources:
-              requests:
-                cpu: 50m
-                memory: 512Mi
-              limits:
-                memory: 6Gi
-            volumeMounts:
-              - name: docker-data
-                mountPath: /var/lib/docker
         containers:
           - name: runner
             image: forgejo.jetersen.dev/jetersen/homelab/runner-job:1.8.0@sha256:a6a8fdf9a7b4914434835fbd3763da496f27797c160123d7386af8cfb711aff9
@@ -106,6 +74,7 @@ spec:
             # Exit status 2 means Rocket claimed the queued task first; finish without a failed Job.
             args:
               - |
+                until docker --host=tcp://forgejo-ci-docker:2375 info > /dev/null 2>&1; do sleep 2; done
                 /runner/forgejo-runner --config /config/runner.yaml one-job --url https://forgejo.jetersen.dev --uuid "$(cat /registration/uuid)" --token-url file:/registration/token &
                 runner=$!
                 trap 'kill -TERM "$runner" 2>/dev/null' TERM INT
@@ -172,15 +141,6 @@ spec:
                   path: uuid
                 - key: runner-token
                   path: token
-          - name: docker-data
-            ephemeral:
-              volumeClaimTemplate:
-                spec:
-                  accessModes: [ReadWriteOnce]
-                  storageClassName: openebs-lvm-ephemeral
-                  resources:
-                    requests:
-                      storage: 20Gi
   triggers:
     - type: forgejo-runner
       metadata:

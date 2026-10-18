@@ -1,0 +1,34 @@
+name: Runner cache
+on:
+  workflow_dispatch:
+    inputs:
+      phase:
+        description: Warm a marker image or verify it survived a worker change
+        type: choice
+        default: warm
+        options: [warm, verify]
+      cache_key:
+        description: Marker tag shared by the warm and verify runs
+        type: string
+        default: smoke
+jobs:
+  check:
+    runs-on: [linux-docker, runner-kubernetes]
+    timeout-minutes: 5
+    steps:
+      - name: Verify the shared Docker image cache
+        env:
+          PHASE: ${{ inputs.phase }}
+          CACHE_KEY: ${{ inputs.cache_key }}
+        run: |
+          set -euo pipefail
+          [[ "$CACHE_KEY" =~ ^[a-z0-9][a-z0-9_.-]{0,62}$ ]]
+          image=$(docker inspect "$(cat /etc/hostname)" --format '{{.Image}}')
+          marker="homelab-cache-proof:$CACHE_KEY"
+          case "$PHASE" in
+            warm) docker tag "$image" "$marker" ;;
+            verify) test "$(docker image inspect "$marker" --format '{{.Id}}')" = "$image" ;;
+            *) exit 1 ;;
+          esac
+          docker info --format 'Docker backend: {{.Name}}'
+          echo "Cache $PHASE succeeded"

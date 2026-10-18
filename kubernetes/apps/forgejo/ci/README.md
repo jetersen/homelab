@@ -18,29 +18,39 @@ one-job processes. Keep registration and the scaler's read-only repository API
 token in the SOPS-encrypted Secret. Only runner credentials are mounted in
 workers. The scaler credential stays with KEDA.
 
-Each worker has a privileged Docker-in-Docker restartable init sidecar. Workflow
-containers run without privileged mode, host sockets, or Kubernetes
-service-account tokens. Docker actions, services, image builds, and job container
-overrides use the worker's isolated daemon. This pool is for trusted repository
-workflows: Docker access can control that daemon and its containers.
+Workers connect to a shared [Docker backend](docker-backend.yaml), which retains
+image layers on a private 20 GiB `openebs-lvm-thin` PVC. Only worker pods can reach
+its Docker API. The backend has no runner registration, Kubernetes token, host
+socket, or node containerd socket mounted. Its privileged daemon is confined by
+the aggregate memory budget previously allocated to the two disposable daemons.
+CPU quotas remain omitted.
 
-The [network policy](networkpolicy.yaml) allows DNS, public package and image
-registries, the shared Envoy listener, and the internal deployment endpoints.
-The Envoy exception cannot distinguish HTTPS hostnames. Nested containers use
-cluster DNS; `docker` resolves to their daemon gateway for Docker CLI access.
+This pool is for trusted repository workflows. Jobs share a Docker engine and can
+inspect or control each other's CI containers. They retain separate job networks
+and workspaces, but the shared engine is not an isolation boundary between jobs.
+Nested containers use cluster DNS; `docker` resolves to their daemon gateway.
+Docker allocates /24 networks inside 172.28.0.0/16 to avoid the Kubernetes pod
+and service ranges.
+The backend network policy preserves access to the same registries and deployment
+endpoints used by the workers.
 
-Docker workspaces and image layers use a per-worker generic ephemeral PVC from
-`openebs-lvm-ephemeral`. Kubernetes deletes its PVC with the worker Pod, and the
-storage class deletes its volume. Workers bind to a node with that local thin
-pool. Monitor thin-pool data and metadata capacity as well as each PVC's capacity.
-The daemon puts nested containers under its own cgroup so its memory limit covers
-the entire job. The Docker sidecar stops automatically after the one-job runner
-exits.
+The PVC survives backend pod replacement. Never mount its Docker data directory
+into multiple daemons. [Startup](docker-entrypoint.sh) removes stale stopped
+containers, networks, and job volumes before becoming ready, while retaining image
+layers. BuildKit has a 4 GB cache budget. With less than 4 GiB free, periodic cleanup
+removes unused images older than 24 hours. Monitor PVC and thin-pool capacity.
 
-New Kubernetes workers download dependencies and images into their isolated
-store. Rocket retains Docker image layers and permits the `dotfiles-nix-cache`
+The backend uses `OnDelete` updates to avoid restarting the shared engine during
+CI. For an engine or configuration update, pause KEDA, let active Kubernetes jobs
+finish, then replace the backend pod and verify it is ready before unpausing KEDA.
+The PVC and image cache remain. Never restart it while CI jobs are active. Ordinary
+job-image updates need no backend restart; the daemon pulls the new pinned image
+and retains reusable layers. Clearing Docker storage requires stopping the pool
+and explicit approval. A cache miss or cleanup can still require a cold pull.
+
+Rocket retains Docker image layers and permits the `dotfiles-nix-cache`
 named volume for serialized Nix jobs. That volume holds the Nix store, its
-database, and fetched inputs. The shared Debian job image includes Nix outside
+database, and fetched inputs. The Debian job image includes Nix outside
 the store, so it can mount either a fresh or retained store directly. Job
 credentials must stay outside this shared volume. The volume belongs to Rocket's nested Docker daemon
 and survives runner and daemon restarts through its persistent Docker data.

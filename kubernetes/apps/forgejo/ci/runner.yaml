@@ -12,7 +12,7 @@ runner:
 cache:
   enabled: false
 container:
-  docker_host: tcp://127.0.0.1:2375
+  docker_host: tcp://forgejo-ci-docker:2375
   options: --add-host=docker:host-gateway --dns-option=ndots:1 --dns-search=.
   privileged: false
   valid_volumes: []
