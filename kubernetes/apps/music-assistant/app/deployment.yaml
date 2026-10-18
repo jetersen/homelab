@@ -65,7 +65,7 @@ spec:
         name: node-route
       containers:
       - name: app
-        image: forgejo.jetersen.dev/jetersen/music-assistant:2.10.6-private.3@sha256:ac69f73a51c7698cb2ce2c7df580b62e60a6f230a40c9a62f29ed8ecada4f5cf
+        image: forgejo.jetersen.dev/jetersen/music-assistant:2.10.6-private.4@sha256:863cd512d38e3641b693a567103c2f8a244fb99c5cf6694fb1b3a199197c7756
         env:
         - name: HOME
           value: /data
@@ -78,6 +78,7 @@ spec:
         - name: MA_TRACK_CACHE_MEMORY_BYTES
           value: "134217728"
         securityContext:
+          readOnlyRootFilesystem: true
           allowPrivilegeEscalation: false
           capabilities:
             drop:
@@ -106,11 +107,15 @@ spec:
             port: http
           periodSeconds: 20
         volumeMounts:
+        - name: tmp
+          mountPath: /tmp
         - name: data
           mountPath: /data
         - name: track-cache
           mountPath: /track-cache
       volumes:
+      - name: tmp
+        emptyDir: {}
       - name: data
         persistentVolumeClaim:
           claimName: music-assistant
