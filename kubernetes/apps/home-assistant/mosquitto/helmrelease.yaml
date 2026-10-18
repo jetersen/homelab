@@ -38,6 +38,16 @@ spec:
                 umask 077
                 cp /mqtt-auth/passwd /mosquitto/secrets/passwd
                 chmod 0600 /mosquitto/secrets/passwd
+                while IFS=: read -r username hash; do
+                  [ -n "$username" ] || continue
+                  printf 'user %s\n' "$username"
+                  if [ "$username" = nixos-deploy-ci ]; then
+                    printf 'topic write framework/button/update/command\n'
+                    printf 'topic write rocket/button/update/command\n'
+                  else
+                    printf 'topic readwrite #\n'
+                  fi
+                done < /mqtt-auth/passwd > /mosquitto/secrets/acl
             securityContext:
               allowPrivilegeEscalation: false
               readOnlyRootFilesystem: true
@@ -125,6 +135,7 @@ spec:
             log_dest stdout
             allow_anonymous false
             password_file /mosquitto/secrets/passwd
+            acl_file /mosquitto/secrets/acl
             listener 1883
             listener 9001
             protocol websockets
