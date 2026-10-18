@@ -9,7 +9,14 @@ services:
     restart: unless-stopped
     environment:
       DOCKER_TLS_CERTDIR: ''
-    command: [--tls=false, --storage-driver=overlay2, --dns=100.100.100.100, --dns=192.168.1.21, --dns=192.168.1.2]
+    # Nested job networks must not overlap the outer Compose bridge.
+    command:
+      - --tls=false
+      - --storage-driver=overlay2
+      - --default-address-pool=base=172.28.0.0/16,size=24
+      - --dns=100.100.100.100
+      - --dns=192.168.1.21
+      - --dns=192.168.1.2
     volumes:
       - docker-cache:/var/lib/docker
       - nix-nas-cache:/var/cache/nix-nas
