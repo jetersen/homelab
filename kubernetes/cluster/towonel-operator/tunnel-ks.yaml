@@ -12,7 +12,4 @@ spec:
   dependsOn:
     - name: towonel-operator
   targetNamespace: towonel-system
-  commonMetadata:
-    labels:
-      app.kubernetes.io/name: towonel-tunnel
   path: ./kubernetes/cluster/towonel-operator/tunnel

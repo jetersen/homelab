@@ -1,6 +1,8 @@
 apiVersion: towonel.io/v1alpha1
 kind: TowonelAgent
 metadata:
+  labels:
+    app.kubernetes.io/name: towonel-tunnel
   name: towonel-system-homelab-b679ec58
   namespace: towonel-system
   annotations:

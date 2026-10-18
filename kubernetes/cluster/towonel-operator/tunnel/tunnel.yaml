@@ -2,6 +2,8 @@
 apiVersion: towonel.io/v1alpha1
 kind: TowonelTunnel
 metadata:
+  labels:
+    app.kubernetes.io/name: towonel-tunnel
   name: homelab
 spec:
   region: EU
