@@ -88,6 +88,14 @@
       "prBodyDefinitions": {
         "Package": "[{{{packageName}}}](https://github.com/{{{packageName}}})"
       }
+    },
+    {
+      "description": "Track immutable private Music Assistant CI image versions",
+      "matchPackageNames": [
+        "forgejo.jetersen.dev/jetersen/music-assistant"
+      ],
+      "ignoreUnstable": false,
+      "versioning": "semver"
     }
   ],
   "customDatasources": {
