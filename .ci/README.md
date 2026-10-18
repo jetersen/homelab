@@ -7,6 +7,20 @@ and GitHub both publish the Flux OCI artifact and run Go checks. See the
 Jobs use Forgejo secrets or short-lived Authorized Integration tokens directly.
 Varlock resolves credentials for local commands.
 
+## Pull request checks
+
+[PR checks](../.forgejo/workflows/pr-checks.yaml) selects reusable checks using
+[pr-checks.json](pr-checks.json). Its final `Required PR checks` job succeeds only
+when every selected check succeeds. Unselected checks must be skipped. Branch
+protection requires this aggregate status and Konflate. Keep the selection rules
+in sync when adding checks or changing their scope; push and manual triggers stay
+in the individual workflows.
+
+Forgejo must allow plain Rebase and disable strict fast-forward-only merges for
+Renovate PR automerge. Renovate's `fast-forward` strategy otherwise prefers the
+strict method, which cannot merge a branch after main advances. Disable Squash,
+Merge, and Rebase with merge commit when enforcing plain-rebase-only history.
+
 ## Publication
 
 The Flux publisher runs when packaged Kubernetes manifests or publication inputs

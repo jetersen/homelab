@@ -3,8 +3,7 @@ on:
   push:
     branches: [main]
     paths: ['.ci/renovate-upgrade-policy*.mjs', '.forgejo/workflows/check-upgrade-policy.yaml']
-  pull_request:
-    paths: ['.ci/renovate-upgrade-policy*.mjs', '.forgejo/workflows/check-upgrade-policy.yaml']
+  workflow_call:
 jobs:
   check:
     runs-on: linux-docker

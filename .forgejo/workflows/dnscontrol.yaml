@@ -6,8 +6,7 @@ concurrency:
   group: dnscontrol
   cancel-in-progress: false
 on:
-  pull_request:
-    paths: [infrastructure/dns/**, package.json, package-lock.json, biome.json, .forgejo/workflows/dnscontrol.yaml]
+  workflow_call:
   push:
     branches: [main]
     paths: [infrastructure/dns/**, package.json, package-lock.json, biome.json, .forgejo/workflows/dnscontrol.yaml]

@@ -1,0 +1,99 @@
+name: PR checks
+on:
+  pull_request: {}
+concurrency:
+  group: pr-checks-${{ forgejo.ref }}
+  cancel-in-progress: true
+jobs:
+  changes:
+    runs-on: linux-docker
+    timeout-minutes: 5
+    outputs:
+      runner: ${{ steps.select.outputs.runner }}
+      csharp: ${{ steps.select.outputs.csharp }}
+      dnscontrol: ${{ steps.select.outputs.dnscontrol }}
+      javascript: ${{ steps.select.outputs.javascript }}
+      python: ${{ steps.select.outputs.python }}
+      upgrade_policy: ${{ steps.select.outputs.upgrade_policy }}
+      dns: ${{ steps.select.outputs.dns }}
+      truenas: ${{ steps.select.outputs.truenas }}
+    steps:
+      - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: select
+        env:
+          BASE_SHA: ${{ forgejo.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ forgejo.event.pull_request.head.sha }}
+        run: python3 .ci/pr-checks.py select "$BASE_SHA" "$HEAD_SHA" >> "$GITHUB_OUTPUT"
+  runner:
+    needs:
+      - changes
+    if: ${{ needs.changes.outputs.runner == 'true' }}
+    uses: ./.forgejo/workflows/check-runner.yaml
+    secrets: inherit
+  csharp:
+    needs:
+      - changes
+    if: ${{ needs.changes.outputs.csharp == 'true' }}
+    uses: ./.forgejo/workflows/check-style-csharp.yaml
+    secrets: inherit
+  dnscontrol:
+    needs:
+      - changes
+    if: ${{ needs.changes.outputs.dnscontrol == 'true' }}
+    uses: ./.forgejo/workflows/check-style-dnscontrol.yaml
+    secrets: inherit
+  javascript:
+    needs:
+      - changes
+    if: ${{ needs.changes.outputs.javascript == 'true' }}
+    uses: ./.forgejo/workflows/check-style-javascript.yaml
+    secrets: inherit
+  python:
+    needs:
+      - changes
+    if: ${{ needs.changes.outputs.python == 'true' }}
+    uses: ./.forgejo/workflows/check-style-python.yaml
+    secrets: inherit
+  upgrade_policy:
+    needs:
+      - changes
+    if: ${{ needs.changes.outputs.upgrade_policy == 'true' }}
+    uses: ./.forgejo/workflows/check-upgrade-policy.yaml
+    secrets: inherit
+  dns:
+    needs:
+      - changes
+    if: ${{ needs.changes.outputs.dns == 'true' }}
+    uses: ./.forgejo/workflows/dnscontrol.yaml
+    secrets: inherit
+  truenas:
+    needs:
+      - changes
+    if: ${{ needs.changes.outputs.truenas == 'true' }}
+    uses: ./.forgejo/workflows/truenas.yaml
+    secrets: inherit
+  complete:
+    name: Required PR checks
+    if: ${{ always() }}
+    needs:
+      - changes
+      - runner
+      - csharp
+      - dnscontrol
+      - javascript
+      - python
+      - upgrade_policy
+      - dns
+      - truenas
+    runs-on: linux-docker
+    timeout-minutes: 5
+    steps:
+      - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - env:
+          CHECK_RESULTS: ${{ toJSON(needs) }}
+        run: python3 .ci/pr-checks.py verify

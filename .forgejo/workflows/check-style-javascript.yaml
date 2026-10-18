@@ -3,8 +3,7 @@ on:
   push:
     branches: [main]
     paths: ['**/*.js', '**/*.mjs', '**/*.cjs', 'biome.json', '.ci/actions/setup-tool/check.sh', '.editorconfig', '.forgejo/workflows/check-style-javascript.yaml', '.forgejo/renovate.json']
-  pull_request:
-    paths: ['**/*.js', '**/*.mjs', '**/*.cjs', 'biome.json', '.ci/actions/setup-tool/check.sh', '.editorconfig', '.forgejo/workflows/check-style-javascript.yaml', '.forgejo/renovate.json']
+  workflow_call:
   workflow_dispatch:
 concurrency:
   group: code-style-javascript-${{ forgejo.ref }}

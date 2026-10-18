@@ -1,0 +1,63 @@
+{
+  "runner": [
+    "infrastructure/forgejo/runner/Dockerfile*",
+    "infrastructure/dns/install.sh",
+    "infrastructure/dns/compat/**",
+    "package*.json",
+    "requirements-dev.txt",
+    ".ci/check-runner.sh",
+    ".forgejo/workflows/check-runner.yaml"
+  ],
+  "csharp": [
+    "**/*.cs",
+    "**/*.csproj",
+    "**/*.props",
+    "**/*.targets",
+    "**/global.json",
+    "**/packages.lock.json",
+    "**/NuGet.Config",
+    "*.slnx",
+    "infrastructure/truenas/restore-provider.py",
+    ".editorconfig",
+    ".forgejo/workflows/check-style-csharp.yaml"
+  ],
+  "dnscontrol": [
+    "infrastructure/dns/compat/**",
+    "infrastructure/dns/install.sh",
+    ".ci/actions/check-go/**",
+    ".editorconfig",
+    ".forgejo/workflows/check-style-dnscontrol.yaml"
+  ],
+  "javascript": [
+    "**/*.js",
+    "**/*.mjs",
+    "**/*.cjs",
+    "biome.json",
+    ".ci/actions/setup-tool/check.sh",
+    ".editorconfig",
+    ".forgejo/workflows/check-style-javascript.yaml",
+    ".forgejo/renovate.json"
+  ],
+  "python": [
+    "**/*.py",
+    "ruff.toml",
+    ".editorconfig",
+    ".forgejo/workflows/check-style-python.yaml"
+  ],
+  "upgrade_policy": [
+    ".ci/renovate-upgrade-policy*.mjs",
+    ".forgejo/workflows/check-upgrade-policy.yaml"
+  ],
+  "dns": [
+    "infrastructure/dns/**",
+    "package.json",
+    "package-lock.json",
+    "biome.json",
+    ".forgejo/workflows/dnscontrol.yaml"
+  ],
+  "truenas": [
+    "infrastructure/truenas/**",
+    ".forgejo/workflows/truenas.yaml",
+    ".ci/actions/setup-tool/**"
+  ]
+}

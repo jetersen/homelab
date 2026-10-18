@@ -3,8 +3,7 @@ on:
   push:
     branches: [main]
     paths: ['**/*.cs', '**/*.csproj', '**/*.props', '**/*.targets', '**/global.json', '**/packages.lock.json', '**/NuGet.Config', '*.slnx', 'infrastructure/truenas/restore-provider.py', '.editorconfig', '.forgejo/workflows/check-style-csharp.yaml']
-  pull_request:
-    paths: ['**/*.cs', '**/*.csproj', '**/*.props', '**/*.targets', '**/global.json', '**/packages.lock.json', '**/NuGet.Config', '*.slnx', 'infrastructure/truenas/restore-provider.py', '.editorconfig', '.forgejo/workflows/check-style-csharp.yaml']
+  workflow_call:
   workflow_dispatch:
 concurrency:
   group: code-style-csharp-${{ forgejo.ref }}

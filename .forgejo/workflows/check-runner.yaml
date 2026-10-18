@@ -1,15 +1,7 @@
 name: Runner image
 # Main pushes validate the runner while publishing its image.
 on:
-  pull_request:
-    paths:
-      - infrastructure/forgejo/runner/Dockerfile*
-      - infrastructure/dns/install.sh
-      - infrastructure/dns/compat/**
-      - package*.json
-      - requirements-dev.txt
-      - .ci/check-runner.sh
-      - .forgejo/workflows/check-runner.yaml
+  workflow_call:
 concurrency:
   group: runner-image-${{ forgejo.ref }}
   cancel-in-progress: true

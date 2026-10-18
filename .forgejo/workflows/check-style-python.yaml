@@ -3,8 +3,7 @@ on:
   push:
     branches: [main]
     paths: ['**/*.py', 'ruff.toml', '.editorconfig', '.forgejo/workflows/check-style-python.yaml']
-  pull_request:
-    paths: ['**/*.py', 'ruff.toml', '.editorconfig', '.forgejo/workflows/check-style-python.yaml']
+  workflow_call:
   workflow_dispatch:
 concurrency:
   group: code-style-python-${{ forgejo.ref }}
@@ -18,3 +17,4 @@ jobs:
         with:
           persist-credentials: false
       - run: npm run check:python
+      - run: python3 -m unittest discover -s .ci -p test_pr_checks.py
