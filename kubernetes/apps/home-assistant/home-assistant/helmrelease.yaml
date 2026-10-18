@@ -14,7 +14,7 @@ spec:
   values:
     defaultPodOptions:
       annotations:
-        k8s.v1.cni.cncf.io/networks: home-assistant-lan@lan0
+        k8s.v1.cni.cncf.io/networks: home-assistant-lan@lan0,home-assistant-iot@iot0
       nodeSelector:
         kubernetes.io/hostname: talos01
       securityContext:
