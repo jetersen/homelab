@@ -13,7 +13,7 @@ spec:
     metadata:
       labels: *id001
       annotations:
-        k8s.v1.cni.cncf.io/networks: music-assistant-lan@lan0,music-assistant-iot@iot0
+        k8s.v1.cni.cncf.io/networks: music-assistant-lan@lan0
     spec:
       automountServiceAccountToken: false
       imagePullSecrets:
