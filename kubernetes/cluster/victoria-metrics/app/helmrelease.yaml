@@ -217,6 +217,7 @@ spec:
     vmsingle:
       enabled: true
       spec:
+        disableAutomountServiceAccountToken: true
         # Run as UID 65534 with a read-only root filesystem and no capabilities.
         useStrictSecurity: true
         retentionPeriod: 1y
@@ -236,6 +237,7 @@ spec:
             memory: 2Gi
     vmalert:
       spec:
+        disableAutomountServiceAccountToken: true
         evaluationInterval: 60s
         # Run as UID 65534 with a read-only root filesystem and no capabilities.
         useStrictSecurity: true
