@@ -4,21 +4,13 @@ The deployment uses the [private fork](https://forgejo.jetersen.dev/jetersen/mus
 and its pinned image from the internal Forgejo registry. Build and upstream-sync
 procedures live in the fork's `FORK.md` and `Dockerfile.private`.
 
-The fork adds optional YouTube Music video search and caches completed YouTube
-Music tracks using their original compressed audio. A separate thin LVM volume
-holds the disk cache. Both disk and RAM caches evict least-recently-used entries;
-active disk readers are protected. Recently used tracks also stay in a bounded
-RAM cache for five minutes of inactivity. The normal decoded audio buffers feed
-players. Clients still need a connection to the Music Assistant server.
-
-The [deployment](../../kubernetes/apps/music-assistant/app/deployment.yaml) defines
-cache budgets and mounts; the [claims](../../kubernetes/apps/music-assistant/app/storage.yaml)
-keep application state separate from replaceable audio cache data. Allow filesystem
-headroom above the disk-cache budget. Cache failures fall back to upstream streaming.
+The [deployment](../../kubernetes/apps/music-assistant/app/deployment.yaml) and
+[storage claims](../../kubernetes/apps/music-assistant/app/storage.yaml) define
+the runtime configuration and persistent storage.
 
 ## Runtime and networking
 
-Music Assistant runs as UID/GID 568. Existing state and cache files must have that
+Music Assistant runs as UID/GID 568. Existing files in writable volumes must have that
 ownership. Cilium supplies cluster DNS and the default route; Multus attaches
 `lan0` only to the main LAN for discovery and player connections. Its fixed IP
 and MAC are defined in the network attachment and must stay outside DHCP and
@@ -33,6 +25,6 @@ Players fetch streams through the LAN address on port 8097. Direct LAN traffic
 bypasses Cilium NetworkPolicy and the router's inter-VLAN firewall.
 
 The fork's shell-free image preserves its media helpers and native libraries.
-Keep state, the track cache, and `/tmp` writable while the root filesystem is
+Keep the configured writable mounts available while the root filesystem is
 read-only. Build it with the maintained `Dockerfile.private` in the fork;
 its `FORK.md` describes the runtime and upstream update procedure.
