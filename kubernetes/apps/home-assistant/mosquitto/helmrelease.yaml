@@ -38,38 +38,6 @@ spec:
                 umask 077
                 cp /mqtt-auth/passwd /mosquitto/secrets/passwd
                 chmod 0600 /mosquitto/secrets/passwd
-                while IFS=: read -r username hash; do
-                  [ -n "$username" ] || continue
-                  printf 'user %s\n' "$username"
-                  if [ "$username" = nixos-deploy-ci ]; then
-                    printf 'topic write framework/button/update/command\n'
-                    printf 'topic write rocket/button/update/command\n'
-                  elif [ "$username" = home-assistant ]; then
-                    printf 'topic readwrite #\n'
-                    # Preserve other integrations; deployment updates belong to CI.
-                    printf 'topic deny +/button/update/command\n'
-                  elif [ "$username" = pc2mqtt-rocket ]; then
-                    printf 'topic write rocket/state\n'
-                    printf 'topic write rocket/binary_sensor/availability\n'
-                    printf 'topic write homeassistant/binary_sensor/63fbeebb-f107-4903-ab36-6104b9d802b0/rocket_sensor_power/config\n'
-                    printf 'topic write homeassistant/button/63fbeebb-f107-4903-ab36-6104b9d802b0/rocket_button_shutdown/config\n'
-                    printf 'topic write homeassistant/button/63fbeebb-f107-4903-ab36-6104b9d802b0/rocket_button_reboot/config\n'
-                    printf 'topic read rocket/button/shutdown/command\n'
-                    printf 'topic read rocket/button/reboot/command\n'
-                    printf 'topic read rocket/button/update/command\n'
-                  elif [ "$username" = pc2mqtt-framework ]; then
-                    printf 'topic write framework/state\n'
-                    printf 'topic write framework/binary_sensor/availability\n'
-                    printf 'topic write homeassistant/binary_sensor/fbce0afd-c66f-4a56-b8aa-0e1561ac1837/framework_sensor_power/config\n'
-                    printf 'topic write homeassistant/button/fbce0afd-c66f-4a56-b8aa-0e1561ac1837/framework_button_shutdown/config\n'
-                    printf 'topic write homeassistant/button/fbce0afd-c66f-4a56-b8aa-0e1561ac1837/framework_button_reboot/config\n'
-                    printf 'topic read framework/button/shutdown/command\n'
-                    printf 'topic read framework/button/reboot/command\n'
-                    printf 'topic read framework/button/update/command\n'
-                  else
-                    printf 'topic readwrite #\n'
-                  fi
-                done < /mqtt-auth/passwd > /mosquitto/secrets/acl
             securityContext:
               allowPrivilegeEscalation: false
               readOnlyRootFilesystem: true
@@ -157,7 +125,38 @@ spec:
             log_dest stdout
             allow_anonymous false
             password_file /mosquitto/secrets/passwd
-            acl_file /mosquitto/secrets/acl
+            acl_file /mosquitto/config/acl
             listener 1883
             listener 9001
             protocol websockets
+          acl: |
+            user mqtt
+            topic readwrite #
+
+            user home-assistant
+            topic readwrite #
+            topic deny +/button/update/command
+
+            user nixos-deploy-ci
+            topic write framework/button/update/command
+            topic write rocket/button/update/command
+
+            user pc2mqtt-rocket
+            topic write rocket/state
+            topic write rocket/binary_sensor/availability
+            topic write homeassistant/binary_sensor/63fbeebb-f107-4903-ab36-6104b9d802b0/rocket_sensor_power/config
+            topic write homeassistant/button/63fbeebb-f107-4903-ab36-6104b9d802b0/rocket_button_shutdown/config
+            topic write homeassistant/button/63fbeebb-f107-4903-ab36-6104b9d802b0/rocket_button_reboot/config
+            topic read rocket/button/shutdown/command
+            topic read rocket/button/reboot/command
+            topic read rocket/button/update/command
+
+            user pc2mqtt-framework
+            topic write framework/state
+            topic write framework/binary_sensor/availability
+            topic write homeassistant/binary_sensor/fbce0afd-c66f-4a56-b8aa-0e1561ac1837/framework_sensor_power/config
+            topic write homeassistant/button/fbce0afd-c66f-4a56-b8aa-0e1561ac1837/framework_button_shutdown/config
+            topic write homeassistant/button/fbce0afd-c66f-4a56-b8aa-0e1561ac1837/framework_button_reboot/config
+            topic read framework/button/shutdown/command
+            topic read framework/button/reboot/command
+            topic read framework/button/update/command
