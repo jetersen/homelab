@@ -17,6 +17,9 @@ spec:
       repository: forgejo/forgejo
       tag: 16.0.6-rootless
       rootless: true
+    serviceAccount:
+      create: true
+      automountServiceAccountToken: false
     podSecurityContext:
       runAsUser: 1000
       runAsGroup: 1000
