@@ -10,6 +10,9 @@ spec:
     name: app-template
     namespace: flux-system
   values:
+    mqttClients:
+      rocket: 63fbeebb-f107-4903-ab36-6104b9d802b0
+      framework: fbce0afd-c66f-4a56-b8aa-0e1561ac1837
     defaultPodOptions:
       automountServiceAccountToken: false
       securityContext:
@@ -145,22 +148,14 @@ spec:
             topic write framework/button/update/command
             topic write rocket/button/update/command
 
-            user pc2mqtt-rocket
-            topic write rocket/state
-            topic write rocket/binary_sensor/availability
-            topic write homeassistant/binary_sensor/63fbeebb-f107-4903-ab36-6104b9d802b0/rocket_sensor_power/config
-            topic write homeassistant/button/63fbeebb-f107-4903-ab36-6104b9d802b0/rocket_button_shutdown/config
-            topic write homeassistant/button/63fbeebb-f107-4903-ab36-6104b9d802b0/rocket_button_reboot/config
-            topic read rocket/button/shutdown/command
-            topic read rocket/button/reboot/command
-            topic read rocket/button/update/command
-
-            user pc2mqtt-framework
-            topic write framework/state
-            topic write framework/binary_sensor/availability
-            topic write homeassistant/binary_sensor/fbce0afd-c66f-4a56-b8aa-0e1561ac1837/framework_sensor_power/config
-            topic write homeassistant/button/fbce0afd-c66f-4a56-b8aa-0e1561ac1837/framework_button_shutdown/config
-            topic write homeassistant/button/fbce0afd-c66f-4a56-b8aa-0e1561ac1837/framework_button_reboot/config
-            topic read framework/button/shutdown/command
-            topic read framework/button/reboot/command
-            topic read framework/button/update/command
+            {{ range $host, $deviceId := .Values.mqttClients }}
+            user pc2mqtt-{{ $host }}
+            topic write {{ $host }}/state
+            topic write {{ $host }}/binary_sensor/availability
+            topic write homeassistant/binary_sensor/{{ $deviceId }}/{{ $host }}_sensor_power/config
+            topic write homeassistant/button/{{ $deviceId }}/{{ $host }}_button_shutdown/config
+            topic write homeassistant/button/{{ $deviceId }}/{{ $host }}_button_reboot/config
+            topic read {{ $host }}/button/shutdown/command
+            topic read {{ $host }}/button/reboot/command
+            topic read {{ $host }}/button/update/command
+            {{ end }}
