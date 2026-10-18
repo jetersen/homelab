@@ -83,6 +83,7 @@ jobs:
           REPOSITORY: ${{ inputs.repository }}
           REGISTRY_USERNAME: ${{ forgejo.repository_owner }}
           REGISTRY_TOKEN: ${{ steps.packages.outputs.token }}
+          DHI_REGISTRY_TOKEN: ${{ secrets.DHI_REGISTRY_TOKEN }}
         run: |
           set -euo pipefail
           case "$REPOSITORY" in
@@ -106,6 +107,11 @@ jobs:
             matchHost: "forgejo.jetersen.dev",
             username: env.REGISTRY_USERNAME,
             password: env.REGISTRY_TOKEN
+          }, {
+            hostType: "docker",
+            matchHost: "dhi.io",
+            username: "jetersen",
+            password: env.DHI_REGISTRY_TOKEN
           }]')
           export RENOVATE_HOST_RULES
           # Job containers bypass the image entrypoint that initializes its tools.
