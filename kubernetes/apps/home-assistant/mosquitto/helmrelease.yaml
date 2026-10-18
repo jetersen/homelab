@@ -14,6 +14,8 @@ spec:
       rocket: 63fbeebb-f107-4903-ab36-6104b9d802b0
       framework: fbce0afd-c66f-4a56-b8aa-0e1561ac1837
     defaultPodOptions:
+      imagePullSecrets:
+        - name: dhi-registry-auth
       automountServiceAccountToken: false
       securityContext:
         runAsUser: 1883
@@ -76,8 +78,8 @@ spec:
               requests:
                 cpu: 5m
             image:
-              repository: docker.io/library/eclipse-mosquitto
-              tag: 2.1.2-alpine@sha256:38c0da4f2ef84284d47b3b3eeea1cb3bdeabe81ee10caf0cd5c5ff61ee3ea408
+              repository: dhi.io/eclipse-mosquitto
+              tag: 2.1.2-debian13@sha256:c5150410d8dab5f2d55268a5ef6e38e5396469367360bd763438425ba240b93a
     service:
       app:
         controller: mosquitto
