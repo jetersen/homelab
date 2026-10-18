@@ -44,6 +44,10 @@ spec:
                   if [ "$username" = nixos-deploy-ci ]; then
                     printf 'topic write framework/button/update/command\n'
                     printf 'topic write rocket/button/update/command\n'
+                  elif [ "$username" = home-assistant ]; then
+                    printf 'topic readwrite #\n'
+                    # Preserve other integrations; deployment updates belong to CI.
+                    printf 'topic deny +/button/update/command\n'
                   else
                     printf 'topic readwrite #\n'
                   fi
