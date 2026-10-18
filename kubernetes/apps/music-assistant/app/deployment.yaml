@@ -12,21 +12,65 @@ spec:
   template:
     metadata:
       labels: *id001
+      annotations:
+        k8s.v1.cni.cncf.io/networks: music-assistant-lan@lan0,music-assistant-iot@iot0
     spec:
       automountServiceAccountToken: false
       imagePullSecrets:
       - name: homelab-oci-auth
-      hostNetwork: true
-      dnsPolicy: ClusterFirstWithHostNet
+      hostname: music-assistant
       nodeSelector:
         kubernetes.io/hostname: talos01
       securityContext:
+        runAsUser: 568
+        runAsGroup: 568
+        runAsNonRoot: true
+        fsGroup: 568
+        fsGroupChangePolicy: OnRootMismatch
         seccompProfile:
           type: RuntimeDefault
+      initContainers:
+      - image: docker.io/library/busybox:1.38.0@sha256:fd7dc98638c8e305f4dc34e979f1c0fdfdcaeb0fbf8fcff77ae834b6da3d7e6e
+        command:
+          - /bin/sh
+          - -ec
+        args:
+          - |
+            # macvlan cannot reach its parent host; keep kubelet replies on Cilium.
+            gateway=$(ip -4 route show default dev eth0 | awk '$1 == "default" && $2 == "via" { print $3; exit }')
+            test -n "${gateway}"
+            ip -4 route replace "${NODE_IP}/32" via "${gateway}" dev eth0
+        env:
+          - name: NODE_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+          runAsNonRoot: false
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
+            add:
+              - NET_ADMIN
+        resources:
+          requests:
+            cpu: 5m
+            memory: 16Mi
+          limits:
+            memory: 32Mi
+        name: node-route
       containers:
       - name: app
         image: forgejo.jetersen.dev/jetersen/music-assistant:2.10.6-private.3@sha256:ac69f73a51c7698cb2ce2c7df580b62e60a6f230a40c9a62f29ed8ecada4f5cf
         env:
+        - name: HOME
+          value: /data
+        - name: PYTHONDONTWRITEBYTECODE
+          value: "1"
         - name: MA_TRACK_CACHE_DIR
           value: /track-cache
         - name: MA_TRACK_CACHE_MAX_BYTES

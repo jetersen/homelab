@@ -11,4 +11,5 @@ spec:
   targetNamespace: home-assistant
   dependsOn:
     - name: openebs-lvm
+    - name: multus
   path: ./kubernetes/apps/music-assistant/app
