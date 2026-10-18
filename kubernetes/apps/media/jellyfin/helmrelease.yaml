@@ -32,6 +32,7 @@ spec:
               TZ: Europe/Copenhagen
               JELLYFIN_PublishedServerUrl: https://jellyfin.jetersen.dev
             securityContext:
+              readOnlyRootFilesystem: true
               allowPrivilegeEscalation: false
               runAsUser: 568
               runAsGroup: 568
@@ -102,6 +103,12 @@ spec:
               - identifier: app
                 port: 8096
     persistence:
+      tmp:
+        type: emptyDir
+        advancedMounts:
+          jellyfin:
+            app:
+              - path: /tmp
       config:
         existingClaim: jellyfin-config-lvm
         type: persistentVolumeClaim
