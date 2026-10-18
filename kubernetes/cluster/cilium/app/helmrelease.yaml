@@ -30,7 +30,7 @@ spec:
       masquerade: true
       # Preserve service load-balancing behavior independently of Gateway API.
       lbAlgorithmAnnotation: true
-      # Permit only the IoT tag used by the Multus wake relay.
+      # Permit only the IoT tag used by Home Assistant's Multus attachment.
       vlanBypass: [20]
     bgp:
       enabled: false

@@ -8,4 +8,4 @@ kind: VLANConfig
 name: enp1s0.20
 parent: enp1s0
 vlanID: 20
-# No node addresses or routes: only the Multus relay attaches to this LAN.
+# No node addresses or routes: only Home Assistant's Multus interface attaches to this LAN.

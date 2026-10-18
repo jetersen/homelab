@@ -11,24 +11,27 @@ unavailable.
 
 Cilium provides cluster DNS, the default route, and Service access. Configure the
 MQTT integration with `mosquitto.home-assistant.svc.cluster.local` on port `1883`.
-Multus attaches `lan0` directly to the main LAN for zeroconf and SSDP discovery;
-see [the attachment](home-assistant/network.yaml) for its reserved IP and MAC.
-Keep that address outside DHCP and other allocation pools. The attachment is
-exclusive to Home Assistant's single replica on `talos01` and adds no default
-route; router advertisements cannot add an IPv6 default route on `lan0`.
+Multus attaches `lan0` to the main LAN and `iot0` to the IoT VLAN for zeroconf,
+SSDP discovery, and direct device access;
+see [the attachments](home-assistant/network.yaml) for their reserved IPs and MACs.
+Keep those addresses outside DHCP and other allocation pools. The attachments are
+exclusive to Home Assistant's single replica on `talos01` and add no default
+route; router advertisements cannot add an IPv6 default route on either interface.
 
-Select only `lan0` in Settings > System > Network and restart Home Assistant
+Select `lan0` and `iot0` in Settings > System > Network and restart Home Assistant
 after changing the selection. Automatic detection follows the primary pod's
 multicast route. Cilium policy covers only the primary interface, and macvlan
 cannot directly reach its parent host. A short-lived init container uses
 `NET_ADMIN` to route the node's IPv4 address through the primary Cilium gateway,
 so kubelet probe replies keep working. Home Assistant itself keeps all Linux
-capabilities dropped. Keep IoT wake traffic on the [wake relay](wol-relay/README.md).
+capabilities dropped. Both secondary interfaces bypass UniFi's routed firewall;
+IoT devices can reach listeners bound to all addresses on Home Assistant.
 See the [networking overview](../../../NETWORKING.md).
 
-Configure main-LAN Wake-on-LAN targets with the LAN subnet's broadcast address.
+Configure Wake-on-LAN targets with their subnet's broadcast address: `192.168.1.255`
+for the main LAN and `192.168.20.255` for IoT, on UDP port `9`.
 The generic `255.255.255.255` broadcast follows Cilium's primary interface;
-selecting `lan0` for discovery does not change that route.
+selecting discovery interfaces does not change that route.
 
 ## CO2 ventilation
 

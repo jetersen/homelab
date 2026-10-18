@@ -153,14 +153,12 @@ VLAN interface on the node; the switch port must carry that VLAN. Keep the pod's
 default route and DNS on its primary network. Moving the nodes to a dedicated
 server VLAN remains an optional design.
 
-For wake-on-LAN alone, prefer a small relay pod per target network over attaching
-Home Assistant to every VLAN. Restrict its command listener to the primary pod
-interface, allow only Home Assistant to call it, and expose fixed wake targets.
-Do not bridge or route between its interfaces. Directly attaching Home Assistant
-also enables local discovery, but its device traffic then bypasses UniFi's routed
-firewall, and listeners bound to all addresses may become reachable from IoT.
-Ordinary routed device control and TV access to Jellyfin need narrow firewall
-rules, not additional pod interfaces. Continue using Technitium for DNS.
+Home Assistant attaches directly to both the main LAN and IoT VLAN for local
+integration discovery and Wake-on-LAN. Its default route and DNS stay on Cilium;
+forwarding is disabled. Traffic through its secondary interfaces bypasses UniFi's
+routed firewall and Cilium policy. IoT devices can initiate connections to Home
+Assistant listeners on the IoT address; this is not an outbound-only attachment.
+Continue using Technitium for DNS.
 
 IoT firewall validation must include the gateway itself as well as other VLANs:
 blocking IoT-to-LAN traffic does not restrict gateway management or gateway DNS.
@@ -178,10 +176,10 @@ wake-on-LAN broadcasts. Permit the application connections needed after discover
 See [UniFi mDNS](https://help.ui.com/hc/en-us/articles/12648701398807-UniFi-Gateway-Multicast-DNS-mDNS-Proxy)
 and [Home Assistant wake-on-LAN](https://www.home-assistant.io/integrations/wake_on_lan/).
 
-The [IoT wake relay](kubernetes/apps/home-assistant/wol-relay/README.md) receives
-Home Assistant's TV wake packets through its primary Cilium interface and sends
-only the configured target's packet on its Multus IoT interface. Apollo firmware
-is not involved. The server-VLAN migration remains a separate design option.
+Home Assistant sends TV wake packets directly through `iot0` to
+`192.168.20.255:9`. Select `lan0` and `iot0` in Home Assistant's network settings
+for discovery. Use subnet-specific broadcast addresses for Wake-on-LAN;
+`255.255.255.255` follows the primary Cilium interface.
 
 Before separating a wake target from Home Assistant, provide a tested wake path.
 Options include a narrowly authorized relay on the destination LAN or a dedicated
