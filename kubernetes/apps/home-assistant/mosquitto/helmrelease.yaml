@@ -154,7 +154,11 @@ spec:
             user pc2mqtt-{{ $host }}
             topic write {{ $host }}/state
             topic write {{ $host }}/binary_sensor/availability
+            topic write {{ $host }}/deployment/state
             topic write homeassistant/binary_sensor/{{ $deviceId }}/{{ $host }}_sensor_power/config
+            topic write homeassistant/sensor/{{ $deviceId }}/{{ $host }}_deployment/config
+            topic write homeassistant/sensor/{{ $deviceId }}/{{ $host }}_deployed_revision/config
+            topic write homeassistant/binary_sensor/{{ $deviceId }}/{{ $host }}_reboot_required/config
             topic write homeassistant/button/{{ $deviceId }}/{{ $host }}_button_shutdown/config
             topic write homeassistant/button/{{ $deviceId }}/{{ $host }}_button_reboot/config
             topic read {{ $host }}/button/shutdown/command
