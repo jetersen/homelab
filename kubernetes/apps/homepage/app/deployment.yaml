@@ -40,6 +40,7 @@ spec:
             - name: http
               containerPort: 3000
           securityContext:
+            readOnlyRootFilesystem: true
             allowPrivilegeEscalation: false
             capabilities:
               drop: [ALL]
@@ -64,6 +65,10 @@ spec:
             limits:
               memory: 512Mi
           volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: cache
+              mountPath: /app/.next/cache
             - name: runtime
               mountPath: /app/config
             - name: config
@@ -103,6 +108,10 @@ spec:
               subPath: custom.js
               readOnly: true
       volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: cache
+          emptyDir: {}
         - name: config
           configMap:
             name: homepage-config
