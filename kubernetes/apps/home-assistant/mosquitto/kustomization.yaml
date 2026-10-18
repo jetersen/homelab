@@ -6,5 +6,6 @@ resources:
   - lvm-storage.yaml
   - helmrelease.yaml
   - tcproute.yaml
+  - httproute.yaml
 components:
   - ../../../components/helmrelease-defaults
