@@ -47,44 +47,25 @@ bypass disabled and no physical fan in its targets. The upstream blueprint retai
 its humidity thresholds, safeguard, and run-on delays. It continues tracking humidity
 during manual and CO2 ventilation; those demands do not restart its cycle.
 
-Use `input_select.ventilation_fan_mode` to select Auto, Always on, or Always off.
-The manual modes take priority and persist across restarts. In Auto, the controller
-runs `switch.utility_fan_plug` while any demand remains active. Only this controller
-should operate the physical fan. It reacts to demand, mode, and switch changes and
-reconciles restored state at startup without periodic polling.
-
-Press `button.ventilation_fan_add_hour` for timed manual ventilation. Each press
-adds an hour to the active timer and selects Auto mode. Cancel
-`timer.ventilation_fan_manual_run` to end it early. Canceling or finishing the timer
-stops a manual-only run immediately; active humidity or CO2 demand keeps the fan
-running. Assign the button, timer, and mode selector to Utility Closet for its
-area controls.
-
-`sensor.utility_fan_reason` explains the current fan state and lists simultaneous
-demands. Bathroom humidity and its run-on delay share one reason, based on the
-explicit humidity demand rather than whether an automation is running. An
-unexplained on state is reported as unknown. Assign the sensor to Utility Closet
-and add it to the dashboard favorites beside the fan controls. Its attributes
-include demand states, the manual timer's finish time, and bathroom humidity readings.
-
-CO2 demand starts after ten minutes above 1,000 ppm and clears after ten minutes
-below 800 ppm, or five minutes without usable sensor readings. Each CO2 cycle
-is limited to one hour, followed by a one-hour cooldown after a timeout. Restored
-deadlines fire once for the cutoff and cooldown. These limits apply to CO2 demand;
-independent humidity or manual demand can keep the fan running longer.
+The controller owns the physical fan and combines independent demands. Manual
+modes take priority and persist across restarts. Timed manual demand can end
+without stopping active humidity or CO2 demand. The reason sensor reports active
+demands and flags an unexplained on state. See the package for entity mappings,
+thresholds, timers, and safety limits.
 
 ## KVM certificate delivery
 
-cert-manager issues a dedicated Let's Encrypt certificate for
-`glkvm.jetersen.dev`. Internal DNS resolves this hostname directly to the KVM,
+cert-manager issues a dedicated Let's Encrypt certificate for the KVM.
+Internal DNS resolves its configured hostname directly to the device,
 so console access does not depend on the Kubernetes ingress during maintenance.
 The Certificate and its TLS Secret live in Home Assistant's namespace and are
 managed alongside the application. The KVM administrator password is stored in a
 separate SOPS-encrypted Secret.
 
-Home Assistant synchronizes the certificate when the UniFi tracker
-`device_tracker.glkvm` becomes `home`, when Home Assistant starts, and when
-Folder watcher detects a change to the mounted TLS Secret. Configure Folder
+The [certificate package](home-assistant/glkvm_certificates.yaml) synchronizes
+the certificate when the configured device tracker reports the KVM online,
+when Home Assistant starts, and when Folder watcher detects a change to the
+mounted TLS Secret. Configure Folder
 watcher for `/etc/glkvm/tls` with the pattern `..data`, and name its event entity
 `event.glkvm_certificate_changed`. Kubernetes replaces this symlink atomically
 when the Secret changes. No scheduled sync job is required.

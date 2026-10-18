@@ -14,9 +14,8 @@ to the gateway host route.
 Edit [app/error-page.html](app/error-page.html) for gateway error responses,
 including backup downtime. The embedded mascot is by David Revoy, CC BY 4.0.
 
-The bootstrap administrator is `jetersen`; its initial password is the `password`
-key in the `forgejo-admin` Secret. Change it at first login. The chart creates the
-administrator only once and does not reset its password during upgrades.
+Change the bootstrap administrator password at first login. The chart creates
+the administrator only once and does not reset its password during upgrades.
 Existing users link their GitHub identity by authenticating their Forgejo account
 once. Keep the local administrator login available for recovery.
 

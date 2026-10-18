@@ -6,17 +6,16 @@ clients only. Public DNS publication is disabled. Varlock resolves the initial
 administrator password for the SOPS-encrypted Secret. Changing that Secret does
 not reset an existing account.
 
-Syncthing delivers Android camera files to the originals folder. Use send-only
-on Android and receive-only on the NAS, with staggered versioning on the NAS.
-Before sharing, ignore `.trashed-*`, `.pending-*`, and `.thumbnails` on both
-devices; Android keeps deleted camera files in the camera directory until its
-trash expires. Kopiur also excludes these files. Syncthing can connect through
-LAN discovery or the NAS's published TCP port over Tailscale.
+For Syncthing imports, use a send-only source and receive-only destination,
+with staggered versioning on the destination. Exclude source trash, pending files,
+and thumbnails on both sides; Android sources use `.trashed-*`, `.pending-*`,
+and `.thumbnails`. Kopiur also excludes these files.
 
 Start manual scans through Library > Index so they share the server's worker lock
 with scheduled scans. Albums, labels, face recognition, and metadata changes live
-in the storage volume; operations that write originals are disabled. Add Google
-Takeout files and their JSON sidecars to the originals folder, then index them.
+in the storage volume; operations that write originals are disabled. For Google
+Takeout imports, add media files and their JSON sidecars to the originals folder,
+then index them.
 Keep the original Takeout metadata. For exports using
 `photo.jpg.supplemental-metadata.json`, add a matching `photo.jpg.json` copy so
 PhotoPrism reads it. Resolve duplicate filename suffixes against the actual media
