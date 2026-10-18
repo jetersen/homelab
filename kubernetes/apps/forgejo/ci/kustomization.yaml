@@ -3,11 +3,14 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - scaledjob.yaml
+  - docker-backend.yaml
   - networkpolicy.yaml
   - credentials.sops.yaml
 configMapGenerator:
   - name: forgejo-ci-config
     files:
       - runner.yaml
+      - docker-entrypoint.sh
+      - docker.json
 generatorOptions:
   disableNameSuffixHash: true
