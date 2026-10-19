@@ -3,6 +3,10 @@ on:
   push:
     branches: [main]
     paths:
+      - infrastructure/renovate/**
+      - .ci/renovate-upgrade-policy.mjs
+      - .ci/renovate-operator-cliff.toml
+      - .ci/renovate-worker-cliff.toml
       - infrastructure/backup/image/**
       - infrastructure/forgejo/runner/Dockerfile
       - infrastructure/forgejo/runner/Dockerfile.dockerignore
@@ -38,7 +42,7 @@ jobs:
   publish:
     if: forgejo.ref == 'refs/heads/main'
     runs-on: ${{ inputs.runner || 'linux-docker' }}
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - name: Authenticate release tags
         id: release
@@ -58,11 +62,20 @@ jobs:
           tool: git-cliff
       - name: Test image publication
         run: node --test .ci/image-publishing.test.mjs .ci/image-retention.test.mjs
-      - name: Allocate image releases
+      - name: Allocate changed image releases
         shell: bash
+        env:
+          BEFORE: ${{ forgejo.event.before }}
+          EVENT_NAME: ${{ forgejo.event_name }}
         run: |
-          bash .ci/image-release.sh backup-helper
-          bash .ci/image-release.sh runner-job
+          set -euo pipefail
+          for component in backup-helper runner-job renovate-operator renovate-worker; do
+            source .ci/image-inputs.sh "$component"
+            if [ "$EVENT_NAME" = workflow_dispatch ] || [ -z "$BEFORE" ] || \
+              ! git diff --quiet "$BEFORE" HEAD -- "${paths[@]}"; then
+              bash .ci/image-release.sh "$component"
+            fi
+          done
       - name: Authenticate with the package integration
         id: auth
         uses: https://github.com/actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -82,6 +95,7 @@ jobs:
           registry: forgejo.jetersen.dev
           repository: ${{ forgejo.repository }}
       - name: Retain workload image releases
+        if: env.BACKUP_HELPER_VERSION != '' || env.RUNNER_JOB_VERSION != ''
         env:
           FORGEJO_HOST: https://forgejo.jetersen.dev
           FORGEJO_OWNER: ${{ forgejo.repository_owner }}

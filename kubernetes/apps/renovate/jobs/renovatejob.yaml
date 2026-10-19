@@ -18,6 +18,11 @@ spec:
   skipForks: false
   secretRef: renovate-credentials
   parallelism: 1
+  securityContext:
+    pod:
+      runAsGroup: 0
+    container:
+      runAsGroup: 0
   resources:
     requests:
       cpu: 100m

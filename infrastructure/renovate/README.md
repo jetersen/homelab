@@ -30,7 +30,7 @@ The [operator patch](operator/pending-events.patch) uses priority to retain one
 follow-up request received during a running job. Without it, 6.5.1 acknowledges
 those events without queuing a run. The image build tests coalescing, successful
 completion, and failure. Remove the patch only after verifying equivalent upstream
-behavior. Image releases use the shared publication helpers through `publish-renovate.yaml`.
+behavior. Image releases use the shared publication helpers through `publish-images.yaml`.
 
 Before switching worker ownership, suspend the RenovateJob and wait for running
 jobs to finish. For rollback, leave it suspended and restore the previous Actions

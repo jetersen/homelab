@@ -12,14 +12,30 @@ runs:
   using: composite
   steps:
     - name: Publish the backup helper release
+      if: env.BACKUP_HELPER_VERSION != ''
       shell: bash
       env:
         REGISTRY: ${{ inputs.registry }}
         REPOSITORY: ${{ inputs.repository }}
       run: bash .ci/publish-image.sh backup-helper
     - name: Publish the runner job release
+      if: env.RUNNER_JOB_VERSION != ''
       shell: bash
       env:
         REGISTRY: ${{ inputs.registry }}
         REPOSITORY: ${{ inputs.repository }}
       run: bash .ci/publish-image.sh runner-job
+    - name: Publish renovate-operator
+      if: env.RENOVATE_OPERATOR_VERSION != ''
+      shell: bash
+      env:
+        REGISTRY: ${{ inputs.registry }}
+        REPOSITORY: ${{ inputs.repository }}
+      run: bash .ci/publish-image.sh renovate-operator
+    - name: Publish renovate-worker
+      if: env.RENOVATE_WORKER_VERSION != ''
+      shell: bash
+      env:
+        REGISTRY: ${{ inputs.registry }}
+        REPOSITORY: ${{ inputs.repository }}
+      run: bash .ci/publish-image.sh renovate-worker
