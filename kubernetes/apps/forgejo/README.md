@@ -23,7 +23,8 @@ Application and chart major upgrades require Renovate dashboard approval and
 manual merge because upgrades can change the database schema.
 
 Set the repository default merge style to Fast-forward only and disable the other
-merge methods. The instance default does not disable methods in existing or newly
+merge methods. Enable the branch-protection check that blocks outdated PRs.
+The instance default does not disable methods in existing or newly
 created repositories. The [shared Renovate preset](../../../.renovate/forgejo.json)
 uses the repository default and regenerates stale branches before CI runs again.
 

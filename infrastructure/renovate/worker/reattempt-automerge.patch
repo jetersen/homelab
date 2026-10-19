@@ -1,0 +1,20 @@
+--- a/lib/modules/platform/gitea/index.ts
++++ b/lib/modules/platform/gitea/index.ts
+@@ -0,0 +1 @@
++import { reattemptAutomerge } from './reattempt-automerge.mjs';
+@@ -757,0 +759,7 @@
++    async reattemptPlatformAutomerge(prConfig) {
++      await reattemptAutomerge(prConfig, {
++        method: getMergeMethod(prConfig.platformPrOptions?.automergeStrategy, config.allowedMergeMethods) ?? config.mergeMethod,
++        merge: (number, options) => helper.mergePR(http, config.repository, number, options),
++      });
++    },
++
+--- a/lib/modules/platform/gitea/index.ts
++++ b/lib/modules/platform/gitea/index.ts
+@@ -1195,0 +1196 @@
++  reattemptPlatformAutomerge,
+--- a/lib/modules/platform/forgejo/index.ts
++++ b/lib/modules/platform/forgejo/index.ts
+@@ -60,0 +61 @@
++  reattemptPlatformAutomerge,

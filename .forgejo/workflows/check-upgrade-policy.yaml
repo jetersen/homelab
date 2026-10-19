@@ -11,4 +11,4 @@ jobs:
       - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - run: node --test .ci/renovate-upgrade-policy.test.mjs infrastructure/renovate/worker/config.test.cjs
+      - run: node --test .ci/renovate-upgrade-policy.test.mjs infrastructure/renovate/worker/config.test.cjs infrastructure/renovate/worker/reattempt-automerge.test.mjs

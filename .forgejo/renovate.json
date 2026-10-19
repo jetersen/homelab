@@ -44,6 +44,20 @@
   ],
   "packageRules": [
     {
+      "description": "Review patched Renovate runtimes together with their pinned released source",
+      "matchFileNames": [
+        "infrastructure/renovate/**",
+        "kubernetes/apps/renovate/app/source.yaml"
+      ],
+      "matchPackageNames": [
+        "ghcr.io/mogenius/helm-charts/renovate-operator",
+        "ghcr.io/mogenius/renovate-operator",
+        "ghcr.io/renovatebot/renovate"
+      ],
+      "dependencyDashboardApproval": true,
+      "automerge": false
+    },
+    {
       "description": "Restore NuGet locks with the verified local TrueNAS SDK feed",
       "matchManagers": [
         "nuget"

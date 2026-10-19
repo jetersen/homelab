@@ -70,9 +70,10 @@ jobs:
           EVENT_NAME: ${{ forgejo.event_name }}
         run: |
           set -euo pipefail
+          bash .ci/image-select.sh > "$RUNNER_TEMP/image-components"
           while IFS= read -r component; do
             bash .ci/image-release.sh "$component"
-          done < <(bash .ci/image-select.sh)
+          done < "$RUNNER_TEMP/image-components"
       - name: Authenticate with the package integration
         id: auth
         uses: https://github.com/actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
