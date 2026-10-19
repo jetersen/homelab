@@ -5,5 +5,5 @@ metadata:
   name: tuppr
 spec:
   ref:
-    tag: 0.5.8
+    tag: 0.5.9
   url: oci://ghcr.io/home-operations/charts/tuppr
