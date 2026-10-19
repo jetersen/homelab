@@ -33,3 +33,70 @@
 -			t.Errorf("expected priority to remain 1, got %d", result.Priority)
 +		if result.Priority != 2 {
 +			t.Errorf("expected follow-up priority 2, got %d", result.Priority)
+--- a/src/webhook/forgejo.go
++++ b/src/webhook/forgejo.go
+@@ -6,0 +7 @@
++	"strings"
+@@ -25,0 +27 @@
++//   - push: only non-deletion pushes to the repository default branch
+@@ -35,0 +38,3 @@
++	After       string              `json:"after"`
++	Ref         string              `json:"ref"`
++	Deleted     bool                `json:"deleted"`
+@@ -57,3 +62,4 @@
+-	ID       int    `json:"id"`
+-	Name     string `json:"name"`
+-	FullName string `json:"full_name"`
++	ID            int    `json:"id"`
++	Name          string `json:"name"`
++	FullName      string `json:"full_name"`
++	DefaultBranch string `json:"default_branch"`
+@@ -135,0 +142,6 @@
++	case "push":
++		if payload.Deleted || strings.Trim(payload.After, "0") == "" || payload.Repository.DefaultBranch == "" || payload.Ref != "refs/heads/"+payload.Repository.DefaultBranch {
++			return false, "not a default branch push"
++		}
++		return true, ""
++
+--- a/src/webhook/forgejo_test.go
++++ b/src/webhook/forgejo_test.go
+@@ -224 +224 @@
+-			name:  "push event is not supported",
++			name:  "push without ref is ignored",
+@@ -230 +230 @@
+-			reason: "unsupported event type: push",
++			reason: "not a default branch push",
+--- a/src/gitProviderClients/forgejoProvider/forgejo.go
++++ b/src/gitProviderClients/forgejoProvider/forgejo.go
+@@ -101 +101 @@
+-// just the base issue and pull request events. The aggregate names "issues"/
++// default-branch pushes plus the base issue and pull request events. The aggregate names "issues"/
+@@ -104 +104 @@
+-var forgejoWebhookEvents = []string{"issues_only", "pull_request_only"}
++var forgejoWebhookEvents = []string{"issues_only", "pull_request_only", "push"}
+@@ -107,2 +107,2 @@
+-// the enabled base flags are listed as "issues"/"pull_request".
+-var forgejoReportedEvents = []string{"issues", "pull_request"}
++// the enabled base flags are listed as "issues"/"pull_request" alongside "push".
++var forgejoReportedEvents = []string{"issues", "pull_request", "push"}
+--- a/src/gitProviderClients/forgejoProvider/forgejo_test.go
++++ b/src/gitProviderClients/forgejoProvider/forgejo_test.go
+@@ -16 +16 @@
+-			{ID: 1, Config: forgejoHookConfig{URL: "https://example.com/webhook"}, Events: []string{"issues", "pull_request"}},
++			{ID: 1, Config: forgejoHookConfig{URL: "https://example.com/webhook"}, Events: []string{"issues", "pull_request", "push"}},
+@@ -54,2 +54,2 @@
+-		if len(payload.Events) != 2 || payload.Events[0] != "issues_only" || payload.Events[1] != "pull_request_only" {
+-			t.Errorf("expected events [issues_only pull_request_only], got %v", payload.Events)
++		if len(payload.Events) != 3 || payload.Events[0] != "issues_only" || payload.Events[1] != "pull_request_only" || payload.Events[2] != "push" {
++			t.Errorf("expected events [issues_only pull_request_only push], got %v", payload.Events)
+@@ -103 +103 @@
+-		if len(events) != 2 || events[0] != "issues_only" || events[1] != "pull_request_only" {
++		if len(events) != 3 || events[0] != "issues_only" || events[1] != "pull_request_only" || events[2] != "push" {
+@@ -163,0 +164,7 @@
++
++func TestOldForgejoSubscriptionNeedsUpdate(t *testing.T) {
++	hook := forgejoHook{Events: []string{"issues", "pull_request"}}
++	if hook.toWebhook().EventsUpToDate {
++		t.Fatal("existing hooks without push subscription must be updated")
++	}
++}
