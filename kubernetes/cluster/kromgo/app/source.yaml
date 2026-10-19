@@ -4,5 +4,5 @@ metadata:
   name: kromgo
 spec:
   ref:
-    tag: 0.16.1
+    tag: 0.16.2
   url: oci://ghcr.io/home-operations/charts/kromgo
