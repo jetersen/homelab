@@ -1,0 +1,8 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: OCIRepository
+metadata:
+  name: renovate-operator
+spec:
+  ref:
+    tag: 6.5.1
+  url: oci://ghcr.io/mogenius/helm-charts/renovate-operator

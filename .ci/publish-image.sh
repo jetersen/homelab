@@ -34,6 +34,12 @@ elif grep -Eqi 'manifest unknown|MANIFEST_UNKNOWN|: not found|no such manifest' 
   if [ "$component" = backup-helper ]; then
     docker run --rm --network none --read-only --user 1000:1000 \
       --cap-drop ALL --security-opt no-new-privileges "$release" --help
+  elif [ "$component" = renovate-operator ]; then
+    docker run --rm --network none --read-only --cap-drop ALL \
+      --security-opt no-new-privileges "$release" --help
+  elif [ "$component" = renovate-worker ]; then
+    docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges \
+      --entrypoint bash "$release" -c 'node --check /opt/renovate/config.cjs && nix --version && python3 --version && command -v install-tool'
   else
     docker run --rm -i --network none --read-only --cap-drop ALL \
       --security-opt no-new-privileges "$release" \

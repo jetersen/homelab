@@ -1,0 +1,63 @@
+--- a/src/internal/utils/projectStatus.go
++++ b/src/internal/utils/projectStatus.go
+@@ -25,7 +25,11 @@
+ }
+ 
+ func validateProjectStatusScheduled(projectStatus *api.RenovateProjectState, desiredStatus *types.RenovateStatusUpdate) *api.RenovateProjectState {
+-	if projectStatus.Status != api.JobStatusRunning {
++	if projectStatus.Status == api.JobStatusRunning {
++		// Priority doubles as a persisted, coalesced follow-up request while running.
++		projectStatus.Priority = max(projectStatus.Priority, desiredStatus.Priority, 1)
++		projectStatus.ExecutionOptions = desiredStatus.ExecutionOptions
++	} else {
+ 		projectStatus.Status = api.JobStatusScheduled
+ 		projectStatus.LastTransition = metav1.Now()
+ 		projectStatus.ExecutionOptions = desiredStatus.ExecutionOptions
+@@ -55,8 +59,11 @@
+ 
+ func validateProjectStatusCompleted(projectStatus *api.RenovateProjectState, desiredStatus *types.RenovateStatusUpdate) *api.RenovateProjectState {
+ 	if projectStatus.Status == api.JobStatusRunning {
+-		projectStatus.Status = api.JobStatusCompleted
+-		projectStatus.Priority = 0
++		if projectStatus.Priority > 0 {
++			projectStatus.Status = api.JobStatusScheduled
++		} else {
++			projectStatus.Status = api.JobStatusCompleted
++		}
+ 		projectStatus.LastTransition = metav1.Now()
+ 	}
+ 	projectStatus.Duration = desiredStatus.Duration
+@@ -68,8 +75,11 @@
+ 
+ func validateProjectStatusFailed(projectStatus *api.RenovateProjectState, desiredStatus *types.RenovateStatusUpdate) *api.RenovateProjectState {
+ 	if projectStatus.Status == api.JobStatusRunning {
+-		projectStatus.Status = api.JobStatusFailed
+-		projectStatus.Priority = 0
++		if projectStatus.Priority > 0 {
++			projectStatus.Status = api.JobStatusScheduled
++		} else {
++			projectStatus.Status = api.JobStatusFailed
++		}
+ 		projectStatus.LastTransition = metav1.Now()
+ 	}
+ 	projectStatus.Duration = desiredStatus.Duration
+--- a/src/internal/utils/projectStatus_test.go
++++ b/src/internal/utils/projectStatus_test.go
+@@ -104,14 +104,14 @@
+ 		}
+ 	})
+ 
+-	t.Run("Cannot schedule a running project, priority unchanged", func(t *testing.T) {
++	t.Run("Scheduling a running project retains the follow-up priority", func(t *testing.T) {
+ 		proj := &api.RenovateProjectState{Status: api.JobStatusRunning, Priority: 1}
+ 		result := GetUpdateStatusForProject(proj, &types.RenovateStatusUpdate{Status: api.JobStatusScheduled, Priority: 2})
+ 		if result.Status != api.JobStatusRunning {
+ 			t.Errorf("expected status to remain running, got %v", result.Status)
+ 		}
+-		if result.Priority != 1 {
+-			t.Errorf("expected priority to remain 1, got %d", result.Priority)
++		if result.Priority != 2 {
++			t.Errorf("expected follow-up priority 2, got %d", result.Priority)
+ 		}
+ 	})
+ }

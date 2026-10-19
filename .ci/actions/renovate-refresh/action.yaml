@@ -1,0 +1,28 @@
+name: Refresh Renovate PRs
+description: Queue event-driven repository maintenance in Renovate Operator
+inputs:
+  repository:
+    description: Forgejo repository to refresh
+    required: true
+  token:
+    description: Operator webhook bearer token
+    required: true
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        REPOSITORY: ${{ inputs.repository }}
+        WEBHOOK_TOKEN: ${{ inputs.token }}
+      run: |
+        set -euo pipefail
+        case "$REPOSITORY" in
+          jetersen/homelab|jetersen/dotfiles|jetersen/music-assistant|jetersen/pc2mqtt) ;;
+          *) echo 'Repository is not managed by this operator' >&2; exit 1 ;;
+        esac
+        test -n "$WEBHOOK_TOKEN"
+        # The generic API accepts the project as a query parameter; it does not inspect push payloads.
+        curl --silent --show-error --fail --request POST \
+          --retry 6 --retry-all-errors --retry-delay 10 --max-time 20 \
+          --header "Authorization: Bearer $WEBHOOK_TOKEN" \
+          "https://renovate-webhook.jetersen.dev/webhook/v1/schedule?namespace=renovate&job=forgejo&project=$REPOSITORY"

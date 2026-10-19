@@ -1,0 +1,45 @@
+apiVersion: renovate-operator.mogenius.com/v1alpha1
+kind: RenovateJob
+metadata:
+  name: forgejo
+spec:
+  # Discovery also queues dependency scans. Events maintain PRs between scans.
+  schedule: '17 */6 * * *'
+  suspend: true
+  image: forgejo.jetersen.dev/jetersen/homelab/renovate-worker:0.1.0
+  provider:
+    name: forgejo
+    endpoint: https://forgejo.jetersen.dev/api/v1
+  discoveryFilters:
+    - jetersen/homelab
+    - jetersen/dotfiles
+    - jetersen/music-assistant
+    - jetersen/pc2mqtt
+  skipForks: false
+  secretRef: renovate-credentials
+  parallelism: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      memory: 4Gi
+  webhook:
+    enabled: true
+    authentication:
+      enabled: true
+      secretRef:
+        name: renovate-credentials
+        key: WEBHOOK_TOKEN
+    sync:
+      enabled: true
+      secretRef:
+        name: renovate-webhook-sync
+        key: token
+  extraVolumes:
+    - name: cache
+      persistentVolumeClaim:
+        claimName: renovate-cache
+  extraVolumeMounts:
+    - name: cache
+      mountPath: /cache

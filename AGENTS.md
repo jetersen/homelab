@@ -23,7 +23,7 @@
 
 - Use conventional commits.
 - Keep history linear: rebase onto upstream and never create merge commits.
-- Use Forgejo's `fast-forward-only` merge default and disable other merge styles to preserve commit identities. Let Renovate rebase outdated branches with `rebaseWhen: "behind-base-branch"` and use `automergeStrategy: "auto"`. Renovate maps `"fast-forward"` to Forgejo's rebase operation, which can replace the committer.
+- Use Forgejo's `fast-forward-only` merge default and disable other merge styles to preserve commit identities. Let Renovate rebase outdated branches with `rebaseWhen: "behind-base-branch"` and use `automergeStrategy: "auto"`. Renovate 44.132.2 maps `"fast-forward"` to strict fast-forward when allowed, with a rebase fallback. Keep `"auto"` and the strict repository default.
 - Preserve Renovate's author and committer as `renovate[bot] <29139614+renovate[bot]@users.noreply.github.com>`.
 - Amending local commits and force-pushing amended or rebased commits are permitted. Fetch and inspect remote changes first, preserve unrelated work, and use `--force-with-lease` for force pushes.
 - Keep one-off setup, migration, inspection, and recovery helpers outside the repository. Commit scripts only when maintained automation or deployed workloads require them.

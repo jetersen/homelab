@@ -19,3 +19,4 @@ resources:
   - system-upgrade.yaml
   - technitium.yaml
   - towonel-system.yaml
+  - renovate.yaml

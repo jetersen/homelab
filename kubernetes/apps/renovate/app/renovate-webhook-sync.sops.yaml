@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Secret
+metadata:
+    name: renovate-webhook-sync
+    labels:
+        renovate-operator.mogenius.com/allow-ref: "true"
+type: Opaque
+stringData:
+    token: ENC[AES256_GCM,data:XPNzzBFWlJKgDFPkoBxKiE+zJE8brOFm84vudviJb2KDdflVBHmWGA==,iv:q/i/Trxz66m5WV243J9h6ugj/UEWshaIDqIWfsiHuB0=,tag:+6lkdcr57nkN0WLpn7YAHQ==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBOSmJ4T2h2RXZHK2p2eWNS
+            OTV4VHBUMFpNUU1rV2tpUHNSRFRVNEFBYWdBCk83M1R6VGduak5wOUFYRHhCeU9V
+            akpYeHV2NGtTeUpZY2h6bVFNOXZSa1kKLS0tIGpVYlRjVE5iTDVvNk5iT0tIQ2Yz
+            eFlIMGg4RXRjbnkzNFpTMGUvN2NIb3cKezvSPgDI7UQHQXgKIjChmvbpKTIr8TLM
+            qvVdWs/svYsRKNtRBc9qEw1e3xgfH3BM91I3MojeTv/eFs1uEL36gw==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1u0m8ryqg7hfhuykraxe35v4xzw92a03w9jpt75yv3m57g6pvpp0sf24mdy
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-10-19T22:52:12Z"
+    mac: ENC[AES256_GCM,data:xokj7hfXaQ5hyc+4f29Cph1U1KUCRDq+2W/gY5vHplNuPkQAShaLVmBk5yhQ7MPW6FOT6BrkPOP1cJryufxW/cB1dB4pCIC5aDEs/J5BahRdPBsM9nxi7oq6sl0jU+q9MXBOueCyEU4/fT9GVCJrVPgQvuMqcGHV7bb0P9XasL4=,iv:nklS3LIP9UFtNy1ZUh4CaX+Nba15Xrg3NOybi8nW0fg=,tag:tUqVLwsLPr2VRYZ+jixo6g==,type:str]
+    version: 3.13.3

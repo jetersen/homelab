@@ -12,6 +12,7 @@ resources:
   - nix-cache/flux-ks.yaml
   - openspeedtest/flux-ks.yaml
   - photoprism/flux-ks.yaml
+  - renovate/flux-ks.yaml
   - reloader/flux-ks.yaml
   - searxng/flux-ks.yaml
 components:

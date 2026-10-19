@@ -1,0 +1,40 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: renovate-operator
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: renovate-operator
+  values:
+    fullnameOverride: renovate-operator
+    crd:
+      mode: template
+    image:
+      registry: forgejo.jetersen.dev
+      repository: jetersen/homelab/renovate-operator
+      tag: 0.1.0
+    rbac:
+      ownNamespaceOnly: true
+    policy:
+      enabled: true
+      allowedHosts:
+        - forgejo.jetersen.dev
+      allowedImages:
+        - forgejo.jetersen.dev/jetersen/homelab/renovate-worker
+    config:
+      defaultJobBackoffLimit: 1
+      defaultJobActiveDeadlineSeconds: 2700
+      jobTTLSecondsAfterFinished: 86400
+      forwardCacheToJobs: false
+    webhook:
+      enabled: true
+      baseUrl: https://renovate-webhook.jetersen.dev
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64Mi
+      limits:
+        memory: 256Mi
+    metrics:
+      enabled: true

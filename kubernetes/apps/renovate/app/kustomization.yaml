@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - source.yaml
+  - helmrelease.yaml
+  - monitoring.yaml
+  - storage.yaml
+  - httproute.yaml
+  - access-policy.yaml
+  - renovate-credentials.sops.yaml
+  - renovate-webhook-sync.sops.yaml
+components:
+  - ../../../components/helmrelease-defaults
+  - ../../../components/oci-source-defaults

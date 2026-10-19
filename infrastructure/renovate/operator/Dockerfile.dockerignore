@@ -1,0 +1,5 @@
+**
+!infrastructure
+!infrastructure/renovate
+!infrastructure/renovate/operator
+!infrastructure/renovate/operator/**

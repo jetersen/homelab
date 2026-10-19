@@ -124,8 +124,8 @@ spec:
           DEFAULT_BRANCH: main
           ENABLE_PUSH_CREATE_USER: true
         repository.pull-request:
-          # Plain rebase keeps history linear; Renovate calls this strategy "fast-forward".
-          DEFAULT_MERGE_STYLE: rebase
+          # Strict fast-forward preserves the tested commit and its committer.
+          DEFAULT_MERGE_STYLE: fast-forward-only
           DEFAULT_UPDATE_STYLE: rebase
         repository.signing:
           DEFAULT_TRUST_MODEL: committer
@@ -139,6 +139,6 @@ spec:
           DISABLE_REGISTRATION: true
           REQUIRE_SIGNIN_VIEW: false
         webhook:
-          ALLOWED_HOST_LIST: external,webhook-receiver.flux-system.svc.cluster.local,webhook.jetersen.dev,konflate.jetersen.dev
+          ALLOWED_HOST_LIST: external,webhook-receiver.flux-system.svc.cluster.local,webhook.jetersen.dev,konflate.jetersen.dev,renovate-webhook.jetersen.dev
         log:
           MODE: console

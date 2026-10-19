@@ -1,0 +1,7 @@
+**
+!infrastructure
+!infrastructure/renovate
+!infrastructure/renovate/worker
+!infrastructure/renovate/worker/**
+!.ci
+!.ci/renovate-upgrade-policy.mjs

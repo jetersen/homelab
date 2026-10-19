@@ -25,5 +25,15 @@ case "${1:?Expected backup-helper or runner-job}" in
       --include-path 'package.json' --include-path 'package-lock.json' --include-path 'requirements-dev.txt')
     dockerfile=infrastructure/forgejo/runner/Dockerfile
     ;;
+  renovate-operator)
+    paths=(':(glob)infrastructure/renovate/operator/*')
+    cliff_paths=(--include-path 'infrastructure/renovate/operator/*')
+    dockerfile=infrastructure/renovate/operator/Dockerfile
+    ;;
+  renovate-worker)
+    paths=(':(glob)infrastructure/renovate/worker/*' .ci/renovate-upgrade-policy.mjs)
+    cliff_paths=(--include-path 'infrastructure/renovate/worker/*' --include-path '.ci/renovate-upgrade-policy.mjs')
+    dockerfile=infrastructure/renovate/worker/Dockerfile
+    ;;
   *) echo "Unknown image component: $1" >&2; exit 1 ;;
 esac

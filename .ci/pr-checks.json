@@ -45,6 +45,7 @@
     ".forgejo/workflows/check-style-python.yaml"
   ],
   "upgrade_policy": [
+    "infrastructure/renovate/**",
     ".ci/renovate-upgrade-policy*.mjs",
     ".forgejo/workflows/check-upgrade-policy.yaml"
   ],

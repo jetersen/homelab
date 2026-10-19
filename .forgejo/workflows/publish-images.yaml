@@ -3,6 +3,10 @@ on:
   push:
     branches: [main]
     paths:
+      - infrastructure/renovate/**
+      - .ci/renovate-upgrade-policy.mjs
+      - .ci/renovate-operator-cliff.toml
+      - .ci/renovate-worker-cliff.toml
       - infrastructure/backup/image/**
       - infrastructure/forgejo/runner/Dockerfile
       - infrastructure/forgejo/runner/Dockerfile.dockerignore
@@ -38,7 +42,7 @@ jobs:
   publish:
     if: forgejo.ref == 'refs/heads/main'
     runs-on: ${{ inputs.runner || 'linux-docker' }}
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - name: Authenticate release tags
         id: release
@@ -63,6 +67,8 @@ jobs:
         run: |
           bash .ci/image-release.sh backup-helper
           bash .ci/image-release.sh runner-job
+          bash .ci/image-release.sh renovate-operator
+          bash .ci/image-release.sh renovate-worker
       - name: Authenticate with the package integration
         id: auth
         uses: https://github.com/actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0

@@ -51,6 +51,8 @@ function fixture(t) {
     "check-runner.sh",
     "backup-helper-cliff.toml",
     "runner-job-cliff.toml",
+    "renovate-operator-cliff.toml",
+    "renovate-worker-cliff.toml",
   ]) {
     copyFileSync(join(source, file), join(cwd, ".ci", file));
   }
@@ -228,4 +230,17 @@ test("moving main copies the release digest without rebuilding or wrapping it in
     ],
   );
   assert.ok(!f.calls().some((a) => ["build", "push"].includes(a[0])));
+});
+
+test("Renovate gate changes release the worker independently of the operator", (t) => {
+  const f = fixture(t);
+  f.commit("infrastructure/renovate/operator/Dockerfile", "operator", "feat: operator");
+  f.commit("infrastructure/renovate/worker/Dockerfile", "worker", "feat: worker");
+  const operator = f.release("renovate-operator").values;
+  const worker = f.release("renovate-worker").values;
+  assert.equal(operator.RENOVATE_OPERATOR_VERSION, "0.1.0");
+  assert.equal(worker.RENOVATE_WORKER_VERSION, "0.1.0");
+  f.commit(".ci/renovate-upgrade-policy.mjs", "policy", "fix: runtime policy");
+  assert.equal(f.release("renovate-worker").values.RENOVATE_WORKER_VERSION, "0.1.1");
+  assert.deepEqual(f.release("renovate-operator").values, operator);
 });
