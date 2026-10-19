@@ -4,10 +4,10 @@
   ignoreUnstable: true,
   automerge: true,
   automergeType: "pr",
-  // Forgejo's plain rebase is named "fast-forward" in Renovate; "rebase" adds a merge commit.
-  automergeStrategy: "fast-forward",
+  // Use the repository's fast-forward-only default to preserve commit identities.
+  automergeStrategy: "auto",
   platformAutomerge: true,
-  // Forgejo's scheduled fast-forward merges cannot merge a diverged branch.
+  // Renovate must rebase outdated branches before Forgejo can fast-forward them.
   rebaseWhen: "behind-base-branch",
   packageRules: [
     {
