@@ -88,45 +88,21 @@ Configure Authorized Integrations with these repository variables:
 | --- | --- | --- |
 | `OCI_PACKAGES_AUDIENCE` | `write:package` | `publish-oci.yaml`, `publish-images.yaml` |
 | `IMAGE_RELEASE_AUDIENCE` | `write:repository` | `publish-images.yaml` |
-| `RENOVATE_AUDIENCE` | Repository updates as the Renovate bot | `renovate.yaml` |
-| `RENOVATE_PACKAGES_AUDIENCE` | `read:package`, owned by the package owner | `renovate.yaml` |
 
-Restrict claims to this repository, `refs/heads/main`, and the listed workflows.
-Publishers need `push` and `workflow_dispatch`; Renovate needs `schedule` and
-`workflow_dispatch`. Renovate's Forgejo API token does not authenticate Docker
-lookups, which use the separate package integration through `hostRules`.
-Homelab [update rules](../.renovate/autoMerge.json5) prefer the newest eligible
-release instead of competing major, minor, and patch PRs. Renovate rebases
-outdated branches before queuing Forgejo's fast-forward auto-merge. Talos and Kubernetes
-retain separate patch PRs so reviewed minor upgrades do not block maintenance
-of the running minor. Compatibility constraints and approval gates still apply. Sonarr, Radarr, and Prowlarr's
-numeric image tags do not identify prereleases, so the policy generator restricts
-them to the latest stable GitHub release. Sonarr major migrations still require review.
+Restrict claims to this repository, `refs/heads/main`, the listed workflows, and
+`push` or `workflow_dispatch` events. Request tokens with `actions/github-script`
+and `core.getIDToken(audience)`, which also masks them in runner logs.
 
-The [Renovate workflow](../.forgejo/workflows/renovate.yaml) defines the repository
-selection. Manual runs can select one repository with the `repository` input;
-`all` keeps the shared run. Use `dry_run` to inspect updates without writing
-branches or PRs.
+Renovate runs through the [operator](../infrastructure/renovate/README.md).
 Repository configs extend `local>jetersen/homelab//.renovate/forgejo.json` for
-[shared defaults](../.renovate/forgejo.json), including unlimited PR creation
-and branch concurrency. Keep dependency-specific managers and approval rules in
-each repository's `.forgejo/renovate.json` or its presets.
-Token requests use `actions/github-script` with `core.getIDToken(audience)`, which
-also masks the token in runner logs.
+[shared defaults](../.renovate/forgejo.json). Keep dependency-specific managers and
+approval rules in each repository's `.forgejo/renovate.json` or its presets.
+The [live compatibility gate](renovate-upgrade-policy.mjs) constrains Kubernetes
+and Talos upgrades and checks upstream stable app releases before every worker run.
 
-The Renovate identity belongs to the bot and is limited to this main-branch
-workflow; repository collaborator permissions control which repositories it can
-change. Allowed post-upgrade
-commands refresh Claude Code's upstream manifest and regenerate `flake.lock`
-after a pinned upstream release tag changes. Homelab NuGet updates run
-[the solution lockfile restore](renovate-dotnet-locks.sh) with the selected SDK
-and verified TrueNAS release package because Renovate's built-in restore omits
-local package feeds. CI continues to restore in locked mode.
-
-GitHub dependency lookups use a separate metadata-read-only GitHub App installed
-on a public repository. Set `GH_READ_APP_CLIENT_ID` and
-`GH_READ_APP_PRIVATE_KEY` in this repository's Forgejo Actions settings. The job
-requests short-lived installation tokens; it does not write to GitHub.
+Homelab NuGet updates run [the solution lockfile restore](renovate-dotnet-locks.sh)
+with the selected SDK and verified TrueNAS release package because Renovate's
+built-in restore omits local package feeds. CI continues to restore in locked mode.
 
 See [DNS setup](../infrastructure/dns/README.md) and
 [TrueNAS setup](../infrastructure/truenas/README.md) for their deployment credentials.

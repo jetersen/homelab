@@ -13,7 +13,7 @@ spec:
     image:
       registry: forgejo.jetersen.dev
       repository: jetersen/homelab/renovate-operator
-      tag: 0.1.0
+      tag: 0.1.1@sha256:93e925ed003d9ff5083d2fc6a168f93f404410c9ef3247697e7e06f8b0254bb0
     rbac:
       ownNamespaceOnly: true
     policy:
