@@ -62,7 +62,7 @@ spec:
                 mountPath: /runner
         containers:
           - name: runner
-            image: forgejo.jetersen.dev/jetersen/homelab/runner-job:1.8.1@sha256:77819d134fc807fe2eab96fee9abf3c6be417d89cac4d3f3cfec50582874ce61
+            image: forgejo.jetersen.dev/jetersen/homelab/runner-job:1.8.2@sha256:fd2786fdef2ac0f76ae995f56451d341d2b7754008b9cca4157aa8b3d7611044
             command: [/bin/bash, -ec]
             # Exit status 2 means the queued task disappeared before this worker claimed it.
             args:
