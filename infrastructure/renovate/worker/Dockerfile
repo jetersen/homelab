@@ -19,6 +19,7 @@ RUN mkdir -p /usr/local/renovate/node_modules/emojibase-data \
     && rm /tmp/emojibase.tgz
 COPY infrastructure/renovate/worker/reattempt-automerge.patch /tmp/reattempt-automerge.patch
 COPY infrastructure/renovate/worker/reattempt-automerge.mjs /usr/local/renovate/lib/modules/platform/gitea/reattempt-automerge.mjs
+COPY infrastructure/renovate/worker/should-force-rebase.mjs /usr/local/renovate/lib/workers/repository/update/branch/should-force-rebase.mjs
 RUN cd /usr/local/renovate \
     && patch -p1 < /tmp/reattempt-automerge.patch \
     && ./node tools/generate-imports.mjs \

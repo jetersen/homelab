@@ -30,5 +30,10 @@
 +  reattemptPlatformAutomerge,
 --- a/lib/workers/repository/update/branch/index.ts
 +++ b/lib/workers/repository/update/branch/index.ts
-@@ -819 +818,0 @@
+@@ -0,0 +1 @@
++import { shouldForceRebase } from './should-force-rebase.mjs';
+@@ -759 +760 @@
+-      config.forceCommit = forcedManually || config.isConflicted;
++      config.forceCommit = forcedManually || config.isConflicted || (await shouldForceRebase(config, scm));
+@@ -819 +819,0 @@
 -        commitSha &&

@@ -27,7 +27,9 @@ the run. The source adapter implements Renovate's automerge retry hook, which th
 released Forgejo adapter lacks, so eligible PRs are re-armed for native CI-gated
 merging on each run, including unchanged branches. New PRs use the same path, with
 bounded retries while Forgejo calculates mergeability. Its tests reject rebase
-fallback and review-only updates.
+fallback and review-only updates. An explicit behind-base policy also forces a
+regenerated commit when only history changed; equal trees still cannot fast-forward
+across divergent commits.
 Upgrade the base image and pinned source together; the build rejects a version
 mismatch. Rebuild generated imports through the upstream generator.
 It includes Nix; Renovate's Containerbase installs other required tools in
