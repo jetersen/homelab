@@ -23,15 +23,3 @@ runs:
         REGISTRY: ${{ inputs.registry }}
         REPOSITORY: ${{ inputs.repository }}
       run: bash .ci/publish-image.sh runner-job
-    - name: Publish the Renovate operator release
-      shell: bash
-      env:
-        REGISTRY: ${{ inputs.registry }}
-        REPOSITORY: ${{ inputs.repository }}
-      run: bash .ci/publish-image.sh renovate-operator
-    - name: Publish the Renovate worker release
-      shell: bash
-      env:
-        REGISTRY: ${{ inputs.registry }}
-        REPOSITORY: ${{ inputs.repository }}
-      run: bash .ci/publish-image.sh renovate-worker

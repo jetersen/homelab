@@ -1,0 +1,67 @@
+name: Publish Renovate images
+on:
+  push:
+    branches: [main]
+    paths:
+      - infrastructure/renovate/**
+      - .ci/renovate-upgrade-policy.mjs
+      - .ci/renovate-operator-cliff.toml
+      - .ci/renovate-worker-cliff.toml
+      - .ci/image-inputs.sh
+      - .ci/image-release.sh
+      - .ci/publish-image.sh
+      - .forgejo/workflows/publish-renovate.yaml
+  workflow_dispatch:
+enable-openid-connect: true
+concurrency:
+  group: publish-renovate
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: forgejo.ref == 'refs/heads/main'
+    runs-on: linux-docker
+    timeout-minutes: 30
+    steps:
+      - name: Authenticate release tags
+        id: release
+        uses: https://github.com/actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          AUDIENCE: ${{ vars.IMAGE_RELEASE_AUDIENCE }}
+        with:
+          script: |
+            if (!process.env.AUDIENCE) throw new Error('Configure the Authorized Integration audience');
+            core.setOutput('token', await core.getIDToken(process.env.AUDIENCE));
+      - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          token: ${{ steps.release.outputs.token }}
+      - uses: ./.ci/actions/setup-tool
+        with:
+          tool: git-cliff
+      - name: Test image publication
+        run: node --test .ci/image-publishing.test.mjs
+      - name: Allocate releases
+        run: |
+          bash .ci/image-release.sh renovate-operator
+          bash .ci/image-release.sh renovate-worker
+      - name: Authenticate package publication
+        id: packages
+        uses: https://github.com/actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          AUDIENCE: ${{ vars.OCI_PACKAGES_AUDIENCE }}
+        with:
+          script: |
+            if (!process.env.AUDIENCE) throw new Error('Configure the Authorized Integration audience');
+            core.setOutput('token', await core.getIDToken(process.env.AUDIENCE));
+      - uses: https://github.com/docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: forgejo.jetersen.dev
+          username: ${{ forgejo.repository_owner }}
+          password: ${{ steps.packages.outputs.token }}
+      - name: Build, test, and publish
+        env:
+          REGISTRY: forgejo.jetersen.dev
+          REPOSITORY: ${{ forgejo.repository }}
+        run: |
+          bash .ci/publish-image.sh renovate-operator
+          bash .ci/publish-image.sh renovate-worker
