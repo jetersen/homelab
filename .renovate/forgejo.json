@@ -1,0 +1,12 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Shared defaults for repositories maintained by the Forgejo Renovate workflow",
+  "extends": [
+    ":disableRateLimiting"
+  ],
+  "branchConcurrentLimit": 0,
+  "automergeStrategy": "auto",
+  "automergeType": "pr",
+  "platformAutomerge": true,
+  "rebaseWhen": "behind-base-branch"
+}

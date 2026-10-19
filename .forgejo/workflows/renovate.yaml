@@ -13,6 +13,7 @@ on:
           - jetersen/homelab
           - jetersen/dotfiles
           - jetersen/music-assistant
+          - jetersen/pc2mqtt
       dry_run:
         description: Inspect dependencies without writing branches or pull requests
         type: boolean
@@ -75,7 +76,7 @@ jobs:
           RENOVATE_GITHUB_COM_TOKEN: ${{ steps.github.outputs.token }}
           RENOVATE_PLATFORM: forgejo
           RENOVATE_ENDPOINT: https://forgejo.jetersen.dev/api/v1
-          RENOVATE_REPOSITORIES: '["jetersen/homelab","jetersen/dotfiles","jetersen/music-assistant"]'
+          RENOVATE_REPOSITORIES: '["jetersen/homelab","jetersen/dotfiles","jetersen/music-assistant","jetersen/pc2mqtt"]'
           RENOVATE_ALLOWED_COMMANDS: '["^bash \\.ci/renovate-dotnet-locks\\.sh$","^nixos/packages/update-(claude-code|t3code)[.]sh [0-9]+\\.[0-9]+\\.[0-9]+$","^nix --extra-experimental-features \"nix-command flakes\" flake lock$"]'
           RENOVATE_CONFIG_FILE_NAMES: '[".forgejo/renovate.json"]'
           RENOVATE_ONBOARDING: 'false'
@@ -88,7 +89,7 @@ jobs:
         run: |
           set -euo pipefail
           case "$REPOSITORY" in
-            jetersen/homelab|jetersen/dotfiles|jetersen/music-assistant)
+            jetersen/homelab|jetersen/dotfiles|jetersen/music-assistant|jetersen/pc2mqtt)
               RENOVATE_REPOSITORIES=$(jq -cn --arg repository "$REPOSITORY" '[$repository]')
               export RENOVATE_REPOSITORIES
               ;;

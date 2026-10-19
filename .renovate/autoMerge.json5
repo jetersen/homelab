@@ -3,12 +3,6 @@
   // Use platform-native auto-merge for eligible updates, including images and charts.
   ignoreUnstable: true,
   automerge: true,
-  automergeType: "pr",
-  // Use the repository's fast-forward-only default to preserve commit identities.
-  automergeStrategy: "auto",
-  platformAutomerge: true,
-  // Renovate must rebase outdated branches before Forgejo can fast-forward them.
-  rebaseWhen: "behind-base-branch",
   packageRules: [
     {
       description: "Prefer the newest eligible release instead of competing version PRs",

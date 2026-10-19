@@ -107,6 +107,10 @@ The [Renovate workflow](../.forgejo/workflows/renovate.yaml) defines the reposit
 selection. Manual runs can select one repository with the `repository` input;
 `all` keeps the shared run. Use `dry_run` to inspect updates without writing
 branches or PRs.
+Repository configs extend `local>jetersen/homelab//.renovate/forgejo.json` for
+[shared defaults](../.renovate/forgejo.json), including unlimited PR creation
+and branch concurrency. Keep dependency-specific managers and approval rules in
+each repository's `.forgejo/renovate.json` or its presets.
 Token requests use `actions/github-script` with `core.getIDToken(audience)`, which
 also masks the token in runner logs.
 
