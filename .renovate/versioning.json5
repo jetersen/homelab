@@ -41,8 +41,8 @@
       matchPackageNames: ["siderolabs/talos"],
       versioning: "semver",
     },
-    // Forgejo injects allowedVersions and live-minor patch automerge rules from
-    // .ci/renovate-upgrade-policy.mjs before starting Renovate. Do not override
+    // The worker injects allowedVersions and live-minor patch automerge rules from
+    // .ci/renovate-upgrade-policy.mjs while loading global configuration. Do not override
     // those fields here: repository package rules follow the injected rules.
   ],
 }

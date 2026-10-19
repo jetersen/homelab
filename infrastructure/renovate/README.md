@@ -11,6 +11,8 @@ discovers repositories and queues dependency scans. Native Forgejo webhooks hand
 merges, default-branch pushes, and Renovate checkboxes. Retry failed webhook
 deliveries in Forgejo or request another run through the Dependency Dashboard;
 the next discovery also reconciles missed events and exhausted worker retries.
+For initial discovery or an immediate scan, annotate the RenovateJob with
+`renovate-operator.mogenius.com/discovery=true`. The operator consumes the annotation.
 
 Use separate Forgejo tokens for bot repository writes, package reads, and webhook
 administration. Store them, the metadata-read GitHub App credentials, and registry
