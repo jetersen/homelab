@@ -6,7 +6,7 @@ spec:
   # Discovery also queues dependency scans. Events maintain PRs between scans.
   schedule: '17 */6 * * *'
   suspend: false
-  image: forgejo.jetersen.dev/jetersen/homelab/renovate-worker:0.1.1
+  image: forgejo.jetersen.dev/jetersen/homelab/renovate-worker:0.1.3@sha256:4cf3a8de6e759b2680ac87d9ed0801ea6a3987db3451ba28b4fea770df291475
   provider:
     name: forgejo
     endpoint: https://forgejo.jetersen.dev/api/v1
@@ -17,9 +17,6 @@ spec:
     - jetersen/pc2mqtt
   skipForks: false
   secretRef: renovate-credentials
-  extraEnv:
-    - name: RENOVATE_DRY_RUN
-      value: full
   parallelism: 1
   securityContext:
     pod:
@@ -28,8 +25,8 @@ spec:
       runAsGroup: 0
   resources:
     requests:
-      cpu: 100m
-      memory: 512Mi
+      cpu: 250m
+      memory: 1Gi
     limits:
       memory: 4Gi
   webhook:
