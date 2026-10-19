@@ -20,6 +20,7 @@ on:
       - .ci/check-runner.sh
       - .ci/backup-helper-cliff.toml
       - .ci/runner-job-cliff.toml
+      - .ci/image-select.sh
       - .ci/image-inputs.sh
       - .ci/image-release.sh
       - .ci/publish-image.sh
@@ -69,14 +70,9 @@ jobs:
           EVENT_NAME: ${{ forgejo.event_name }}
         run: |
           set -euo pipefail
-          for component in backup-helper runner-job renovate-operator renovate-worker; do
-            source .ci/image-inputs.sh "$component"
-            if [ "$EVENT_NAME" = workflow_dispatch ] || [ -z "$BEFORE" ] || \
-              [ -z "$(git tag --list "$component/v*")" ] || \
-              ! git diff --quiet "$BEFORE" HEAD -- "${paths[@]}"; then
-              bash .ci/image-release.sh "$component"
-            fi
-          done
+          while IFS= read -r component; do
+            bash .ci/image-release.sh "$component"
+          done < <(bash .ci/image-select.sh)
       - name: Authenticate with the package integration
         id: auth
         uses: https://github.com/actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0

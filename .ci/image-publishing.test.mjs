@@ -46,6 +46,7 @@ function fixture(t) {
   mkdirSync(join(cwd, ".ci"));
   for (const file of [
     "image-inputs.sh",
+    "image-select.sh",
     "image-release.sh",
     "publish-image.sh",
     "check-runner.sh",
@@ -243,4 +244,26 @@ test("Renovate gate changes release the worker independently of the operator", (
   f.commit(".ci/renovate-upgrade-policy.mjs", "policy", "fix: runtime policy");
   assert.equal(f.release("renovate-worker").values.RENOVATE_WORKER_VERSION, "0.1.1");
   assert.deepEqual(f.release("renovate-operator").values, operator);
+});
+
+test("publication bootstraps new components without releasing unrelated rewritten history", (t) => {
+  const f = fixture(t);
+  f.release("backup-helper");
+  f.git("tag", "runner-job/v9.0.0");
+  const before = f.git("rev-parse", "HEAD");
+  const select = () =>
+    f
+      .run("bash", [".ci/image-select.sh"], { BEFORE: before, EVENT_NAME: "push" })
+      .stdout.trim()
+      .split("\n");
+  assert.deepEqual(select(), ["renovate-operator", "renovate-worker"]);
+  f.commit("infrastructure/renovate/operator/Dockerfile", "operator", "feat: operator");
+  f.commit("infrastructure/renovate/worker/Dockerfile", "worker", "feat: worker");
+  f.release("renovate-operator");
+  f.release("renovate-worker");
+  const current = f.git("rev-parse", "HEAD");
+  assert.equal(
+    f.run("bash", [".ci/image-select.sh"], { BEFORE: current, EVENT_NAME: "push" }).stdout,
+    "",
+  );
 });
