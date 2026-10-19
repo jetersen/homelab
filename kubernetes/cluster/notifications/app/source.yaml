@@ -4,5 +4,5 @@ metadata:
   name: chaski
 spec:
   ref:
-    tag: 0.5.1
+    tag: 0.5.2
   url: oci://ghcr.io/home-operations/charts/chaski
