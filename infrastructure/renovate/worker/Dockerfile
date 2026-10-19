@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y nix-bin patch \
 ADD --checksum=sha256:1aeb9200bbc34ddfdd7130cd8cdb6efafcceb760443fb9d885c9d426c9fcd849 https://api.github.com/repos/renovatebot/renovate/tarball/44.132.2 /tmp/renovate-source.tar.gz
 RUN mkdir /tmp/renovate-source \
     && tar -xzf /tmp/renovate-source.tar.gz --strip-components=1 -C /tmp/renovate-source \
-    && test "$(node -p 'require("/tmp/renovate-source/package.json").version')" = "$(node -p 'require("/usr/local/renovate/package.json").version')" \
+    && test "$(node -p 'require("/usr/local/renovate/package.json").version')" = 44.132.2 \
     && cp -a /tmp/renovate-source/lib /tmp/renovate-source/data /usr/local/renovate/ \
     && cp -a /tmp/renovate-source/tools/. /usr/local/renovate/tools/ \
     && rm -rf /tmp/renovate-source /tmp/renovate-source.tar.gz
