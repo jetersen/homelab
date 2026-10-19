@@ -2,19 +2,33 @@
 +++ b/lib/modules/platform/gitea/index.ts
 @@ -0,0 +1 @@
 +import { reattemptAutomerge } from './reattempt-automerge.mjs';
-@@ -757,0 +759,7 @@
+@@ -626,8 +627,3 @@
+-              await helper.mergePR(http, config.repository, gpr.number, {
+-                Do:
+-                  getMergeMethod(
+-                    platformPrOptions?.automergeStrategy,
+-                    config.allowedMergeMethods,
+-                  ) ?? config.mergeMethod,
+-                merge_when_checks_succeed: true,
+-                delete_branch_after_merge: true,
++              await reattemptAutomerge({ number: gpr.number, platformPrOptions }, {
++                method: getMergeMethod(platformPrOptions?.automergeStrategy, config.allowedMergeMethods) ?? config.mergeMethod,
++                merge: (number, options) => helper.mergePR(http, config.repository, number, options),
+@@ -755,0 +752,7 @@
++    },
++
 +    async reattemptPlatformAutomerge(prConfig) {
 +      await reattemptAutomerge(prConfig, {
 +        method: getMergeMethod(prConfig.platformPrOptions?.automergeStrategy, config.allowedMergeMethods) ?? config.mergeMethod,
 +        merge: (number, options) => helper.mergePR(http, config.repository, number, options),
 +      });
-+    },
-+
---- a/lib/modules/platform/gitea/index.ts
-+++ b/lib/modules/platform/gitea/index.ts
-@@ -1195,0 +1196 @@
+@@ -1187,0 +1191 @@
 +  reattemptPlatformAutomerge,
 --- a/lib/modules/platform/forgejo/index.ts
 +++ b/lib/modules/platform/forgejo/index.ts
 @@ -60,0 +61 @@
 +  reattemptPlatformAutomerge,
+--- a/lib/workers/repository/update/branch/index.ts
++++ b/lib/workers/repository/update/branch/index.ts
+@@ -819 +818,0 @@
+-        commitSha &&

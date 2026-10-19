@@ -62,3 +62,40 @@ test("an existing schedule is idempotent; other failures propagate", async () =>
     /conflict/,
   );
 });
+test("Forgejo mergeability calculation is retried before arming native automerge", async () => {
+  let attempts = 0;
+  const delays = [];
+  await reattemptAutomerge(eligible, {
+    method: "fast-forward-only",
+    merge: async () => {
+      if (++attempts < 3) {
+        throw { statusCode: 405, response: { body: { message: "Please try again later" } } };
+      }
+    },
+    wait: async (ms) => delays.push(ms),
+  });
+  assert.equal(attempts, 3);
+  assert.deepEqual(delays, [1000, 2000]);
+});
+test("mergeability retries are bounded and do not retry other merge failures", async () => {
+  let attempts = 0;
+  const error = Object.assign(new Error("not mergeable"), {
+    statusCode: 405,
+    response: { body: { message: "Please try again later" } },
+  });
+  const delays = [];
+  const options = {
+    method: "fast-forward-only",
+    merge: async () => {
+      attempts++;
+      throw error;
+    },
+    wait: async (ms) => delays.push(ms),
+  };
+  await assert.rejects(reattemptAutomerge(eligible, options), /not mergeable/);
+  assert.equal(attempts, 6);
+  assert.deepEqual(delays, [1000, 2000, 4000, 8000, 16000]);
+  error.response.body.message = "PR is not ready to be merged";
+  await assert.rejects(reattemptAutomerge(eligible, options), /not mergeable/);
+  assert.equal(attempts, 7);
+});

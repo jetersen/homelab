@@ -22,8 +22,10 @@ webhook authentication changes also require updating existing hook headers.
 The [worker image](worker/Dockerfile) runs the live compatibility gate on every
 configuration load, including retries. A missing credential or rejected gate aborts
 the run. The source adapter implements Renovate's automerge retry hook, which the
-released Forgejo adapter lacks, so eligible regenerated branches are re-armed for
-native CI-gated merging. Its tests reject rebase fallback and review-only updates.
+released Forgejo adapter lacks, so eligible PRs are re-armed for native CI-gated
+merging on each run, including unchanged branches. New PRs use the same path, with
+bounded retries while Forgejo calculates mergeability. Its tests reject rebase
+fallback and review-only updates.
 Upgrade the base image and pinned source together; the build rejects a version
 mismatch. Rebuild generated imports through the upstream generator.
 It includes Nix; Renovate's Containerbase installs other required tools in
