@@ -19,6 +19,7 @@ HERE = Path(__file__).resolve().parent
 COMPONENT = re.compile(r"^[A-Za-z0-9_.]+/[A-Za-z0-9_.$]+$")
 HOME_INTENT = ["-a", "android.intent.action.MAIN", "-c", "android.intent.category.HOME"]
 CONFIG = "/sdcard/Android/data/tv.dumbtv.home/files/home.conf"
+ENABLED_STATES = ["default", "enabled", "disabled", "disabled-user", "disabled-until-used"]
 
 
 def require(condition, message):
@@ -106,7 +107,7 @@ class Device:
             "dumbtv is installed for another user; refusing a change that could affect their data.",
         )
 
-    def activities(self, category):
+    def activities(self, category, include_disabled=False):
         result = self.shell(
             "cmd",
             "package",
@@ -114,6 +115,7 @@ class Device:
             "--components",
             "--user",
             "0",
+            *(["--query-flags", "512"] if include_disabled else []),
             "-a",
             "android.intent.action.MAIN",
             "-c",
@@ -134,6 +136,33 @@ class Device:
     def set_home(self, component):
         result = self.shell("cmd", "package", "set-home-activity", "--user", "0", component)
         require(result == "Success", "Android refused the default HOME change.")
+
+    def package_state(self, package):
+        require(re.fullmatch(r"[A-Za-z0-9_.]+", package), "Invalid HOME fallback package.")
+        dump = self.shell("dumpsys", "package", package)
+        sections = re.findall(r"(?ms)^Packages:\n(.*?)(?=^\S|\Z)", dump)
+        require(len(sections) == 1, "Could not inspect the active launcher package.")
+        require(
+            re.findall(r"(?m)^  Package \[([^]]+)\]", sections[0]) == [package],
+            "Ambiguous launcher package state.",
+        )
+        users = re.split(r"(?m)^[ \t]*User (\d+):", sections[0])
+        blocks = [users[i + 1] for i in range(1, len(users), 2) if users[i] == "0"]
+        require(len(blocks) == 1, "Could not inspect user 0's launcher package state.")
+        values = re.findall(r"\benabled=(\d+)\b", blocks[0].splitlines()[0])
+        require(
+            len(values) == 1 and int(values[0]) < len(ENABLED_STATES),
+            "Unknown launcher package enabled state.",
+        )
+        return ENABLED_STATES[int(values[0])]
+
+    def set_package_state(self, package, state):
+        require(state in ENABLED_STATES, "Unknown launcher package enabled state.")
+        command = ["default-state", "enable", "disable", "disable-user", "disable-until-used"][
+            ENABLED_STATES.index(state)
+        ]
+        self.shell("pm", command, "--user", "0", package)
+        require(self.package_state(package) == state, "HOME package state did not change.")
 
     def read_config(self):
         # Listing the parent first avoids treating denied shared-storage access as an absent file.
@@ -233,8 +262,8 @@ def baseline(device, profile, identity):
             "Existing dumbtv APK differs; refusing an update that cannot restore app data.",
         )
         require(launcher["package"] in device.packages("-e"), "Existing dumbtv must be enabled.")
-    return {
-        "schema": 1,
+    state = {
+        "schema": 2,
         "identity": identity,
         "launcher": launcher,
         "home": home,
@@ -242,11 +271,45 @@ def baseline(device, profile, identity):
         "config_before": device.read_config() if installed else None,
         "status": "pending",
     }
+    if overrides := profile.get("home_fallback", {}).get("disable_packages"):
+        require(
+            len(overrides) == len(set(overrides)) and home.split("/")[0] in overrides,
+            "HOME fallback must include the original HOME package, without duplicates.",
+        )
+        require(
+            device.shell("settings", "--user", "0", "get", "secure", "user_setup_complete") == "1"
+            and device.shell("settings", "get", "global", "device_provisioned") == "1",
+            "Complete TV setup before disabling any HOME handler.",
+        )
+        handlers = {
+            component.split("/")[0]
+            for component in device.activities(
+                "android.intent.category.HOME", include_disabled=True
+            )
+        }
+        require(
+            set(overrides) <= handlers, "HOME fallback includes a package without a HOME handler."
+        )
+        state["home_packages_before"] = []
+        for override in overrides:
+            enabled = device.package_state(override)
+            require(enabled in {"default", "enabled"}, "Configured HOME packages must be enabled.")
+            state["home_packages_before"].append({"package": override, "state": enabled})
+    return state
+
+
+def wait_for_home(device, package):
+    # Role assignment and the preferred-activity cache can settle at different times.
+    for _ in range(10):
+        if device.home().split("/")[0] == package:
+            return True
+        time.sleep(0.5)
+    return False
 
 
 def verify(device, profile, content):
     package = profile["launcher"]["package"]
-    require(device.home().split("/")[0] == package, "HOME still resolves to the vendor launcher.")
+    require(wait_for_home(device, package), "HOME still resolves to the vendor launcher.")
     require(device.read_config() == base64.b64encode(content).decode(), "Launcher config differs.")
     device.shell("input", "keyevent", "KEYCODE_HOME")
     for _ in range(10):
@@ -264,6 +327,9 @@ def verify(device, profile, content):
 
 def restore(device, state, path):
     launcher = state["launcher"]
+    for original in state.get("home_packages_before", []):
+        if device.package_state(original["package"]) != original["state"]:
+            device.set_package_state(original["package"], original["state"])
     # Put the working original HOME back before modifying or removing dumbtv.
     device.set_home(state["home"])
     require(
@@ -295,7 +361,7 @@ def apply(device, profile, identity, content, path):
     device.require_private_launcher(profile["launcher"]["package"])
     if path.exists():
         state = json.loads(path.read_text())
-        require(state["schema"] == 1, "Unsupported undo record schema.")
+        require(state["schema"] in {1, 2}, "Unsupported undo record schema.")
         require(state["identity"] == identity, "Device or firmware differs from the undo record.")
         require(
             state["status"] != "restored", "Archive the restored undo record before a new apply."
@@ -303,6 +369,11 @@ def apply(device, profile, identity, content, path):
         require(state["status"] == "applied", "An interrupted apply needs restore first.")
         require(
             state["launcher"] == profile["launcher"], "Restore before changing launcher version."
+        )
+        require(
+            [entry["package"] for entry in state.get("home_packages_before", [])]
+            == profile.get("home_fallback", {}).get("disable_packages", []),
+            "Restore before changing the HOME fallback.",
         )
         require(
             device.installed_digest(profile["launcher"]["package"])
@@ -328,6 +399,12 @@ def apply(device, profile, identity, content, path):
     try:
         device.write_config(content)
         device.set_home(profile["launcher"]["component"])
+        if state.get("home_packages_before") and not wait_for_home(
+            device, profile["launcher"]["package"]
+        ):
+            for original in state["home_packages_before"]:
+                device.set_package_state(original["package"], "disabled-user")
+            device.set_home(profile["launcher"]["component"])
         verify(device, profile, content)
     except BaseException:
         print("Apply failed; restoring the original launcher and configuration.")
@@ -385,7 +462,11 @@ def main():
     if args.action == "plan":
         print("Plan: install the pinned launcher if absent; apply profile; select it as HOME.")
         print("Other apps are hidden from this launcher and remain installed with their data.")
-        print("No package disabling, DNS, VPN, accessibility, or system settings changes.")
+        print("No DNS, VPN, accessibility, or unrelated system settings changes.")
+        if profile.get("home_fallback"):
+            print(
+                "If HOME selection is ignored, disable only the configured HOME packages for user 0."
+            )
         return
     if args.action == "verify":
         verify(device, profile, content)
@@ -401,7 +482,7 @@ def main():
             require(
                 state["identity"] == identity, "Device or firmware differs from the undo record."
             )
-            require(state["schema"] == 1, "Unsupported undo record schema.")
+            require(state["schema"] in {1, 2}, "Unsupported undo record schema.")
             restore(device, state, path)
             print("Original HOME and launcher configuration restored.")
         else:

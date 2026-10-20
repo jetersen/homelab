@@ -12,6 +12,7 @@ from unittest.mock import patch
 import manage
 
 PROFILE = json.loads((Path(__file__).parent / "profile.json").read_text())
+PROFILE.pop("home_fallback", None)
 PACKAGE = PROFILE["launcher"]["package"]
 IDENTITY = {"serial": "test-device", "build": "test-build"}
 ORIGINAL_HOME = "example.vendor/.Home"
@@ -30,6 +31,24 @@ class FakeDevice:
         self.events = []
         self.unrelated_packages = {"example.vendor", "example.player"}
         self.other_user_launcher = False
+        self.enabled_state = "enabled"
+        self.ignore_disabled_home_change = False
+        self.secondary_states = {}
+
+    def package_state(self, package):
+        if package == ORIGINAL_HOME.split("/")[0]:
+            return self.enabled_state
+        return self.secondary_states[package]
+
+    def set_package_state(self, package, state):
+        self.events.append(("package", package, state))
+        if package == ORIGINAL_HOME.split("/")[0]:
+            self.enabled_state = state
+        else:
+            self.secondary_states[package] = state
+
+    def activities(self, category, include_disabled=False):
+        return {ORIGINAL_HOME}
 
     def require_private_launcher(self, package):
         manage.require(not self.other_user_launcher, "dumbtv is installed for another user")
@@ -42,7 +61,11 @@ class FakeDevice:
 
     def set_home(self, component):
         self.events.append(("home", component))
-        if not self.ignore_home_change or component == ORIGINAL_HOME:
+        if (
+            not self.ignore_home_change
+            or component == ORIGINAL_HOME
+            or (self.enabled_state == "disabled-user" and not self.ignore_disabled_home_change)
+        ):
             self.current_home = component
 
     def installed_digest(self, package):
@@ -74,6 +97,8 @@ class FakeDevice:
     def shell(self, *args):
         if args[:3] == ("dumpsys", "activity", "activities"):
             return f"mResumedActivity: ActivityRecord{{u0 {self.current_home}}}"
+        if args[0] == "settings":
+            return "1"
         if args[:2] == ("input", "keyevent"):
             return ""
         raise AssertionError(args)
@@ -87,6 +112,9 @@ class TransactionTests(unittest.TestCase):
         self.artifact = patch("manage.artifact", return_value=Path("verified.apk"))
         self.artifact.start()
         self.addCleanup(self.artifact.stop)
+        sleep = patch("manage.time.sleep")
+        sleep.start()
+        self.addCleanup(sleep.stop)
 
     def apply(self, device, content=CONTENT):
         with contextlib.redirect_stdout(io.StringIO()):
@@ -136,6 +164,141 @@ class TransactionTests(unittest.TestCase):
         self.assertEqual(device.current_home, ORIGINAL_HOME)
         self.assertFalse(device.installed)
         self.assertEqual(json.loads(self.path.read_text())["status"], "restored")
+
+    def test_waits_for_home_preference_to_settle(self):
+        device = FakeDevice()
+        self.apply(device)
+        with patch.object(
+            device, "home", side_effect=[ORIGINAL_HOME, PROFILE["launcher"]["component"]]
+        ):
+            manage.verify(device, PROFILE, CONTENT)
+
+    def test_package_fallback_round_trip_restores_exact_state_before_home(self):
+        for original_state in ["enabled", "default"]:
+            with self.subTest(original_state=original_state):
+                path = self.path.with_name(original_state + ".json")
+                device = FakeDevice()
+                device.enabled_state = original_state
+                device.ignore_home_change = True
+                profile = {
+                    **PROFILE,
+                    "home_fallback": {"disable_packages": [ORIGINAL_HOME.split("/")[0]]},
+                }
+                manage.apply(device, profile, IDENTITY, CONTENT, path)
+                self.assertEqual(device.enabled_state, "disabled-user")
+                self.assertEqual(device.current_home, PROFILE["launcher"]["component"])
+                manage.apply(device, profile, IDENTITY, CONTENT, path)
+                manage.restore(device, json.loads(path.read_text()), path)
+                self.assertEqual(device.enabled_state, original_state)
+                self.assertFalse(device.installed)
+                self.assertLess(
+                    device.events.index(("package", ORIGINAL_HOME.split("/")[0], original_state)),
+                    device.events.index(("home", ORIGINAL_HOME)),
+                )
+
+    def test_failed_package_fallback_restores_launcher_and_package(self):
+        device = FakeDevice()
+        device.ignore_home_change = True
+        device.ignore_disabled_home_change = True
+        profile = {**PROFILE, "home_fallback": {"disable_packages": [ORIGINAL_HOME.split("/")[0]]}}
+        with self.assertRaisesRegex(RuntimeError, "HOME still resolves"):
+            manage.apply(device, profile, IDENTITY, CONTENT, self.path)
+        self.assertEqual(device.enabled_state, "enabled")
+        self.assertEqual(device.current_home, ORIGINAL_HOME)
+        self.assertFalse(device.installed)
+
+    def test_refused_package_disable_still_restores_without_rewriting_original_state(self):
+        device = FakeDevice()
+        device.ignore_home_change = True
+        profile = {**PROFILE, "home_fallback": {"disable_packages": [ORIGINAL_HOME.split("/")[0]]}}
+        with patch.object(
+            device, "set_package_state", side_effect=RuntimeError("Package change refused")
+        ) as change:
+            with self.assertRaisesRegex(RuntimeError, "Package change refused"):
+                manage.apply(device, profile, IDENTITY, CONTENT, self.path)
+            change.assert_called_once()
+        self.assertEqual(device.current_home, ORIGINAL_HOME)
+        self.assertFalse(device.installed)
+        self.assertEqual(json.loads(self.path.read_text())["status"], "restored")
+
+    def test_package_fallback_refuses_unexpected_original_home(self):
+        device = FakeDevice()
+        profile = {**PROFILE, "home_fallback": {"disable_packages": ["other.vendor"]}}
+        with self.assertRaisesRegex(RuntimeError, "include the original HOME"):
+            manage.apply(device, profile, IDENTITY, CONTENT, self.path)
+        self.assertEqual(device.events, [])
+        self.assertFalse(self.path.exists())
+
+    def test_reapply_requires_restoration_before_changing_home_fallback(self):
+        device = FakeDevice()
+        self.apply(device)
+        profile = {**PROFILE, "home_fallback": {"disable_packages": [ORIGINAL_HOME.split("/")[0]]}}
+        previous_events = list(device.events)
+        with self.assertRaisesRegex(RuntimeError, "Restore before changing the HOME fallback"):
+            manage.apply(device, profile, IDENTITY, CONTENT, self.path)
+        self.assertEqual(device.events, previous_events)
+
+    def test_multiple_home_handlers_restore_each_original_state(self):
+        device = FakeDevice()
+        device.ignore_home_change = True
+        device.secondary_states["example.recovery"] = "default"
+        profile = {
+            **PROFILE,
+            "home_fallback": {"disable_packages": ["example.vendor", "example.recovery"]},
+        }
+        with patch.object(
+            device, "activities", return_value={ORIGINAL_HOME, "example.recovery/.Home"}
+        ):
+            manage.apply(device, profile, IDENTITY, CONTENT, self.path)
+        self.assertEqual(device.secondary_states["example.recovery"], "disabled-user")
+        self.restore(device)
+        self.assertEqual(device.enabled_state, "enabled")
+        self.assertEqual(device.secondary_states["example.recovery"], "default")
+
+    def test_partial_fallback_failure_restores_already_disabled_package(self):
+        device = FakeDevice()
+        device.ignore_home_change = True
+        device.secondary_states["example.recovery"] = "default"
+        profile = {
+            **PROFILE,
+            "home_fallback": {"disable_packages": ["example.vendor", "example.recovery"]},
+        }
+        change = device.set_package_state
+
+        def fail_second(package, state):
+            if package == "example.recovery":
+                raise RuntimeError("Recovery package change refused")
+            change(package, state)
+
+        with (
+            patch.object(
+                device, "activities", return_value={ORIGINAL_HOME, "example.recovery/.Home"}
+            ),
+            patch.object(device, "set_package_state", side_effect=fail_second),
+        ):
+            with self.assertRaisesRegex(RuntimeError, "Recovery package change refused"):
+                manage.apply(device, profile, IDENTITY, CONTENT, self.path)
+        self.assertEqual(device.enabled_state, "enabled")
+        self.assertEqual(device.secondary_states["example.recovery"], "default")
+        self.assertFalse(device.installed)
+
+    def test_fallback_requires_completed_setup(self):
+        device = FakeDevice()
+        profile = {**PROFILE, "home_fallback": {"disable_packages": ["example.vendor"]}}
+        with patch.object(device, "shell", return_value="0"):
+            with self.assertRaisesRegex(RuntimeError, "Complete TV setup"):
+                manage.apply(device, profile, IDENTITY, CONTENT, self.path)
+        self.assertEqual(device.events, [])
+
+    def test_fallback_refuses_packages_without_home_handler(self):
+        device = FakeDevice()
+        profile = {
+            **PROFILE,
+            "home_fallback": {"disable_packages": ["example.vendor", "example.unrelated"]},
+        }
+        with self.assertRaisesRegex(RuntimeError, "without a HOME handler"):
+            manage.apply(device, profile, IDENTITY, CONTENT, self.path)
+        self.assertEqual(device.events, [])
 
     def test_failed_config_push_rolls_back_existing_config(self):
         device = FakeDevice(installed=True)
@@ -215,6 +378,36 @@ class TransactionTests(unittest.TestCase):
 
 
 class DeviceTests(unittest.TestCase):
+    def test_package_state_change_targets_only_user_zero(self):
+        device = object.__new__(manage.Device)
+        with (
+            patch.object(device, "shell") as shell,
+            patch.object(device, "package_state", return_value="disabled-user"),
+        ):
+            device.set_package_state("example.vendor", "disabled-user")
+            shell.assert_called_once_with("pm", "disable-user", "--user", "0", "example.vendor")
+
+    def test_package_state_uses_active_package_and_user_zero(self):
+        device = object.__new__(manage.Device)
+        for number, state in enumerate(manage.ENABLED_STATES):
+            with self.subTest(state=state):
+                dump = (
+                    "Packages:\n  Package [example.vendor] (hash):\n"
+                    f"    User 0: installed=true enabled={number}\n"
+                    "    User 10: installed=true enabled=1\n"
+                    "Hidden system packages:\n  Package [example.vendor] (old):\n"
+                    "    User 0: installed=true enabled=2\n"
+                )
+                with patch.object(device, "shell", return_value=dump):
+                    self.assertEqual(device.package_state("example.vendor"), state)
+
+    def test_package_state_refuses_unknown_output(self):
+        device = object.__new__(manage.Device)
+        for dump in ["", "Packages:\n  Package [example.vendor]:\n    User 0: installed=true\n"]:
+            with patch.object(device, "shell", return_value=dump):
+                with self.assertRaises(RuntimeError):
+                    device.package_state("example.vendor")
+
     def test_install_failure_reports_code_without_raw_device_output(self):
         device = object.__new__(manage.Device)
         device.command = ["adb", "-s", "test-device"]

@@ -10,8 +10,9 @@ local appearance and visibility choices.
 Requires Python 3 and `adb`, an authorized debugging connection, Android TV 9 or
 newer, with Android user 0 active. Other profiles are left unchanged; dumbtv must
 not be installed for another user because its APK is shared. On NixOS, run the
-commands inside `nix shell nixpkgs#android-tools`. For network debugging, use the address and port
-shown by the device; wireless debugging may require `adb pair` before `adb connect`.
+commands inside `nix shell nixpkgs#android-tools`. For network debugging, use the
+address and port shown by the device; wireless debugging may require `adb pair`
+before `adb connect`.
 USB requires a data cable and a device port that actually exposes ADB.
 
 ```sh
@@ -36,6 +37,15 @@ outside the repository on every command to override the default. Do not commit
 device identifiers, undo records, or APKs. Reapplication preserves the original
 baseline. After restoring, archive the record before starting a new baseline.
 
+Some firmware ignores HOME selection while its original launcher is enabled.
+The optional `home_fallback.disable_packages` must include the original HOME
+package and may include explicitly selected HOME recovery handlers. Complete
+TV setup first. If selection fails, the tool disables only those packages for
+user 0, retaining their app data and installations for restoration. The undo
+record preserves each package's original enabled state; restoration puts those
+states back before selecting HOME. Other profiles keep their handlers enabled.
+Remove this fallback from the profile on devices that do not require it.
+
 `restore` selects the original HOME and restores the original configuration. If
 this tool introduced dumbtv, restoration removes it, including configuration
 created since installation. Existing apps and their data are left alone.
@@ -47,9 +57,8 @@ Run the transaction regression tests with
 `python3 -m unittest discover -s infrastructure/android-tv -p 'test_*.py'`.
 
 This manages the launcher only. It does not run dumbtv's debloat or DNS scripts,
-disable vendor packages, install browsers, or alter VPN configuration. Fire OS
-needs a separate HOME hook and is refused. Some Android TV firmware ignores a
-preferred HOME while the vendor launcher is enabled. If verification fails,
-`apply` attempts restoration and retains the undo record. Investigate that model
-before disabling packages. If USB disconnects or the process stops, reconnect
-and run `restore`; an incomplete transaction blocks further applies.
+disable unrelated packages, install browsers, or alter VPN configuration.
+Fire OS needs a separate HOME hook and is refused. If verification fails,
+`apply` attempts restoration and retains the undo record. If the connection drops
+or the process stops, reconnect and run `restore`; an incomplete transaction
+blocks further applies.

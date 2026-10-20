@@ -7,6 +7,12 @@
     "url": "https://github.com/humblemuzzu/dumbtv/releases/download/launcher-v1.1/dumbtv-home.apk",
     "sha256": "3855e8497b04da8484287dffe7e00e23cd4a9e10fc1aed9991f0da2036da0b12"
   },
+  "home_fallback": {
+    "disable_packages": [
+      "com.google.android.apps.tv.launcherx",
+      "com.google.android.tungsten.setupwraith"
+    ]
+  },
   "appearance": {
     "accent": "violet",
     "tiles": "large",
