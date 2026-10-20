@@ -1,4 +1,4 @@
-FROM docker.io/library/golang:1.27.2-alpine@sha256:f92b6ef800e499660581efdabdf25d9d817a9d124eaf900924f0504e7e27e12d AS source
+FROM docker.io/library/golang:1.27.3-alpine@sha256:f2c872bcee949b7be9c490efd02b48a8a2fbf947cdf533f1c58525ec9d8170fd AS source
 ENV CGO_ENABLED=0 GOMAXPROCS=2 GOFLAGS="-p=2 -trimpath"
 # WORKDIR includes SOURCE_DATE_EPOCH in its cache key. Use explicit paths so
 # commit timestamps update image metadata without invalidating compilation.

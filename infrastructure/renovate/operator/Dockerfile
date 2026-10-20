@@ -1,4 +1,4 @@
-FROM docker.io/library/golang:1.27.2-alpine AS build
+FROM docker.io/library/golang:1.27.3-alpine AS build
 RUN apk add --no-cache patch
 WORKDIR /source
 ADD --checksum=sha256:5453ceb891bd823038624dabb60ea9d55e42865dd050e3bd60fcfc2a89f86cfe https://api.github.com/repos/mogenius/renovate-operator/tarball/6.5.1 /tmp/operator.tar.gz
