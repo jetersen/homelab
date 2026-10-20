@@ -6,7 +6,7 @@ spec:
   # Discovery also queues dependency scans. Events maintain PRs between scans.
   schedule: '17 */6 * * *'
   suspend: false
-  image: forgejo.jetersen.dev/jetersen/homelab/renovate-worker:0.1.5@sha256:87d09f418bf59ced8cb10322bb74687dbc598fc6b6eba491a9a4946360d57921
+  image: forgejo.jetersen.dev/jetersen/homelab/renovate-worker:0.1.6@sha256:68bdeca9ecf6e15da378d50cfac22c5c868137a851cbcaa372628c19a6d46bca
   provider:
     name: forgejo
     endpoint: https://forgejo.jetersen.dev/api/v1
