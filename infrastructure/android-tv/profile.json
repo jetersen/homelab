@@ -13,6 +13,19 @@
       "com.google.android.tungsten.setupwraith"
     ]
   },
+  "privacy": {
+    "disable_packages": [
+      "tv.samba.ssm",
+      "com.android.adservices.api",
+      "com.google.android.feedback",
+      "com.google.android.katniss",
+      "org.droidtv.amazonalexa"
+    ],
+    "settings": [
+      { "namespace": "global", "key": "send_action_app_error", "value": "0" }
+    ],
+    "microphone_blocked": true
+  },
   "appearance": {
     "accent": "violet",
     "tiles": "large",

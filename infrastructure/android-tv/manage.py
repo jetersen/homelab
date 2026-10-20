@@ -164,6 +164,32 @@ class Device:
         self.shell("pm", command, "--user", "0", package)
         require(self.package_state(package) == state, "HOME package state did not change.")
 
+    def read_setting(self, namespace, key):
+        value = self.shell("settings", "--user", "0", "get", namespace, key)
+        return None if value == "null" else value
+
+    def write_setting(self, namespace, key, value):
+        command = ["delete", namespace, key] if value is None else ["put", namespace, key, value]
+        self.shell("settings", "--user", "0", *command)
+        require(self.read_setting(namespace, key) == value, "Setting did not restore or apply.")
+
+    def microphone_blocked(self):
+        dump = self.shell("dumpsys", "sensor_privacy")
+        users = re.findall(r"\buser_id=0\b(.*?)(?=\buser_id=\d+|\Z)", dump, re.DOTALL)
+        require(len(users) == 1, "Could not inspect user 0 microphone privacy.")
+        sensors = re.findall(r"\bsensor=1\b(.*?)(?=\bsensor=\d+|\Z)", users[0], re.DOTALL)
+        require(len(sensors) == 1, "Microphone privacy state is unavailable.")
+        states = re.findall(r"\btoggle_type=1\s+state_type=([12])\b", sensors[0])
+        require(len(states) == 1, "Unknown microphone privacy state.")
+        return states[0] == "1"
+
+    def set_microphone_blocked(self, blocked):
+        if self.microphone_blocked() != blocked:
+            self.shell(
+                "cmd", "sensor_privacy", "enable" if blocked else "disable", "0", "microphone"
+            )
+        require(self.microphone_blocked() == blocked, "Microphone privacy state did not change.")
+
     def read_config(self):
         # Listing the parent first avoids treating denied shared-storage access as an absent file.
         self.shell("ls", "/sdcard/Android/data")
@@ -203,7 +229,7 @@ class Device:
             return digest(path)
 
 
-def render(profile, launchable):
+def render(profile, launchable, known=None):
     selected = []
     names = {}
     missing = []
@@ -221,7 +247,11 @@ def render(profile, launchable):
         "apps.order": ",".join(selected),
         "apps.show": ",".join(selected),
         "apps.hide": ",".join(
-            sorted(launchable - set(selected) - {profile["launcher"]["package"]})
+            sorted(
+                (launchable if known is None else known)
+                - set(selected)
+                - {profile["launcher"]["package"]}
+            )
         ),
         **names,
     }
@@ -326,6 +356,13 @@ def verify(device, profile, content):
 
 
 def restore(device, state, path):
+    privacy_path = path.with_name("privacy.json")
+    if privacy_path.exists():
+        import privacy
+
+        original = privacy.load(privacy_path, state["identity"])
+        if original["status"] != "restored":
+            privacy.restore(device, original, privacy_path)
     launcher = state["launcher"]
     for original in state.get("home_packages_before", []):
         if device.package_state(original["package"]) != original["state"]:
@@ -358,6 +395,14 @@ def restore(device, state, path):
 
 
 def apply(device, profile, identity, content, path):
+    privacy_path = path.with_name("privacy.json")
+    if privacy_path.exists():
+        import privacy
+
+        require(
+            privacy.load(privacy_path, identity)["status"] in {"applied", "restored"},
+            "Restore the interrupted privacy transaction before applying the launcher.",
+        )
     device.require_private_launcher(profile["launcher"]["package"])
     if path.exists():
         state = json.loads(path.read_text())
@@ -416,7 +461,21 @@ def apply(device, profile, identity, content, path):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=["plan", "fetch", "apply", "verify", "restore"])
+    parser.add_argument(
+        "action",
+        choices=[
+            "plan",
+            "fetch",
+            "apply",
+            "verify",
+            "restore",
+            "discover",
+            "privacy-plan",
+            "privacy-apply",
+            "privacy-verify",
+            "privacy-restore",
+        ],
+    )
     parser.add_argument("--adb", default="adb")
     parser.add_argument("--serial", help="ADB transport selector, never saved in the repository")
     parser.add_argument("--profile", type=Path, default=HERE / "profile.json")
@@ -433,6 +492,11 @@ def main():
     directory = (args.state_dir or Path.home() / ".local/state/homelab/android-tv" / key).resolve()
     repository = HERE.parents[1]
     require(not directory.is_relative_to(repository), "Keep rollback state outside the repository.")
+    if args.action == "discover" or args.action.startswith("privacy-"):
+        import privacy
+
+        privacy.command(args.action, device, profile, identity, directory)
+        return
     if args.action == "plan":
         device.require_private_launcher(profile["launcher"]["package"])
         if (directory / "state.json").exists():
@@ -456,7 +520,15 @@ def main():
             ]
             for component in device.activities(category)
         }
-        content, missing = render(profile, launchable)
+        known = {
+            component.split("/")[0]
+            for category in [
+                "android.intent.category.LEANBACK_LAUNCHER",
+                "android.intent.category.LAUNCHER",
+            ]
+            for component in device.activities(category, include_disabled=True)
+        }
+        content, missing = render(profile, launchable, known)
         for name in missing:
             print(f"Configured app is not installed or launchable: {name}")
     if args.action == "plan":

@@ -8,8 +8,8 @@ and can be made visible in the launcher's Options. Reapplying replaces those
 local appearance and visibility choices.
 
 Requires Python 3 and `adb`, an authorized debugging connection, Android TV 9 or
-newer, with Android user 0 active. Other profiles are left unchanged; dumbtv must
-not be installed for another user because its APK is shared. On NixOS, run the
+newer, with Android user 0 active. Launcher and package changes target user 0;
+dumbtv must not be installed for another user because its APK is shared. On NixOS, run the
 commands inside `nix shell nixpkgs#android-tools`. For network debugging, use the
 address and port shown by the device; wireless debugging may require `adb pair`
 before `adb connect`.
@@ -22,6 +22,31 @@ python3 infrastructure/android-tv/manage.py apply
 python3 infrastructure/android-tv/manage.py verify
 python3 infrastructure/android-tv/manage.py restore
 ```
+
+Privacy changes use a separate transaction so they can be undone while keeping
+the launcher. Review `privacy` in the profile and the plan before applying:
+
+```sh
+python3 infrastructure/android-tv/manage.py discover
+python3 infrastructure/android-tv/manage.py privacy-plan
+python3 infrastructure/android-tv/manage.py privacy-apply
+python3 infrastructure/android-tv/manage.py privacy-verify
+python3 infrastructure/android-tv/manage.py privacy-restore
+```
+
+`discover` prints possible candidates without saving an inventory or changing
+the device. A matching name does not establish a package's purpose or safety.
+The privacy profile disables only explicitly selected packages for user 0,
+retaining their data. It can also disable app-error reporting and block the
+microphone through Android's software privacy toggle. These controls do not
+prevent all telemetry from retained apps or change online account preferences.
+The app-error reporting toggle is device-wide. Microphone privacy targets user 0
+and requires Android 12 or newer with a supported sensor privacy implementation.
+The private `privacy.json` undo record preserves exact original enabled states,
+settings including absence, and microphone privacy. Reapplication keeps that
+baseline; restore privacy before changing its profile. Archive a restored record
+before starting a new transaction. The full `restore` command undoes privacy
+first, then restores the original launcher.
 
 Select a device with `--serial` when more than one is attached. `plan` reads the
 TV without changing it. `fetch` downloads the pinned release and verifies its
@@ -56,8 +81,8 @@ changes also require review before using an older undo record.
 Run the transaction regression tests with
 `python3 -m unittest discover -s infrastructure/android-tv -p 'test_*.py'`.
 
-This manages the launcher only. It does not run dumbtv's debloat or DNS scripts,
-disable unrelated packages, install browsers, or alter VPN configuration.
+This does not run dumbtv's debloat or DNS scripts, uninstall existing apps,
+disable unrelated packages, install browsers, or alter DNS or VPN configuration.
 Fire OS needs a separate HOME hook and is refused. If verification fails,
 `apply` attempts restoration and retains the undo record. If the connection drops
 or the process stops, reconnect and run `restore`; an incomplete transaction
