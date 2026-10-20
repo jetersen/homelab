@@ -1,0 +1,24 @@
+{
+  "launcher": {
+    "package": "tv.dumbtv.home",
+    "component": "tv.dumbtv.home/.Home",
+    "version": "1.1",
+    "source": "https://github.com/humblemuzzu/dumbtv/tree/90fa871149ec5897d1afd635d0e327ce672ab493/launcher",
+    "url": "https://github.com/humblemuzzu/dumbtv/releases/download/launcher-v1.1/dumbtv-home.apk",
+    "sha256": "3855e8497b04da8484287dffe7e00e23cd4a9e10fc1aed9991f0da2036da0b12"
+  },
+  "appearance": {
+    "accent": "violet",
+    "tiles": "large",
+    "labels": "always",
+    "clock": "24h",
+    "inputs": "on",
+    "background": "graphite",
+    "rotate": "off"
+  },
+  "apps": [
+    { "name": "YouTube", "candidates": ["com.google.android.youtube.tv"] },
+    { "name": "Jellyfin", "candidates": ["org.jellyfin.androidtv"] },
+    { "name": "Proton VPN", "candidates": ["ch.protonvpn.android"] }
+  ]
+}

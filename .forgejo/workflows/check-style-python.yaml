@@ -2,7 +2,7 @@ name: Code style (python)
 on:
   push:
     branches: [main]
-    paths: ['**/*.py', 'ruff.toml', '.editorconfig', '.forgejo/workflows/check-style-python.yaml']
+    paths: ['**/*.py', 'infrastructure/android-tv/**', 'ruff.toml', '.editorconfig', '.forgejo/workflows/check-style-python.yaml']
   workflow_dispatch:
 concurrency:
   group: code-style-python-${{ forgejo.ref }}
@@ -17,3 +17,4 @@ jobs:
           persist-credentials: false
       - run: npm run check:python
       - run: python3 -m unittest discover -s .ci -p test_pr_checks.py
+      - run: python3 -m unittest discover -s infrastructure/android-tv -p 'test_*.py'

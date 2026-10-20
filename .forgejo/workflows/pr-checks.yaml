@@ -123,6 +123,7 @@ jobs:
           persist-credentials: false
       - run: npm run check:python
       - run: python3 -m unittest discover -s .ci -p test_pr_checks.py
+      - run: python3 -m unittest discover -s infrastructure/android-tv -p 'test_*.py'
     if: ${{ needs.changes.outputs.python == 'true' }}
     name: Python
     needs:
