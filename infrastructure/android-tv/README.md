@@ -46,7 +46,29 @@ The private `privacy.json` undo record preserves exact original enabled states,
 settings including absence, and microphone privacy. Reapplication keeps that
 baseline; restore privacy before changing its profile. Archive a restored record
 before starting a new transaction. The full `restore` command undoes privacy
-first, then restores the original launcher.
+along with optional-app controls, then restores the original launcher.
+
+The separate `philips` profile selects optional manufacturer apps. Review the
+packages for the device and firmware before applying; a Philips package can
+also provide hardware support. Disabling Help removes manufacturer tutorials
+and diagnostics. Ambient artwork and sunrise-alarm apps are separate from the
+core Ambilight services. Keep audio recovery, inputs, power, remote-control,
+and update services enabled.
+
+```sh
+python3 infrastructure/android-tv/manage.py philips-plan
+python3 infrastructure/android-tv/manage.py philips-apply
+python3 infrastructure/android-tv/manage.py philips-verify
+python3 infrastructure/android-tv/manage.py philips-restore
+```
+
+This uses the same package-state transaction mechanism, with an independent
+private `philips.json` undo record. Apps and their data stay installed; restore
+returns each package to its exact original enabled state. Reapplication preserves
+the first baseline. Restore and archive that record before changing the package
+list. Active privacy and optional-app transactions cannot own the same package.
+`philips-restore` keeps the launcher and privacy controls; full `restore` also
+undoes the optional-app controls.
 
 Select a device with `--serial` when more than one is attached. `plan` reads the
 TV without changing it. `fetch` downloads the pinned release and verifies its

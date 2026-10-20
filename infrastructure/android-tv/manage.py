@@ -356,13 +356,14 @@ def verify(device, profile, content):
 
 
 def restore(device, state, path):
-    privacy_path = path.with_name("privacy.json")
-    if privacy_path.exists():
-        import privacy
+    import privacy
 
-        original = privacy.load(privacy_path, state["identity"])
-        if original["status"] != "restored":
-            privacy.restore(device, original, privacy_path)
+    for scope in reversed(privacy.SCOPES):
+        control_path = path.with_name(f"{scope}.json")
+        if control_path.exists():
+            original = privacy.load(control_path, state["identity"])
+            if original["status"] != "restored":
+                privacy.restore(device, original, control_path)
     launcher = state["launcher"]
     for original in state.get("home_packages_before", []):
         if device.package_state(original["package"]) != original["state"]:
@@ -411,14 +412,9 @@ def apply(device, profile, identity, content, path):
             youtube_shortcut.load(shortcut_path, identity)["status"] in {"applied", "restored"},
             "Restore the interrupted shortcut transaction before applying the launcher.",
         )
-    privacy_path = path.with_name("privacy.json")
-    if privacy_path.exists():
-        import privacy
+    import privacy
 
-        require(
-            privacy.load(privacy_path, identity)["status"] in {"applied", "restored"},
-            "Restore the interrupted privacy transaction before applying the launcher.",
-        )
+    privacy.require_complete(path.parent, identity)
     device.require_private_launcher(profile["launcher"]["package"])
     if path.exists():
         state = json.loads(path.read_text())
@@ -490,6 +486,10 @@ def main():
             "privacy-apply",
             "privacy-verify",
             "privacy-restore",
+            "philips-plan",
+            "philips-apply",
+            "philips-verify",
+            "philips-restore",
             "youtube-build",
             "youtube-artwork",
             "youtube-plan",
@@ -533,9 +533,13 @@ def main():
     if args.action.startswith("youtube-"):
         import youtube_shortcut
 
+        if args.action == "youtube-apply":
+            import privacy
+
+            privacy.require_complete(directory, identity)
         youtube_shortcut.command(args.action, device, profile, identity, directory)
         return
-    if args.action == "discover" or args.action.startswith("privacy-"):
+    if args.action == "discover" or args.action.startswith(("privacy-", "philips-")):
         import privacy
 
         privacy.command(args.action, device, profile, identity, directory)

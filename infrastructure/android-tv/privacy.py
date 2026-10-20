@@ -1,4 +1,4 @@
-"""Reversible, explicitly selected Android TV privacy controls."""
+"""Reversible, explicitly selected Android TV privacy and optional-app controls."""
 
 import fcntl
 import json
@@ -26,7 +26,19 @@ PROTECTED = {
     "tv.dumbtv.home",
     "tv.homelab.youtube",
     "org.droidtv.upgradeapp",
+    "org.droidtv.ambisvc",
+    "org.droidtv.ambiair",
+    "org.droidtv.channels",
+    "org.droidtv.playtv",
+    "org.droidtv.tvsystemui",
+    "org.droidtv.bluetoothremote",
+    "org.droidtv.tvpowermanagerservice",
+    "org.droidtv.tv.tpvaudiomanager",
+    "org.droidtv.tv.tpvvideomanager",
+    "org.droidtv.tv.tpvbluetoothmanager",
+    "org.droidtv.customautologservice",  # Also handles audio-DSP reset checks.
 }
+SCOPES = ("privacy", "philips")
 
 
 def discover(device):
@@ -81,15 +93,37 @@ def capture(device, policy, identity):
 
 def load(path, identity):
     state = json.loads(path.read_text())
-    require(state["schema"] == 1, "Unsupported privacy undo record schema.")
-    require(state["identity"] == identity, "Device or firmware differs from privacy undo record.")
+    require(state["schema"] == 1, "Unsupported control undo record schema.")
+    require(state["identity"] == identity, "Device or firmware differs from control undo record.")
     return state
+
+
+def require_complete(directory, identity, *, exclude=None):
+    for scope in SCOPES:
+        path = directory / f"{scope}.json"
+        if scope != exclude and path.exists():
+            require(
+                load(path, identity)["status"] in {"applied", "restored"},
+                f"Restore the interrupted {scope} transaction first.",
+            )
+
+
+def require_separate(directory, identity, scope, policy):
+    for peer in SCOPES:
+        path = directory / f"{peer}.json"
+        if peer != scope and path.exists():
+            state = load(path, identity)
+            if state["status"] != "restored":
+                require(
+                    not set(policy["disable_packages"]) & set(state["policy"]["disable_packages"]),
+                    "Package already belongs to another active control transaction.",
+                )
 
 
 def verify(device, state):
     for package in state["packages"]:
         require(
-            device.package_state(package) == "disabled-user", f"Privacy package differs: {package}"
+            device.package_state(package) == "disabled-user", f"Disabled package differs: {package}"
         )
     require(
         not set(state["missing"]) & device.packages(), "A previously absent privacy app appeared."
@@ -122,9 +156,10 @@ def apply(device, policy, identity, path):
     if path.exists():
         state = load(path, identity)
         require(
-            state["status"] == "applied", "Restore or archive the previous privacy transaction."
+            state["status"] == "applied",
+            f"Restore or archive the previous {path.stem} transaction.",
         )
-        require(state["policy"] == policy, "Restore privacy before changing its profile.")
+        require(state["policy"] == policy, "Restore controls before changing its profile.")
     else:
         state = capture(device, policy, identity)
     state["status"] = "pending"
@@ -138,7 +173,7 @@ def apply(device, policy, identity, path):
             device.set_microphone_blocked(policy["microphone_blocked"])
         verify(device, state)
     except BaseException:
-        print("Privacy apply failed; restoring the original privacy controls.")
+        print(f"{path.stem.capitalize()} apply failed; restoring the original controls.")
         restore(device, state, path)
         raise
     state["status"] = "applied"
@@ -146,35 +181,49 @@ def apply(device, policy, identity, path):
 
 
 def command(action, device, profile, identity, directory):
-    path = directory / "privacy.json"
     if action == "discover":
         discover(device)
         return
-    policy = profile["privacy"]
-    if action == "privacy-plan":
+    scope, operation = action.split("-", 1)
+    require(scope in SCOPES, "Unknown package-control scope.")
+    path = directory / f"{scope}.json"
+    if operation in {"plan", "apply"}:
+        policy = profile[scope]
+        if scope == "philips":
+            require(
+                set(policy) == {"disable_packages"}, "Philips controls only disable selected apps."
+            )
+        require_complete(directory, identity, exclude=scope)
+        require_separate(directory, identity, scope, policy)
+    if operation == "plan":
         if path.exists():
             state = load(path, identity)
-            require(state["status"] == "applied", "Restore or archive the privacy transaction.")
-            require(state["policy"] == policy, "Restore privacy before changing its profile.")
+            require(state["status"] == "applied", "Restore or archive the control transaction.")
+            require(state["policy"] == policy, "Restore controls before changing its profile.")
         else:
             state = capture(device, policy, identity)
         for package in state["packages"]:
             print(f"Disable for user 0, retaining data: {package}")
         for package in state["missing"]:
             print(f"Not installed; skip: {package}")
-        print("Apply configured crash-report and microphone controls; save exact undo state.")
+        if scope == "privacy":
+            print("Apply configured crash-report and microphone controls; save exact undo state.")
+        else:
+            print("Save exact enabled states; do not uninstall apps or clear their data.")
         return
-    if action == "privacy-verify":
+    if operation == "verify":
         state = load(path, identity)
-        require(state["status"] == "applied", "Privacy transaction is not applied.")
+        require(state["status"] == "applied", "Control transaction is not applied.")
         verify(device, state)
-        print("Privacy package, setting, and microphone states verified.")
+        print(f"{scope.capitalize()} controls verified.")
         return
     directory.mkdir(parents=True, exist_ok=True, mode=0o700)
     directory.chmod(0o700)
     with (directory / "lock").open("w") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        if action == "privacy-apply":
+        if operation == "apply":
+            require_complete(directory, identity, exclude=scope)
+            require_separate(directory, identity, scope, policy)
             shortcut_path = directory / "youtube.json"
             if shortcut_path.exists():
                 import youtube_shortcut
@@ -191,7 +240,9 @@ def command(action, device, profile, identity, directory):
                     "Restore the interrupted launcher transaction first.",
                 )
             apply(device, policy, identity, path)
-            print("Privacy profile applied and verified; private undo state preserved.")
+            print(
+                f"{scope.capitalize()} profile applied and verified; private undo state preserved."
+            )
         else:
             restore(device, load(path, identity), path)
-            print("Original privacy package, setting, and microphone states restored.")
+            print(f"Original {scope} controls restored.")

@@ -179,6 +179,143 @@ class PrivacyTests(unittest.TestCase):
                 manage.restore(self.device, state, launcher_path)
 
 
+class PhilipsTests(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.directory = Path(self.temporary.name)
+        self.path = self.directory / "philips.json"
+        self.device = FakeDevice()
+        self.device.states.update(
+            {"example.gallery": "default", "example.demo": "disabled-until-used"}
+        )
+        self.policy = {"disable_packages": ["example.gallery", "example.demo"]}
+        self.profile = {"philips": self.policy, "privacy": POLICY}
+
+    def command(self, action):
+        with contextlib.redirect_stdout(io.StringIO()):
+            privacy.command(action, self.device, self.profile, IDENTITY, self.directory)
+
+    def test_plan_is_read_only_and_does_not_touch_privacy_controls(self):
+        self.command("philips-plan")
+        self.assertEqual(self.device.changes, [])
+        self.assertEqual(list(self.directory.iterdir()), [])
+
+    def test_independent_restore_preserves_privacy_and_exact_original_states(self):
+        self.command("privacy-apply")
+        privacy_path = self.directory / "privacy.json"
+        privacy_before = privacy_path.read_bytes()
+        self.command("philips-apply")
+        baseline = self.path.read_bytes()
+        self.command("philips-apply")
+        self.assertEqual(self.path.read_bytes(), baseline)
+        self.assertEqual(self.path.stat().st_mode & 0o777, 0o600)
+        self.assertEqual(self.directory.stat().st_mode & 0o777, 0o700)
+        self.command("philips-verify")
+        self.command("philips-restore")
+        self.assertEqual(self.device.states["example.gallery"], "default")
+        self.assertEqual(self.device.states["example.demo"], "disabled-until-used")
+        self.assertEqual(privacy_path.read_bytes(), privacy_before)
+        privacy.verify(self.device, privacy.load(privacy_path, IDENTITY))
+
+    def test_full_restore_restores_both_controls_before_home(self):
+        self.command("privacy-apply")
+        self.command("philips-apply")
+        state = {
+            "identity": IDENTITY,
+            "launcher": {"package": "example.launcher"},
+            "home": "example.home/.Home",
+        }
+
+        def set_home(component):
+            for scope in privacy.SCOPES:
+                self.assertEqual(
+                    privacy.load(self.directory / f"{scope}.json", IDENTITY)["status"],
+                    "restored",
+                )
+            raise RuntimeError("checked both controls before HOME")
+
+        with patch.object(self.device, "set_home", side_effect=set_home, create=True):
+            with self.assertRaisesRegex(RuntimeError, "checked both"):
+                manage.restore(self.device, state, self.directory / "state.json")
+
+    def test_failed_disable_restores_optional_apps_without_touching_privacy(self):
+        self.command("privacy-apply")
+        before = dict(self.device.states)
+        original = self.device.set_package_state
+
+        def change(package, state):
+            if package == "example.demo" and state == "disabled-user":
+                raise RuntimeError("disable refused")
+            original(package, state)
+
+        with patch.object(self.device, "set_package_state", side_effect=change):
+            with self.assertRaisesRegex(RuntimeError, "disable refused"):
+                self.command("philips-apply")
+        self.assertEqual(self.device.states, before)
+        self.assertEqual(privacy.load(self.path, IDENTITY)["status"], "restored")
+        self.assertTrue(self.device.blocked)
+        self.assertEqual(self.device.setting, "0")
+
+    def test_pending_peer_blocks_both_control_scopes_and_launcher(self):
+        for scope in privacy.SCOPES:
+            with self.subTest(scope=scope):
+                path = self.directory / f"{scope}.json"
+                manage.save(path, privacy.capture(self.device, self.profile[scope], IDENTITY))
+                peer = next(s for s in privacy.SCOPES if s != scope)
+                for action in (f"{peer}-plan", f"{peer}-apply"):
+                    with self.assertRaisesRegex(RuntimeError, f"interrupted {scope}"):
+                        self.command(action)
+                with self.assertRaisesRegex(RuntimeError, f"interrupted {scope}"):
+                    manage.apply(self.device, {}, IDENTITY, b"", self.directory / "state.json")
+                path.unlink()
+        self.assertEqual(self.device.changes, [])
+
+    def test_overlap_including_absent_packages_cannot_own_two_baselines(self):
+        self.command("privacy-apply")
+        before = list(self.device.changes)
+        for package in ("example.tracking", "example.absent"):
+            self.profile["philips"] = {"disable_packages": [package]}
+            with self.assertRaisesRegex(RuntimeError, "another active control transaction"):
+                self.command("philips-apply")
+        self.assertEqual(self.device.changes, before)
+
+    def test_pending_optional_app_transaction_blocks_shortcut_cli(self):
+        manage.save(self.path, privacy.capture(self.device, self.policy, IDENTITY))
+        import youtube_shortcut
+
+        with (
+            patch("sys.argv", ["manage.py", "youtube-apply", "--state-dir", str(self.directory)]),
+            patch.object(manage, "Device", return_value=self.device),
+            patch.object(self.device, "identity", return_value=IDENTITY, create=True),
+            patch.object(youtube_shortcut, "command") as shortcut,
+        ):
+            with self.assertRaisesRegex(RuntimeError, "interrupted philips"):
+                manage.main()
+        shortcut.assert_not_called()
+        self.assertEqual(self.device.changes, [])
+
+    def test_philips_profile_refuses_global_or_microphone_changes(self):
+        self.profile["philips"] = {**self.policy, "microphone_blocked": False}
+        with self.assertRaisesRegex(RuntimeError, "only disable selected apps"):
+            self.command("philips-apply")
+        self.assertEqual(self.device.changes, [])
+
+    def test_philips_audio_recovery_is_protected(self):
+        self.device.states["org.droidtv.customautologservice"] = "default"
+        self.profile["philips"] = {"disable_packages": ["org.droidtv.customautologservice"]}
+        with self.assertRaisesRegex(RuntimeError, "protected"):
+            self.command("philips-apply")
+        self.assertEqual(self.device.changes, [])
+
+    def test_restore_uses_saved_policy_even_if_profile_was_removed(self):
+        self.command("philips-apply")
+        del self.profile["philips"]
+        self.command("philips-restore")
+        self.assertEqual(self.device.states["example.gallery"], "default")
+        self.assertEqual(self.device.states["example.demo"], "disabled-until-used")
+
+
 class DeviceTests(unittest.TestCase):
     def test_microphone_parser_selects_user_zero_software_toggle(self):
         device = object.__new__(manage.Device)

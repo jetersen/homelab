@@ -26,6 +26,18 @@
     ],
     "microphone_blocked": true
   },
+  "philips": {
+    "disable_packages": [
+      "com.tpv.nftgallery",
+      "org.droidtv.aurora",
+      "org.droidtv.sunrise",
+      "org.droidtv.demome",
+      "org.droidtv.PerformanceIndicator",
+      "org.droidtv.eum",
+      "org.droidtv.tv.frameworklogger",
+      "org.droidtv.candeebug"
+    ]
+  },
   "appearance": {
     "accent": "violet",
     "tiles": "large",
