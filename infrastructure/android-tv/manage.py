@@ -39,6 +39,12 @@ def save(path, value):
 
 
 class Device:
+    config_package = "tv.dumbtv.home"
+
+    @property
+    def config_path(self):
+        return f"/sdcard/Android/data/{self.config_package}/files/home.conf"
+
     def __init__(self, adb, serial=None):
         self.command = [adb]
         result = self.run("devices")
@@ -194,7 +200,7 @@ class Device:
         # Listing the parent first avoids treating denied shared-storage access as an absent file.
         self.shell("ls", "/sdcard/Android/data")
         status = self.shell(
-            "sh", "-c", f"if test -f {CONFIG}; then echo present; else echo absent; fi"
+            "sh", "-c", f"if test -f {self.config_path}; then echo present; else echo absent; fi"
         )
         require(
             status in {"present", "absent"}, "Launcher configuration directory is inaccessible."
@@ -204,21 +210,21 @@ class Device:
         # Pull preserves exact bytes, unlike adb shell's text handling.
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "home.conf"
-            self.run("pull", CONFIG, str(path))
+            self.run("pull", self.config_path, str(path))
             return base64.b64encode(path.read_bytes()).decode()
 
     def write_config(self, content):
-        self.shell("am", "force-stop", "--user", "0", "tv.dumbtv.home")
+        self.shell("am", "force-stop", "--user", "0", self.config_package)
         if content is None:
-            self.shell("rm", "-f", CONFIG)
+            self.shell("rm", "-f", self.config_path)
             return
-        self.shell("mkdir", "-p", str(Path(CONFIG).parent))
+        self.shell("mkdir", "-p", str(Path(self.config_path).parent))
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "home.conf"
             path.write_bytes(content)
             # The app is stopped and the original bytes are journaled. A direct push avoids
             # leaving an extra remote file behind if a transfer is interrupted.
-            self.run("push", str(path), CONFIG)
+            self.run("push", str(path), self.config_path)
 
     def installed_digest(self, package):
         paths = self.shell("pm", "path", "--user", "0", package).splitlines()
@@ -263,6 +269,11 @@ def render(profile, launchable, known=None):
 
 def artifact(profile):
     launcher = profile["launcher"]
+    if "local_artifact" in launcher:
+        path = Path(launcher["local_artifact"]).resolve()
+        require(not path.is_relative_to(HERE.parents[1]), "Keep built APKs outside Git.")
+        require(digest(path) == launcher["sha256"], "Local launcher APK checksum differs.")
+        return path
     cache = Path.home() / ".cache/homelab/android-tv"
     cache.mkdir(parents=True, exist_ok=True)
     path = cache / (launcher["sha256"] + ".apk")
@@ -357,6 +368,11 @@ def verify(device, profile, content):
 
 def restore(device, state, path):
     import privacy
+    import settings_fix
+
+    child = settings_fix.state_path(path.parent)
+    if child.exists():
+        settings_fix.restore(device, state["identity"], path.parent)
 
     for scope in reversed(privacy.SCOPES):
         control_path = path.with_name(f"{scope}.json")
@@ -404,6 +420,9 @@ def restore(device, state, path):
 
 
 def apply(device, profile, identity, content, path):
+    import settings_fix
+
+    settings_fix.require_inactive(path.parent, identity)
     shortcut_path = path.with_name("youtube.json")
     if shortcut_path.exists():
         import youtube_shortcut
@@ -496,6 +515,11 @@ def main():
             "youtube-apply",
             "youtube-verify",
             "youtube-restore",
+            "settings-build",
+            "settings-plan",
+            "settings-apply",
+            "settings-verify",
+            "settings-restore",
         ],
     )
     parser.add_argument("--adb", default="adb")
@@ -503,13 +527,24 @@ def main():
     parser.add_argument("--profile", type=Path, default=HERE / "profile.json")
     parser.add_argument("--state-dir", type=Path, help="Private rollback directory outside Git")
     parser.add_argument(
+        "--source",
+        type=Path,
+        default=Path.home() / "git/dumbtv",
+        help="Read-only upstream checkout",
+    )
+    parser.add_argument(
         "--sdk",
         type=Path,
         default=os.environ.get("ANDROID_SDK_ROOT"),
-        help="Android SDK location for youtube-build and youtube-artwork",
+        help="Android SDK location for local APK builds and artwork extraction",
     )
     args = parser.parse_args()
     profile = json.loads(args.profile.read_text())
+    if args.action == "settings-build":
+        import settings_fix
+
+        settings_fix.build(args.source, args.sdk)
+        return
     if args.action == "youtube-build":
         import youtube_shortcut
 
@@ -530,6 +565,33 @@ def main():
     directory = (args.state_dir or Path.home() / ".local/state/homelab/android-tv" / key).resolve()
     repository = HERE.parents[1]
     require(not directory.is_relative_to(repository), "Keep rollback state outside the repository.")
+    import settings_fix
+
+    if args.action.startswith("settings-"):
+        settings_fix.command(args.action, device, profile, identity, directory)
+        return
+    child = settings_fix.state_path(directory)
+    if child.exists() and settings_fix.load(child, identity)["status"] != "restored":
+        if args.action in {"plan", "verify"}:
+            settings_fix.command("settings-" + args.action, device, profile, identity, directory)
+            return
+        if args.action == "youtube-verify":
+            import youtube_shortcut
+
+            shortcut = youtube_shortcut.load(directory / "youtube.json", identity)
+            require(shortcut["status"] == "applied", "Shortcut transaction is not applied.")
+            with settings_fix.route(device):
+                expected = youtube_shortcut.content(device, settings_fix.patched_profile(profile))
+                youtube_shortcut.verify(device, shortcut, expected)
+            print("Shortcut APK and patched launcher tile configuration verified.")
+            return
+        if args.action != "restore":
+            settings_fix.require_inactive(
+                directory,
+                identity,
+                allow_applied=args.action == "discover"
+                or args.action.startswith(("privacy-", "philips-")),
+            )
     if args.action.startswith("youtube-"):
         import youtube_shortcut
 

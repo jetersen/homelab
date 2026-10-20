@@ -75,6 +75,35 @@ TV without changing it. `fetch` downloads the pinned release and verifies its
 SHA-256 without requiring a TV or an Android SDK. Missing apps are reported;
 install them through the device's store and reapply.
 
+The optional Settings-button patch uses Android's standard `ACTION_SETTINGS`
+instead of `MAIN` with `LEANBACK_SETTINGS`, which some firmware routes to an
+unrelated app. It builds the pinned upstream source as a separate launcher
+package, preserving the original installation and its data for rollback.
+It keeps the configured tiles and solid-background appearance. Image backgrounds
+and wallpaper rotation are refused because their files belong to the original app.
+
+Keep a read-only upstream checkout at `~/git/dumbtv`, or select one with
+`--source`. Build with JDK 17, Python 3.12+, and the shared SDK environment:
+
+```sh
+nix-shell infrastructure/android-tv/youtube-shortcut/shell.nix --run \
+  'python3 infrastructure/android-tv/manage.py settings-build'
+python3 infrastructure/android-tv/manage.py settings-plan
+python3 infrastructure/android-tv/manage.py settings-apply
+python3 infrastructure/android-tv/manage.py settings-verify
+python3 infrastructure/android-tv/manage.py settings-restore
+```
+
+The patched APK and build metadata stay in the private `settings-fix` cache.
+Keep `launcher.keystore` and `launcher.password` together in the private signing
+directory. The device's `settings/state.json` record preserves the original
+launcher as HOME. `settings-restore` returns to it and removes only the introduced
+patched copy; full `restore` does this before undoing other changes. Ordinary
+`plan` and `verify` follow the active patched launcher. Restore the patch before
+changing the underlying launcher or YouTube shortcut, then archive the restored
+`settings` undo directory before applying a new patch transaction. Privacy and
+optional-app controls can still be managed independently.
+
 The optional YouTube shortcut opens the installed app's Subscriptions feed with
 an `ACTION_VIEW` intent. The forwarding app requests no permissions and has no
 services. It does not contain an account identifier. YouTube controls account
