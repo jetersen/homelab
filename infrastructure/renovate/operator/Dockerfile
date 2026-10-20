@@ -11,4 +11,8 @@ WORKDIR /source/src
 RUN go test ./internal/utils ./webhook ./internal/crdManager ./internal/renovate ./gitProviderClients/forgejoProvider
 RUN CGO_ENABLED=0 go build -tags timetzdata -trimpath -ldflags='-s -w -X main.Version=6.5.1-events.1' -o /operator ./cmd/main.go
 FROM ghcr.io/mogenius/renovate-operator:6.5.1@sha256:892eec306b8ad0040046328ac7ed47fdcd28946e6e26fc9911f2d6d6c6055c70
+ARG REVISION
+ARG VERSION
+LABEL org.opencontainers.image.revision=$REVISION \
+      org.opencontainers.image.version=$VERSION
 COPY --from=build /operator /app/renovate-operator

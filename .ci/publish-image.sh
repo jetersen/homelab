@@ -16,21 +16,29 @@ release="$image:$version"
 directory=$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/image-publish.XXXXXX")
 trap 'rm -rf -- "$directory"' EXIT
 
+verify_release_labels() {
+  if ! jq -e --arg revision "$revision" --arg version "$version" \
+    '.config.Labels["org.opencontainers.image.revision"] == $revision and
+     .config.Labels["org.opencontainers.image.version"] == $version' "$directory/config" > /dev/null; then
+    echo "Refusing to publish or replace $release: its revision or version label does not match this release." >&2
+    exit 1
+  fi
+}
+
 # Do this before building: a published release is immutable, including on reruns
 # and on a different runner with a different build cache.
 if docker buildx imagetools inspect "$release" --format '{{json .Image}}' \
     > "$directory/config" 2> "$directory/error"; then
-  if ! jq -e --arg revision "$revision" --arg version "$version" \
-    '.config.Labels["org.opencontainers.image.revision"] == $revision and
-     .config.Labels["org.opencontainers.image.version"] == $version' "$directory/config" > /dev/null; then
-    echo "Refusing to replace $release: its revision or version label does not match this release." >&2
-    exit 1
-  fi
+  verify_release_labels
   echo "Reusing $release; skipping build and release push."
 elif grep -Eqi 'manifest unknown|MANIFEST_UNKNOWN|: not found|no such manifest' "$directory/error"; then
   docker build -f "$dockerfile" --build-arg REVISION="$revision" \
     --build-arg VERSION="$version" --build-arg SOURCE_DATE_EPOCH="$epoch" \
     -t "$release" .
+  docker image inspect "$release" --format '{{json .}}' > "$directory/local-config"
+  # Docker's local inspection uses Config; registry inspection uses config.
+  jq '{config: .Config}' "$directory/local-config" > "$directory/config"
+  verify_release_labels
   if [ "$component" = backup-helper ]; then
     docker run --rm --network none --read-only --user 1000:1000 \
       --cap-drop ALL --security-opt no-new-privileges "$release" --help

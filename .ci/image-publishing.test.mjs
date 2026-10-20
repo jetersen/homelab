@@ -144,15 +144,19 @@ const fs = require('node:fs');
 const args = process.argv.slice(2);
 fs.appendFileSync(process.env.DOCKER_LOG, JSON.stringify(args) + '\\n');
 const mode = process.env.SCENARIO;
+const built = process.env.DOCKER_LOG + '.built';
+const labels = {
+  'org.opencontainers.image.revision': mode.endsWith('wrong-labels') ? 'wrong' : process.env.RUNNER_JOB_REVISION,
+  'org.opencontainers.image.version': process.env.RUNNER_JOB_VERSION
+};
+if (args[0] === 'build') fs.writeFileSync(built, 'yes');
+if (args.slice(0,2).join(' ') === 'image inspect') console.log(JSON.stringify({Config:{Labels:labels}}));
 if (args.slice(0,3).join(' ') === 'buildx imagetools inspect') {
   if (args.includes('{{json .Image}}')) {
-    if (mode === 'missing') { console.error('manifest unknown'); process.exit(1); }
+    if (mode.startsWith('missing') && !fs.existsSync(built)) { console.error('manifest unknown'); process.exit(1); }
     if (mode === 'auth') { console.error('unauthorized: authentication required'); process.exit(1); }
     if (mode === 'network') { console.error('host not found in DNS'); process.exit(1); }
-    console.log(JSON.stringify({config:{Labels:{
-      'org.opencontainers.image.revision': mode === 'wrong-labels' ? 'wrong' : process.env.RUNNER_JOB_REVISION,
-      'org.opencontainers.image.version': process.env.RUNNER_JOB_VERSION
-    }}}));
+    console.log(JSON.stringify({config:{Labels:labels}}));
   } else console.log(mode === 'advance-main' && args[3].endsWith(':main') && !fs.existsSync(process.env.DOCKER_LOG + '.moved') ? 'sha256:old' : 'sha256:release');
 }
 if (args.slice(0,3).join(' ') === 'buildx imagetools create') {
@@ -201,6 +205,15 @@ test("missing release builds, smoke tests, and pushes only the SemVer tag", (t) 
     calls.filter((a) => a[0] === "push"),
     [["push", "registry.invalid/owner/repo/runner-job:0.1.0"]],
   );
+});
+test("new images with incorrect release labels stop before smoke tests or registry writes", (t) => {
+  const f = publisher(t, "missing-wrong-labels");
+  const result = f.publish();
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /revision or version label does not match/);
+  assert.equal(f.calls().filter((args) => args[0] === "build").length, 1);
+  assert.ok(f.calls().every((args) => !["run", "push"].includes(args[0])));
+  assert.ok(f.calls().every((args) => args.slice(0, 3).join(" ") !== "buildx imagetools create"));
 });
 test("older workflow cannot rewind main when newer component inputs exist", (t) => {
   const f = publisher(t);

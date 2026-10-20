@@ -33,3 +33,7 @@ RUN mkdir -p /tmp/nix-check \
     && nix --extra-experimental-features 'nix-command flakes' flake lock /tmp/nix-check \
     && rm -rf /tmp/nix-check
 ENV RENOVATE_CONFIG_FILE=/opt/renovate/config.cjs
+ARG REVISION
+ARG VERSION
+LABEL org.opencontainers.image.revision=$REVISION \
+      org.opencontainers.image.version=$VERSION
