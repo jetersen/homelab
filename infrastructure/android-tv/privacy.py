@@ -24,6 +24,7 @@ PROTECTED = {
     "org.jellyfin.androidtv",
     "ch.protonvpn.android",
     "tv.dumbtv.home",
+    "tv.homelab.youtube",
     "org.droidtv.upgradeapp",
 }
 
@@ -174,6 +175,15 @@ def command(action, device, profile, identity, directory):
     with (directory / "lock").open("w") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         if action == "privacy-apply":
+            shortcut_path = directory / "youtube.json"
+            if shortcut_path.exists():
+                import youtube_shortcut
+
+                require(
+                    youtube_shortcut.load(shortcut_path, identity)["status"]
+                    in {"applied", "restored"},
+                    "Restore the interrupted shortcut transaction first.",
+                )
             launcher = directory / "state.json"
             if launcher.exists():
                 require(

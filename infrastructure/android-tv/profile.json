@@ -36,7 +36,7 @@
     "rotate": "off"
   },
   "apps": [
-    { "name": "YouTube", "candidates": ["com.google.android.youtube.tv"] },
+    { "name": "YouTube", "candidates": ["tv.homelab.youtube", "com.google.android.youtube.tv"] },
     { "name": "Jellyfin", "candidates": ["org.jellyfin.androidtv"] },
     { "name": "Proton VPN", "candidates": ["ch.protonvpn.android"] }
   ]

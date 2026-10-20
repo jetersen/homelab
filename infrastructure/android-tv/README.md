@@ -53,6 +53,40 @@ TV without changing it. `fetch` downloads the pinned release and verifies its
 SHA-256 without requiring a TV or an Android SDK. Missing apps are reported;
 install them through the device's store and reapply.
 
+The optional YouTube shortcut opens the installed app's Subscriptions feed with
+an `ACTION_VIEW` intent. The forwarding app requests no permissions and has no
+services. It does not contain an account identifier. YouTube controls account
+selection and may still show a chooser; a deep link is not a guarantee against
+future app changes. The pinned launcher has no per-app intent override, so the
+profile prefers the forwarding tile when installed and otherwise uses YouTube.
+
+Build locally with JDK 17+ and Android SDK platform/build-tools 34, then review
+the device plan:
+
+```sh
+nix-shell infrastructure/android-tv/youtube-shortcut/shell.nix --run \
+  'python3 infrastructure/android-tv/manage.py youtube-artwork'
+nix-shell infrastructure/android-tv/youtube-shortcut/shell.nix --run \
+  'python3 infrastructure/android-tv/manage.py youtube-build'
+python3 infrastructure/android-tv/manage.py youtube-plan
+python3 infrastructure/android-tv/manage.py youtube-apply
+python3 infrastructure/android-tv/manage.py youtube-verify
+python3 infrastructure/android-tv/manage.py youtube-restore
+```
+
+Use `--sdk` to select an existing SDK instead. APKs and build checksums stay in
+`~/.cache/homelab/android-tv/youtube-shortcut/`. `youtube-artwork` reads the
+installed YouTube APK and copies its banner and icon into that private cache;
+neither the artwork nor the original APK is committed. Keep the private signing
+key and its password under `~/.local/state/homelab/android-tv/signing/` together;
+they are needed to reproduce the app's signing identity. Do not put signing material
+in a Nix derivation or repository. The device's `youtube.json` undo record saves
+the exact prior launcher configuration before installing anything. Existing or
+retained copies of the helper are refused, as are APK updates. Restore and
+archive a restored record before changing the helper. `youtube-restore` restores
+the previous tiles and removes only the forwarding app introduced by this tool.
+The full `restore` also undoes the shortcut. YouTube and its data remain installed.
+
 Before changing the TV, `apply` saves the original HOME component, the previous
 launcher configuration bytes or their absence, and whether dumbtv was already
 installed. The private undo record lives under

@@ -379,6 +379,16 @@ def restore(device, state, path):
             device.installed_digest(launcher["package"]) == launcher["sha256"],
             "dumbtv APK changed outside this tool; original HOME restored, manual review needed.",
         )
+    else:
+        require(not state["installed_before"], "Previously installed dumbtv is missing.")
+    shortcut_path = path.with_name("youtube.json")
+    if shortcut_path.exists():
+        import youtube_shortcut
+
+        shortcut = youtube_shortcut.load(shortcut_path, state["identity"])
+        if shortcut["status"] != "restored":
+            youtube_shortcut.restore(device, shortcut, shortcut_path, restore_config=present)
+    if present:
         if state["installed_before"]:
             content = state["config_before"]
             device.write_config(base64.b64decode(content) if content is not None else None)
@@ -387,14 +397,20 @@ def restore(device, state, path):
             result = device.run("uninstall", launcher["package"])
             require(result == "Success", "Could not remove the newly installed launcher.")
             require(launcher["package"] not in device.packages(), "Launcher is still installed.")
-    else:
-        require(not state["installed_before"], "Previously installed dumbtv is missing.")
     device.shell("input", "keyevent", "KEYCODE_HOME")
     state["status"] = "restored"
     save(path, state)
 
 
 def apply(device, profile, identity, content, path):
+    shortcut_path = path.with_name("youtube.json")
+    if shortcut_path.exists():
+        import youtube_shortcut
+
+        require(
+            youtube_shortcut.load(shortcut_path, identity)["status"] in {"applied", "restored"},
+            "Restore the interrupted shortcut transaction before applying the launcher.",
+        )
     privacy_path = path.with_name("privacy.json")
     if privacy_path.exists():
         import privacy
@@ -474,24 +490,51 @@ def main():
             "privacy-apply",
             "privacy-verify",
             "privacy-restore",
+            "youtube-build",
+            "youtube-artwork",
+            "youtube-plan",
+            "youtube-apply",
+            "youtube-verify",
+            "youtube-restore",
         ],
     )
     parser.add_argument("--adb", default="adb")
     parser.add_argument("--serial", help="ADB transport selector, never saved in the repository")
     parser.add_argument("--profile", type=Path, default=HERE / "profile.json")
     parser.add_argument("--state-dir", type=Path, help="Private rollback directory outside Git")
+    parser.add_argument(
+        "--sdk",
+        type=Path,
+        default=os.environ.get("ANDROID_SDK_ROOT"),
+        help="Android SDK location for youtube-build and youtube-artwork",
+    )
     args = parser.parse_args()
     profile = json.loads(args.profile.read_text())
+    if args.action == "youtube-build":
+        import youtube_shortcut
+
+        youtube_shortcut.build(args.sdk)
+        return
     if args.action == "fetch":
         artifact(profile)
         print("Pinned launcher APK downloaded and SHA-256 verified.")
         return
     device = Device(args.adb, args.serial)
+    if args.action == "youtube-artwork":
+        import youtube_shortcut
+
+        youtube_shortcut.artwork(device, args.sdk)
+        return
     identity = device.identity()
     key = hashlib.sha256(identity["serial"].encode()).hexdigest()[:24]
     directory = (args.state_dir or Path.home() / ".local/state/homelab/android-tv" / key).resolve()
     repository = HERE.parents[1]
     require(not directory.is_relative_to(repository), "Keep rollback state outside the repository.")
+    if args.action.startswith("youtube-"):
+        import youtube_shortcut
+
+        youtube_shortcut.command(args.action, device, profile, identity, directory)
+        return
     if args.action == "discover" or args.action.startswith("privacy-"):
         import privacy
 
