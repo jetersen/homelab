@@ -3,6 +3,7 @@
   // Use platform-native auto-merge for eligible updates, including images and charts.
   ignoreUnstable: true,
   automerge: true,
+  minimumReleaseAge: "3 days",
   packageRules: [
     {
       description: "Prefer the newest eligible release instead of competing version PRs",
@@ -17,7 +18,6 @@
       matchPackageNames: ["siderolabs/talos", "ghcr.io/siderolabs/talos", "kubernetes/kubernetes", "ghcr.io/siderolabs/kubelet"],
       separateMajorMinor: true,
       separateMinorPatch: true,
-      minimumReleaseAge: "3 days",
     },
     {
       description: "Talos and Kubernetes minor or major upgrades need explicit review",
@@ -25,12 +25,6 @@
       matchUpdateTypes: ["major", "minor"],
       dependencyDashboardApproval: true,
       automerge: false,
-    },
-    {
-      description: "GitHub Actions: wait out fresh releases",
-      matchManagers: ["github-actions"],
-      matchUpdateTypes: ["minor", "patch", "digest"],
-      minimumReleaseAge: "3 days",
     },
   ],
 }

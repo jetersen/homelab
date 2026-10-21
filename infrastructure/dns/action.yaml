@@ -14,7 +14,7 @@ runs:
     - uses: https://github.com/actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
       if: steps.bundled.outputs.build == 'true'
       with:
-        go-version: '1.27.2'
+        go-version-file: infrastructure/dns/compat/go.mod
         cache-dependency-path: infrastructure/dns/compat/go.sum
     - name: Install DNSControl
       shell: bash
