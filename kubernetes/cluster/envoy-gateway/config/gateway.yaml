@@ -60,21 +60,6 @@ spec:
           - kind: Secret
             name: gateway-production-tls
             namespace: kube-system
-    - name: jellyfin-iot-legacy
-      hostname: jellyfin-iot.lan.jetersen.dev
-      protocol: HTTPS
-      port: 8443
-      allowedRoutes:
-        namespaces:
-          from: Selector
-          selector:
-            matchLabels:
-              kubernetes.io/metadata.name: media
-      tls:
-        certificateRefs:
-          - kind: Secret
-            name: gateway-production-tls
-            namespace: kube-system
     # Public routes use a dedicated listener.
     - name: towonel-public
       hostname: webhook.jetersen.dev

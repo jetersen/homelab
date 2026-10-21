@@ -5,17 +5,15 @@ Technitium and UniFi. The NAS receives Technitium's zones through catalog
 replication; UniFi provides an independent copy during NAS or Kubernetes outages.
 
 Edit [settings.json](settings.json) for desired records. Both providers use the
-same explicit gateway names in the `jetersen.dev` and `lan.jetersen.dev` zones.
-Add gateway hostnames to `gatewayNames` alongside their routes, including
-supported legacy redirects. DNSControl does not discover routes or wait for them
+same explicit gateway names in the `jetersen.dev` zone and infrastructure entries
+in their declared zones. Add gateway hostnames to `gatewayNames` alongside their
+routes. DNSControl does not discover routes or wait for them
 to become ready. Never add wildcards beneath a DHCP search suffix.
 CI checks committed route hostnames against the explicit DNS names when Kubernetes
 manifests change, including hostnames declared in Helm values.
 
-Kubernetes apps use `*.jetersen.dev`. Former `*.lan.jetersen.dev` app URLs
-permanently redirect to their canonical names, preserving paths and queries.
-Physical LAN devices keep their existing names. Both Jellyfin IoT names point to
-the dedicated IPv4 address so redirects stay reachable from the IoT network.
+Kubernetes apps use `*.jetersen.dev`; `lan.jetersen.dev` is reserved for
+infrastructure names. Jellyfin's IoT endpoint uses a dedicated IPv4 address.
 
 Validate both address families for explicit IPv4-only names. Keep dedicated
 endpoints IPv4-only in both views.

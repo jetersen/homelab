@@ -18,6 +18,7 @@ test("cluster route hostnames have explicit internal DNS records", () => {
       return;
     }
     for (const hostname of value.hostnames || []) {
+      assert.ok(!hostname.endsWith(`.lan.${settings.domain}`), `${hostname} (${file})`);
       if (hostname.endsWith(`.${settings.domain}`) && !names.has(hostname)) {
         missing.add(`${hostname} (${file})`);
       }
@@ -93,16 +94,9 @@ test("explicit gateway names retain both address families in both providers", ()
   }
 });
 
-test("every supported legacy redirect has an explicit DNS name", () => {
-  const redirects = readFileSync(
-    "kubernetes/cluster/envoy-gateway/config/legacy-hostname-redirects.yaml",
-    "utf8",
-  );
-  const names = [...redirects.matchAll(/^ {2}- (\S+\.lan\.jetersen\.dev)$/gm)].map(
-    (match) => match[1],
-  );
-  assert.ok(names.length > 0);
-  for (const name of names) {
-    assert.ok(settings.gatewayNames.includes(name), name);
+test("gateway names use the application domain", () => {
+  for (const name of settings.gatewayNames) {
+    assert.ok(name.endsWith(`.${settings.domain}`), name);
+    assert.ok(!name.endsWith(`.lan.${settings.domain}`), name);
   }
 });
