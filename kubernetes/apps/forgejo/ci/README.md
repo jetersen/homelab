@@ -10,6 +10,10 @@ job lifetime, and rollout behavior;
 [runner.yaml](runner.yaml) and [dotfiles-runner.yaml](dotfiles-runner.yaml) define
 the executors.
 
+Select `runner-rocket` for full Nix builds and `runner-kubernetes` for lightweight
+checks. Nix workflows must request their sandbox namespace permissions in the
+job's container options; lightweight workers do not grant those permissions.
+
 The KEDA Forgejo query lists `linux-docker,runner-kubernetes`. Forgejo returns a
 waiting job when every label requested by the job is present in the query, so this
 matches both ordinary `linux-docker` jobs and jobs requiring the Kubernetes label.
@@ -52,14 +56,11 @@ job-image updates need no backend restart; the daemon pulls the new pinned image
 and retains reusable layers. Clearing Docker storage requires stopping the pool
 and explicit approval. A cache miss or cleanup can still require a cold pull.
 
-Both backends retain Docker image layers and permit the `dotfiles-nix-cache`
+Both backends retain Docker image layers. Rocket permits the `dotfiles-nix-cache`
 named volume for serialized Nix jobs. That volume holds the Nix store, its
 database, and fetched inputs. The Debian job image includes Nix outside
 the store, so it can mount either a fresh or retained store directly. Job
-credentials must stay outside this shared volume. Each backend owns a separate
-store; serialize jobs that mount it. Kubernetes startup labels this volume to
-preserve it during cleanup. The dedicated Nix runner grants its jobs the namespace
-permissions needed for strict Nix sandboxing without making every job privileged.
+credentials must stay outside this shared volume. Serialize jobs that mount it.
 The runner's [Compose configuration](../../../../infrastructure/forgejo/runner/compose.yaml)
 also mounts the NAS Nix binary cache at `/var/cache/nix-nas` inside the nested
 Docker daemon. Jobs may bind that path to refill their working store and retain

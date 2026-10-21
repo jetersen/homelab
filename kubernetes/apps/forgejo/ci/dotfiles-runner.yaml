@@ -13,13 +13,9 @@ cache:
   enabled: false
 container:
   docker_host: tcp://forgejo-ci-docker:2375
-  # Nix needs mount/network namespaces and pivot_root for strict sandboxing.
-  options: >-
-    --add-host=docker:host-gateway --dns-option=ndots:1 --dns-search=.
-    --cap-add=SYS_ADMIN --cap-add=NET_ADMIN --security-opt=seccomp=unconfined
+  options: --add-host=docker:host-gateway --dns-option=ndots:1 --dns-search=.
   privileged: false
-  valid_volumes:
-    - dotfiles-nix-cache
+  valid_volumes: []
   force_pull: true
 # Docker execution still stages action sources in the runner's writable directory.
 host:

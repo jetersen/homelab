@@ -2,7 +2,7 @@ log:
   level: info
 runner:
   capacity: 4
-  timeout: 45m
+  timeout: 90m
   shutdown_timeout: 10m
   envs:
     DOCKER_HOST: tcp://docker:2375
