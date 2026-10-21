@@ -110,14 +110,17 @@ retry a failed upgrade.
 
 The Talos image includes `siderolabs/tailscale`.
 [The service patch](patches/node/talos01/tailscale-service.yaml) enables kernel networking and
-advertises individual host routes for the Kubernetes API, Envoy gateway, and
-cluster DNS. Keep these routes narrow instead of advertising the LAN subnet.
+advertises individual host and service routes. Keep these routes narrow instead
+of advertising the LAN subnet.
 
 Enrollment uses an interactive login. State persists under `/var/lib/tailscale`;
 configure the extension before rebooting because an unconfigured service can
 hold up boot. Keep enrollment URLs and recovery material outside the repository.
 Apply service changes with `talosctl patch mc --mode=no-reboot`, capturing raw
 configuration diffs privately as required by [AGENTS.md](../../AGENTS.md).
+Environment lists append during strategic merge. For environment changes, pass a
+delete-document patch followed by the service patch in the same invocation so
+old values are replaced rather than duplicated.
 
 Keep kubelet and etcd addresses pinned to the LAN through [the node configuration](patches/all/00-cluster.yaml) and
 [the etcd patch](patches/control-plane/etcd-lan.yaml). Check Cilium still selects the physical
