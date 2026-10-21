@@ -1,10 +1,39 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { globSync, readFileSync } from "node:fs";
 import test from "node:test";
 import vm from "node:vm";
+import { parseAllDocuments } from "yaml";
 
 const settings = JSON.parse(readFileSync("infrastructure/dns/settings.json", "utf8"));
 const source = readFileSync("infrastructure/dns/dnsconfig.js", "utf8");
+
+test("cluster route hostnames have explicit internal DNS records", () => {
+  const names = new Set([
+    ...settings.gatewayNames,
+    ...settings.infrastructure.map((record) => record.name),
+  ]);
+  const missing = new Set();
+  function check(value, file) {
+    if (!value || typeof value !== "object") {
+      return;
+    }
+    for (const hostname of value.hostnames || []) {
+      if (hostname.endsWith(`.${settings.domain}`) && !names.has(hostname)) {
+        missing.add(`${hostname} (${file})`);
+      }
+    }
+    for (const child of Object.values(value)) {
+      check(child, file);
+    }
+  }
+  for (const file of globSync("kubernetes/**/*.yaml", { exclude: ["**/*.sops.yaml"] })) {
+    for (const document of parseAllDocuments(readFileSync(file, "utf8"))) {
+      assert.equal(document.errors.length, 0, file);
+      check(document.toJS(), file);
+    }
+  }
+  assert.deepEqual([...missing].sort(), [], "Add route hostnames to gatewayNames");
+});
 
 function internalZones() {
   const zones = [];

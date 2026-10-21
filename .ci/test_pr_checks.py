@@ -12,6 +12,10 @@ RULES = json.loads(Path(__file__).with_name("pr-checks.json").read_text())
 
 
 class PrChecksTests(unittest.TestCase):
+    def test_cluster_route_changes_validate_dns(self):
+        path = "kubernetes/apps/renovate/app/httproute.yaml"
+        self.assertTrue(checks.select_checks([path], RULES)["dns"])
+
     def test_truenas_checks_include_hidden_workflows_and_root_sources(self):
         for path in ["infrastructure/truenas/Program.cs", ".forgejo/workflows/truenas.yaml"]:
             self.assertTrue(checks.select_checks([path], RULES)["truenas"])

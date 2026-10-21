@@ -52,6 +52,7 @@
   ],
   "dns": [
     "infrastructure/dns/**",
+    "kubernetes/**",
     "package.json",
     "package-lock.json",
     "biome.json",

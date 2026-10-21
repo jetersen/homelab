@@ -11,6 +11,8 @@ in both views because its wildcard policies also match descendants of LAN search
 domains. Add gateway hostnames to `gatewayNames` alongside their routes, including
 supported legacy redirects. DNSControl does not discover routes or wait for them
 to become ready. Never add wildcards beneath a DHCP search suffix.
+CI checks committed route hostnames against the explicit DNS names when Kubernetes
+manifests change, including hostnames declared in Helm values.
 
 Kubernetes apps use `*.jetersen.dev`. Former `*.lan.jetersen.dev` app URLs
 permanently redirect to their canonical names, preserving paths and queries.
