@@ -17,6 +17,11 @@ sandbox namespace and `/proc` requirements. Runner 13 ignores job-level
 capability flags and loses the empty path-mask lists from `systempaths=unconfined`
 while merging Docker options. Keep these executors restricted to trusted workflows.
 
+Dotfiles workers wait 30 seconds before claiming a job so the persistent Rocket
+runner gets the first opportunity. This is a preference, not strict runner
+priority; Kubernetes can claim an unclaimed job after the delay. Kubernetes-only
+dotfiles checks also incur the delay.
+
 The KEDA Forgejo query lists `linux-docker,runner-kubernetes`. Forgejo returns a
 waiting job when every label requested by the job is present in the query, so this
 matches both ordinary `linux-docker` jobs and jobs requiring the Kubernetes label.
