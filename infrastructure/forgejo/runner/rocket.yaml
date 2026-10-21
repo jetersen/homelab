@@ -1,12 +1,13 @@
 log:
   level: info
 runner:
-  capacity: 1
+  capacity: 4
   timeout: 90m
   shutdown_timeout: 10m
   envs:
     DOCKER_HOST: tcp://docker:2375
   labels:
+    - linux-docker:docker://forgejo.jetersen.dev/jetersen/homelab/runner-job:1.8.3@sha256:2ee040f14481911f9d6774197e47431b1cfa6958ef964aa673185bedab30f414
     - runner-rocket:docker://forgejo.jetersen.dev/jetersen/homelab/runner-job:1.8.3@sha256:2ee040f14481911f9d6774197e47431b1cfa6958ef964aa673185bedab30f414
 cache:
   enabled: false

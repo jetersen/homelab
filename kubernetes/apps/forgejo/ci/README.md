@@ -1,7 +1,7 @@
 # Forgejo CI workers
 
-KEDA starts disposable Docker workers for `linux-docker` jobs. `runner-rocket`
-selects the dedicated build pool; it does not accept generic `linux-docker` jobs.
+KEDA starts disposable Docker workers for `linux-docker` jobs. Rocket accepts the
+same label so either pool can claim jobs; `runner-rocket` selects Rocket explicitly.
 For explicit Kubernetes placement, combine `runner-kubernetes` after
 `linux-docker` in `runs-on`. The [ScaledJob](scaledjob.yaml)
 and [dotfiles ScaledJob](dotfiles-scaledjob.yaml) define polling, concurrency,
@@ -9,10 +9,11 @@ job lifetime, and rollout behavior;
 [runner.yaml](runner.yaml) and [dotfiles-runner.yaml](dotfiles-runner.yaml) define
 the executors.
 
-Select `runner-rocket` for full Nix builds and `runner-kubernetes` for lightweight
-checks. Rocket's runner configuration grants Nix's sandbox namespace permissions;
+Use `linux-docker` for Nix builds that must remain available when either pool is
+offline. Serialize them with a shared workflow concurrency group, and bound
+compilation parallelism inside Nix separately from runner capacity. Both Rocket
+and the dotfiles worker configuration grant Nix's sandbox namespace permissions;
 runner 13 does not apply capability flags from job-level container options.
-Lightweight workers do not grant those permissions.
 
 The KEDA Forgejo query lists `linux-docker,runner-kubernetes`. Forgejo returns a
 waiting job when every label requested by the job is present in the query, so this
@@ -56,7 +57,7 @@ job-image updates need no backend restart; the daemon pulls the new pinned image
 and retains reusable layers. Clearing Docker storage requires stopping the pool
 and explicit approval. A cache miss or cleanup can still require a cold pull.
 
-Both backends retain Docker image layers. Rocket permits the `dotfiles-nix-cache`
+Both backends retain Docker image layers and permit the `dotfiles-nix-cache`
 named volume for serialized Nix jobs. That volume holds the Nix store, its
 database, and fetched inputs. The Debian job image includes Nix outside
 the store, so it can mount either a fresh or retained store directly. Job
