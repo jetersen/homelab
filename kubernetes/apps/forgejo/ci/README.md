@@ -12,10 +12,10 @@ the executors.
 Use `linux-docker` for Nix builds that must remain available when either pool is
 offline. Serialize them with a shared workflow concurrency group, and bound
 compilation parallelism inside Nix separately from runner capacity. Both Rocket
-and the dotfiles worker configuration grant Nix's sandbox namespace permissions;
-runner 13 does not apply capability flags from job-level container options.
-Docker's system-path masking must also be disabled for these trusted Nix workers:
-the bootstrap Nix version probes sandbox support by mounting a fresh `/proc`.
+and the dotfiles worker configuration use privileged job containers for Nix's
+sandbox namespace and `/proc` requirements. Runner 13 ignores job-level
+capability flags and loses the empty path-mask lists from `systempaths=unconfined`
+while merging Docker options. Keep these executors restricted to trusted workflows.
 
 The KEDA Forgejo query lists `linux-docker,runner-kubernetes`. Forgejo returns a
 waiting job when every label requested by the job is present in the query, so this

@@ -13,12 +13,10 @@ cache:
   enabled: false
 container:
   docker_host: tcp://forgejo-ci-docker:2375
-  # Nix needs mount/network namespaces and pivot_root for strict sandboxing.
-  options: >-
-    --add-host=docker:host-gateway --dns-option=ndots:1 --dns-search=.
-    --cap-add=SYS_ADMIN --cap-add=NET_ADMIN --security-opt=seccomp=unconfined
-    --security-opt=systempaths=unconfined
-  privileged: false
+  options: --add-host=docker:host-gateway --dns-option=ndots:1 --dns-search=.
+  # Nix's bootstrap sandbox probe needs an unmasked /proc. Runner 13 loses the
+  # empty mask lists from systempaths=unconfined while merging Docker options.
+  privileged: true
   valid_volumes:
     - dotfiles-nix-cache
   force_pull: true

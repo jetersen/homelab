@@ -13,12 +13,10 @@ cache:
   enabled: false
 container:
   docker_host: tcp://docker:2375
-  # Runner 13 applies capability options only from its configuration, not jobs.
-  options: >-
-    --add-host=docker:host-gateway --dns-option=ndots:1 --dns-search=.
-    --cap-add=SYS_ADMIN --cap-add=NET_ADMIN --security-opt=seccomp=unconfined
-    --security-opt=systempaths=unconfined
-  privileged: false
+  options: --add-host=docker:host-gateway --dns-option=ndots:1 --dns-search=.
+  # Nix's bootstrap sandbox probe needs an unmasked /proc. Runner 13 loses the
+  # empty mask lists from systempaths=unconfined while merging Docker options.
+  privileged: true
   # Serialized Nix jobs retain their store and fetched inputs in Docker's
   # persistent data volume. Credentials stay in disposable job storage.
   valid_volumes:
