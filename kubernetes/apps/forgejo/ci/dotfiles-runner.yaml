@@ -17,6 +17,7 @@ container:
   options: >-
     --add-host=docker:host-gateway --dns-option=ndots:1 --dns-search=.
     --cap-add=SYS_ADMIN --cap-add=NET_ADMIN --security-opt=seccomp=unconfined
+    --security-opt=systempaths=unconfined
   privileged: false
   valid_volumes:
     - dotfiles-nix-cache

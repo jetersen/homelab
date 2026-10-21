@@ -14,6 +14,8 @@ offline. Serialize them with a shared workflow concurrency group, and bound
 compilation parallelism inside Nix separately from runner capacity. Both Rocket
 and the dotfiles worker configuration grant Nix's sandbox namespace permissions;
 runner 13 does not apply capability flags from job-level container options.
+Docker's system-path masking must also be disabled for these trusted Nix workers:
+the bootstrap Nix version probes sandbox support by mounting a fresh `/proc`.
 
 The KEDA Forgejo query lists `linux-docker,runner-kubernetes`. Forgejo returns a
 waiting job when every label requested by the job is present in the query, so this
