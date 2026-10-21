@@ -49,17 +49,12 @@ function publicRecord(record) {
   }
 }
 
-function internalZone(zone, provider, skipClientNames) {
+function internalZone(zone, provider) {
   var isLanZone = zone === "lan." + settings.domain;
-  // UniFi wildcard policies also capture descendants of LAN search domains.
-  // Technitium's separate authoritative LAN zone blocks the parent wildcard.
-  var records =
-    !isLanZone && provider === "technitium"
-      ? [A("*", settings.envoyIPv4), AAAA("*", settings.envoyIPv6)]
-      : [];
+  var records = [];
   settings.gatewayNames.forEach(function (name) {
     var isLan = name.slice(-(".lan." + settings.domain).length) === ".lan." + settings.domain;
-    if (isLan !== isLanZone || (!isLanZone && provider === "technitium")) {
+    if (isLan !== isLanZone) {
       return;
     }
     records.push(A(relative(name, zone), settings.envoyIPv4));
@@ -68,13 +63,13 @@ function internalZone(zone, provider, skipClientNames) {
   settings.infrastructure.forEach(function (record) {
     var isLan =
       record.name.slice(-(".lan." + settings.domain).length) === ".lan." + settings.domain;
-    if (isLan !== (zone === "lan." + settings.domain)) {
+    if (isLan !== isLanZone) {
       return;
     }
     if (record.providers && record.providers.indexOf(provider) === -1) {
       return;
     }
-    if (skipClientNames && record.unifiManagedElsewhere) {
+    if (provider === "unifi" && record.unifiManagedElsewhere) {
       return;
     }
     records.push(A(relative(record.name, zone), record.ipv4));
@@ -93,13 +88,13 @@ function internalZone(zone, provider, skipClientNames) {
 if (view === "all" || view === "internal") {
   if (provider === "all" || provider === "technitium") {
     technitium = NewDnsProvider("technitium", "AXFRDDNS");
-    internalZone(settings.domain, technitium, false);
-    internalZone("lan." + settings.domain, technitium, false);
+    internalZone(settings.domain, technitium);
+    internalZone("lan." + settings.domain, technitium);
   }
   if (provider === "all" || provider === "unifi") {
     unifi = NewDnsProvider("unifi", "UNIFI");
-    internalZone(settings.domain, unifi, true);
-    internalZone("lan." + settings.domain, unifi, true);
+    internalZone(settings.domain, unifi);
+    internalZone("lan." + settings.domain, unifi);
   }
 }
 

@@ -55,14 +55,10 @@ function internalZones() {
   return zones;
 }
 
-test("search-expanded names cannot match a LAN or UniFi wildcard", () => {
+test("internal zones use explicit names without wildcards", () => {
   for (const zone of internalZones()) {
     const wildcards = zone.records.filter((r) => r.name.includes("*"));
-    if (zone.provider === "technitium" && zone.name === settings.domain) {
-      assert.equal(wildcards.length, 2);
-    } else {
-      assert.equal(wildcards.length, 0, `${zone.provider}: ${zone.name}`);
-    }
+    assert.equal(wildcards.length, 0, `${zone.provider}: ${zone.name}`);
   }
 });
 
@@ -71,9 +67,6 @@ test("explicit gateway names retain both address families in both providers", ()
     for (const name of settings.gatewayNames) {
       const isLan = name.endsWith(`.lan.${settings.domain}`);
       if (isLan !== (zone.name === `lan.${settings.domain}`)) {
-        continue;
-      }
-      if (!isLan && zone.provider === "technitium") {
         continue;
       }
       const relative = name.slice(0, -(zone.name.length + 1));
