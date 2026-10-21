@@ -1,10 +1,10 @@
 module github.com/jetersen/homelab/infrastructure/dns/compat
 
-go 1.27.0
+go 1.27.3
 
 require (
 	codeberg.org/miekg/dns v0.6.118
-	github.com/DNSControl/dnscontrol/v5 v5.5.0
+	github.com/DNSControl/dnscontrol/v5 v5.6.0
 )
 
 require (
