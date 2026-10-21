@@ -1,19 +1,21 @@
 log:
   level: info
 runner:
-  capacity: 4
+  capacity: 1
   timeout: 90m
   shutdown_timeout: 10m
   envs:
     DOCKER_HOST: tcp://docker:2375
   labels:
-    - linux-docker:docker://forgejo.jetersen.dev/jetersen/homelab/runner-job:1.8.3@sha256:2ee040f14481911f9d6774197e47431b1cfa6958ef964aa673185bedab30f414
     - runner-rocket:docker://forgejo.jetersen.dev/jetersen/homelab/runner-job:1.8.3@sha256:2ee040f14481911f9d6774197e47431b1cfa6958ef964aa673185bedab30f414
 cache:
   enabled: false
 container:
   docker_host: tcp://docker:2375
-  options: --add-host=docker:host-gateway --dns-option=ndots:1 --dns-search=.
+  # Runner 13 applies capability options only from its configuration, not jobs.
+  options: >-
+    --add-host=docker:host-gateway --dns-option=ndots:1 --dns-search=.
+    --cap-add=SYS_ADMIN --cap-add=NET_ADMIN --security-opt=seccomp=unconfined
   privileged: false
   # Serialized Nix jobs retain their store and fetched inputs in Docker's
   # persistent data volume. Credentials stay in disposable job storage.

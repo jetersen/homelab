@@ -1,18 +1,18 @@
 # Forgejo CI workers
 
-KEDA starts disposable Docker workers for `linux-docker` jobs. Rocket accepts the
-same label, so workflows can run on either pool; `runner-rocket` selects Rocket
-explicitly. `runner-kubernetes` selects only the Kubernetes pool. Combine it after
-`linux-docker` in `runs-on` so Docker remains the selected executor. A worker that finds its
-task already claimed by Rocket exits successfully. The [ScaledJob](scaledjob.yaml)
+KEDA starts disposable Docker workers for `linux-docker` jobs. `runner-rocket`
+selects the dedicated build pool; it does not accept generic `linux-docker` jobs.
+For explicit Kubernetes placement, combine `runner-kubernetes` after
+`linux-docker` in `runs-on`. The [ScaledJob](scaledjob.yaml)
 and [dotfiles ScaledJob](dotfiles-scaledjob.yaml) define polling, concurrency,
 job lifetime, and rollout behavior;
 [runner.yaml](runner.yaml) and [dotfiles-runner.yaml](dotfiles-runner.yaml) define
 the executors.
 
 Select `runner-rocket` for full Nix builds and `runner-kubernetes` for lightweight
-checks. Nix workflows must request their sandbox namespace permissions in the
-job's container options; lightweight workers do not grant those permissions.
+checks. Rocket's runner configuration grants Nix's sandbox namespace permissions;
+runner 13 does not apply capability flags from job-level container options.
+Lightweight workers do not grant those permissions.
 
 The KEDA Forgejo query lists `linux-docker,runner-kubernetes`. Forgejo returns a
 waiting job when every label requested by the job is present in the query, so this
