@@ -24,6 +24,11 @@ image layers on a persistent PVC. Only worker pods can reach its Docker API. The
 socket, or node containerd socket mounted. Its privileged daemon has a configured
 memory limit; CPU quotas remain omitted.
 
+Size the backend's aggregate memory ceiling to leave headroom for cluster
+services, including when both worker pools are busy. Nested builds count toward
+that ceiling. Runner capacity is per worker; use each ScaledJob's replica limit
+to control the number of simultaneous jobs.
+
 This pool is for trusted repository workflows. Jobs share a Docker engine and can
 inspect or control each other's CI containers. They retain separate job networks
 and workspaces, but the shared engine is not an isolation boundary between jobs.

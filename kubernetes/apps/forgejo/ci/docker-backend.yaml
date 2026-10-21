@@ -63,7 +63,8 @@ spec:
               cpu: 100m
               memory: 1Gi
             limits:
-              memory: 12Gi
+              # Include nested builds while leaving headroom for cluster services.
+              memory: 6Gi
           volumeMounts:
             - name: docker-data
               mountPath: /var/lib/docker
