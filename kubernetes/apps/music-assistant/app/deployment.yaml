@@ -65,7 +65,7 @@ spec:
         name: node-route
       containers:
       - name: app
-        image: forgejo.jetersen.dev/jetersen/music-assistant:2.10.6-private.ci.167.1@sha256:ca800b74c34936256089167584c69c8ff46d4609e8794164bed74a9e5b795cea
+        image: forgejo.jetersen.dev/jetersen/music-assistant:2.10.6-private.ci.168.1@sha256:8ef2c3a8a613695fb7d29e11d3d7b9c88d4c80f0c6254e363763f6ecbeb7fe5d
         env:
         - name: HOME
           value: /data
