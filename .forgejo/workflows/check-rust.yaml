@@ -1,0 +1,33 @@
+name: Rust checks
+on:
+  push:
+    branches: [main]
+    paths:
+      - infrastructure/media-scan/**
+      - .forgejo/workflows/check-rust.yaml
+  workflow_dispatch:
+concurrency:
+  group: check-rust-${{ forgejo.ref }}
+  cancel-in-progress: true
+jobs:
+  rust:
+    runs-on: linux-docker
+    timeout-minutes: 10
+    steps:
+      - uses: https://github.com/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: https://github.com/dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+        with:
+          toolchain: 1.95.0
+          components: rustfmt, clippy
+      - name: Install media test dependencies
+        run: |
+          apt-get update
+          apt-get install --no-install-recommends -y ffmpeg
+      - name: Check and test
+        working-directory: infrastructure/media-scan
+        run: |
+          cargo fmt --check
+          cargo clippy --locked --all-targets -- -D warnings
+          cargo test --locked -- --include-ignored

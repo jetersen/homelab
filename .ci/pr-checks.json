@@ -62,5 +62,9 @@
     "infrastructure/truenas/**",
     ".forgejo/workflows/truenas.yaml",
     ".ci/actions/setup-tool/**"
+  ],
+  "rust": [
+    "infrastructure/media-scan/**",
+    ".forgejo/workflows/check-rust.yaml"
   ]
 }

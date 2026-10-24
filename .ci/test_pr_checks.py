@@ -26,6 +26,14 @@ class PrChecksTests(unittest.TestCase):
         self.assertFalse(any(checks.select_checks(["README.md"], RULES).values()))
         self.assertTrue(all(checks.select_checks([".ci/pr-checks.py"], RULES).values()))
 
+    def test_media_scanner_changes_validate_rust(self):
+        for path in [
+            "infrastructure/media-scan/src/engine.rs",
+            "infrastructure/media-scan/Cargo.lock",
+            ".forgejo/workflows/check-rust.yaml",
+        ]:
+            self.assertTrue(checks.select_checks([path], RULES)["rust"])
+
 
 if __name__ == "__main__":
     unittest.main()

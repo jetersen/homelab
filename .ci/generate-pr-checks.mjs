@@ -8,6 +8,7 @@ const checks = {
   dnscontrol: ["check-style-dnscontrol.yaml", "DNS compatibility"],
   javascript: ["check-style-javascript.yaml", "JavaScript"],
   python: ["check-style-python.yaml", "Python"],
+  rust: ["check-rust.yaml", "Rust validation"],
   upgrade_policy: ["check-upgrade-policy.yaml", "Upgrade policy"],
   dns: ["dnscontrol.yaml", "DNS validation"],
   truenas: ["truenas.yaml", "TrueNAS preview"],

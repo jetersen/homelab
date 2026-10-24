@@ -12,6 +12,9 @@ PVC; they are separate from the HelmRelease.
 Verify hardware acceleration with a forced video transcode and inspect its
 FFmpeg log for the QSV hardware encoder. Direct Play does not use the transcoder.
 
+For read-only corruption and timestamp-gap checks, see the
+[media scanner](../../../../infrastructure/media-scan/README.md).
+
 ## Transcode storage
 
 Keep the database and image cache separate from transcode scratch storage.
