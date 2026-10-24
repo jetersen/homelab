@@ -4,7 +4,7 @@ go 1.27.3
 
 require (
 	codeberg.org/miekg/dns v0.6.118
-	github.com/DNSControl/dnscontrol/v5 v5.6.0
+	github.com/DNSControl/dnscontrol/v5 v5.7.0
 )
 
 require (
@@ -12,6 +12,7 @@ require (
 	github.com/DisposaBoy/JsonConfigReader v0.0.0-20201129172854-99cf318d67e7 // indirect
 	github.com/TomOnTime/utfutil v1.0.0 // indirect
 	github.com/cloudflare/cloudflare-go v0.119.0 // indirect
+	github.com/cloudflare/cloudflare-go/v7 v7.13.1 // indirect
 	github.com/ditashi/jsbeautifier-go v0.0.0-20141206144643-2520a8026a9c // indirect
 	github.com/dustin/go-humanize v1.1.0 // indirect
 	github.com/eclipse/paho.golang v0.23.0 // indirect
@@ -30,6 +31,10 @@ require (
 	github.com/ovh/go-ovh v1.9.0 // indirect
 	github.com/qdm12/reprint v0.0.0-20200326205758-722754a53494 // indirect
 	github.com/robertkrimen/otto v0.5.1 // indirect
+	github.com/tidwall/gjson v1.14.4 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.1 // indirect
+	github.com/tidwall/sjson v1.2.5 // indirect
 	github.com/urfave/cli/v3 v3.14.0 // indirect
 	github.com/xddxdd/ottoext v0.0.0-20221109171055-210517fa4419 // indirect
 	golang.org/x/crypto v0.58.0 // indirect
