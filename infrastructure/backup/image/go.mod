@@ -4,12 +4,12 @@ go 1.27.1
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.5.1
-	modernc.org/sqlite v1.60.1
+	modernc.org/sqlite v1.61.0
 )
 
 require (
 	github.com/dustin/go-humanize v1.1.0 // indirect
-	github.com/google/pprof v0.0.0-20261008003335-7bae8d8c4c9e // indirect
+	github.com/google/pprof v0.0.0-20261016150608-1facf8f91b50 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/mattn/go-isatty v0.0.24 // indirect
@@ -19,10 +19,10 @@ require (
 	golang.org/x/net v0.61.0 // indirect
 	golang.org/x/sync v0.24.0 // indirect
 	golang.org/x/sys v0.49.0 // indirect
-	golang.org/x/tools v0.51.0 // indirect
-	modernc.org/cc/v4 v4.30.1 // indirect
-	modernc.org/ccgo/v4 v4.36.2 // indirect
-	modernc.org/libc v1.77.1 // indirect
+	golang.org/x/tools v0.52.0 // indirect
+	modernc.org/cc/v4 v4.30.3 // indirect
+	modernc.org/ccgo/v4 v4.37.0 // indirect
+	modernc.org/libc v1.79.0 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.12.1 // indirect
 )
