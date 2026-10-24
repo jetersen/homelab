@@ -130,6 +130,61 @@ test("unreachable latest release fails rather than resetting the version", (t) =
   assert.match(result.stderr, /outside this history/);
 });
 
+function rewriteReleasedRunner(f) {
+  f.release("runner-job");
+  const base = f.git("rev-parse", "HEAD");
+  f.commit("removed.md", "unrelated", "docs: unrelated change");
+  const original = f.commit(
+    "infrastructure/forgejo/runner/Dockerfile",
+    "runner fix",
+    "fix: runner dependency",
+  );
+  const released = f.release("runner-job").values;
+  const committerDate = f.git("show", "-s", "--format=%cI", original);
+  f.git("reset", "--hard", base);
+  f.run("git", ["cherry-pick", original], { GIT_COMMITTER_DATE: committerDate });
+  const rewritten = f.git("rev-parse", "HEAD");
+  assert.notEqual(rewritten, original);
+  f.git("push", "--force-with-lease", "origin", "main");
+  return { original, rewritten, released, committerDate };
+}
+
+test("rewritten identical build reuses the original release revision and tag", (t) => {
+  const f = fixture(t);
+  const { original, released } = rewriteReleasedRunner(f);
+  assert.deepEqual(f.release("runner-job").values, released);
+  assert.equal(f.git("rev-parse", "runner-job/v0.1.1"), original);
+  assert.equal(f.git("tag", "--list", "runner-job/v*"), "runner-job/v0.1.0\nrunner-job/v0.1.1");
+});
+
+for (const [message, expected] of [
+  ["fix: new runner fix", "0.1.2"],
+  ["feat: new runner capability", "0.2.0"],
+]) {
+  test(`new changes after a rewrite bump the original version to ${expected}`, (t) => {
+    const f = fixture(t);
+    const { original } = rewriteReleasedRunner(f);
+    const next = f.commit("infrastructure/forgejo/runner/Dockerfile", "new runner", message);
+    const released = f.release("runner-job").values;
+    assert.equal(released.RUNNER_JOB_VERSION, expected);
+    assert.equal(released.RUNNER_JOB_REVISION, next);
+    assert.equal(f.git("rev-parse", "runner-job/v0.1.1"), original);
+    assert.deepEqual(f.release("runner-job").values, released);
+  });
+}
+
+test("rewritten identity with different build inputs cannot reuse a release", (t) => {
+  const f = fixture(t);
+  const { original, committerDate } = rewriteReleasedRunner(f);
+  f.write("infrastructure/forgejo/runner/Dockerfile", "different runner");
+  f.git("add", ".");
+  f.run("git", ["commit", "--amend", "--no-edit"], { GIT_COMMITTER_DATE: committerDate });
+  const { result } = f.release("runner-job", false);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /outside this history without an identical rewritten build/);
+  assert.equal(f.git("rev-parse", "runner-job/v0.1.1"), original);
+});
+
 function publisher(t, scenario = "existing") {
   const f = fixture(t);
   const values = f.release("runner-job").values;
