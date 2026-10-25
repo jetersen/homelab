@@ -222,8 +222,8 @@
       },
       "Pulumi": {
         "type": "Transitive",
-        "resolved": "3.114.2",
-        "contentHash": "CfABU1Fxs7ZKLnabOfjErSGVHHsK9z2YSROBi6X5dcURqa1hBQCe68hfxCZLucgDOegVRaGFUrli68VgknHsMg==",
+        "resolved": "3.115.0",
+        "contentHash": "HGTZqZXg1XCOds53VvGE37fCahkp/DRYlYi7GZebgNOXSHRlT16DNRiy6Q3YdpEALNCUcrXdnPF2eIGTZAJ8VA==",
         "dependencies": {
           "Ben.Demystifier": "0.4.1",
           "Google.Protobuf": "3.36.1",
@@ -283,7 +283,7 @@
         "dependencies": {
           "OpenTelemetry.Api": "[1.20.1, )",
           "OpenTelemetry.Exporter.OpenTelemetryProtocol": "[1.20.1, )",
-          "Pulumi": "[3.114.2, )",
+          "Pulumi": "[3.115.0, )",
           "Pulumi.Ovh": "[2.22.0, )"
         }
       }
