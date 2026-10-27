@@ -38,3 +38,16 @@ spec:
     matchLabels:
       io.kubernetes.service.namespace: kube-system
       io.kubernetes.service.name: envoy-proxy
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/cilium.io/ciliumloadbalancerippool_v2alpha1.json
+apiVersion: cilium.io/v2alpha1
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: technitium-ipv6
+spec:
+  blocks:
+    - cidr: fde2:b84e:c4cd:1::1001/128
+  serviceSelector:
+    matchLabels:
+      io.kubernetes.service.namespace: technitium
+      io.kubernetes.service.name: technitium-dns

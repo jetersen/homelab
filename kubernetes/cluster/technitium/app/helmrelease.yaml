@@ -84,8 +84,10 @@ spec:
         controller: technitium
         type: LoadBalancer
         externalTrafficPolicy: Cluster
+        ipFamilyPolicy: RequireDualStack
+        ipFamilies: [IPv4, IPv6]
         annotations:
-          lbipam.cilium.io/ips: 192.168.1.21
+          lbipam.cilium.io/ips: 192.168.1.21,fde2:b84e:c4cd:1::1001
         ports:
           # Configure Technitium's persisted DNS endpoints for port 1053.
           dns-tcp: { port: 53, protocol: TCP, targetPort: 1053 }
