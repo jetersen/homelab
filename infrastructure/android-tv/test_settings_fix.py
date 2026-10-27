@@ -9,8 +9,9 @@ from unittest.mock import patch
 
 import manage
 import settings_fix as fix
+import smarttube
 
-PROFILE = json.loads((Path(__file__).parent / "profile.json").read_text())
+PROFILE = smarttube.legacy_profile(json.loads((Path(__file__).parent / "profile.json").read_text()))
 IDENTITY = {"serial": "test-device", "build": "test-build"}
 
 

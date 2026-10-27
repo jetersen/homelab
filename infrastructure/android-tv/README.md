@@ -98,18 +98,70 @@ The patched APK and build metadata stay in the private `settings-fix` cache.
 Keep `launcher.keystore` and `launcher.password` together in the private signing
 directory. The device's `settings/state.json` record preserves the original
 launcher as HOME. `settings-restore` returns to it and removes only the introduced
-patched copy; full `restore` does this before undoing other changes. Ordinary
+patched copy; full `restore` does this after undoing dependent SmartTube changes. Ordinary
 `plan` and `verify` follow the active patched launcher. Restore the patch before
 changing the underlying launcher or YouTube shortcut, then archive the restored
 `settings` undo directory before applying a new patch transaction. Privacy and
 optional-app controls can still be managed independently.
+
+The optional `smarttube` profile pins an F-Droid build by APK checksum and signing
+certificate. Its package is preferred for the YouTube tile, with the existing
+shortcut and official app retained as fallbacks. Verify the download with SDK
+build-tools 34 before installing:
+
+```sh
+nix-shell infrastructure/android-tv/youtube-shortcut/shell.nix --run \
+  'python3 infrastructure/android-tv/manage.py smarttube-fetch'
+python3 infrastructure/android-tv/manage.py smarttube-plan
+python3 infrastructure/android-tv/manage.py smarttube-apply
+python3 infrastructure/android-tv/manage.py smarttube-verify
+python3 infrastructure/android-tv/manage.py smarttube-restore
+```
+
+Installation targets user 0 without requesting runtime permission grants. Android
+may grant some permissions automatically. Official
+YouTube, its data, and the active launcher's APK stay installed. The private
+`smarttube.json` record saves the exact previous active launcher configuration.
+Restore puts those tiles back and removes only the introduced SmartTube app,
+including its account settings and other data. Existing or retained SmartTube
+installations and APK updates are refused. Restore and archive a restored record
+before changing the pin. A failed reapply preserves data from the last successful
+installation. Configure accounts in the app; keep authentication codes out of Git.
+
+While SmartTube is applied, ordinary `plan`, `apply`, and `verify` follow its
+transaction and the active launcher. Restore SmartTube before changing the
+Settings patch or legacy shortcut. Full `restore` undoes SmartTube first, then
+the launcher patch and other controls.
+
+The optional clean-artwork tile opens SmartTube's native Subscriptions activity.
+It uses checksum-pinned upstream artwork because the F-Droid app's banner includes
+a branding overlay. The forwarding app requests no permissions; the F-Droid APK
+stays unchanged. Build it using the same private signing identity as the legacy
+YouTube shortcut:
+
+```sh
+nix-shell infrastructure/android-tv/youtube-shortcut/shell.nix --run \
+  'python3 infrastructure/android-tv/manage.py smarttube-tile-build'
+python3 infrastructure/android-tv/manage.py smarttube-tile-plan
+python3 infrastructure/android-tv/manage.py smarttube-tile-apply
+python3 infrastructure/android-tv/manage.py smarttube-tile-verify
+python3 infrastructure/android-tv/manage.py smarttube-tile-restore
+```
+
+Keep the signing key and password together. Build artifacts stay in the private
+`smarttube-tile` cache. The independent `smarttube_tile.json` recovery record
+preserves the exact previous tiles. Its restore removes only the forwarding app,
+retaining SmartTube and its account data. While this tile is active, ordinary and
+SmartTube plan/apply/verify commands follow it. `smarttube-restore` and full
+`restore` undo the tile before removing SmartTube. Restore and archive a restored
+tile record before rebuilding a changed helper.
 
 The optional YouTube shortcut opens the installed app's Subscriptions feed with
 an `ACTION_VIEW` intent. The forwarding app requests no permissions and has no
 services. It does not contain an account identifier. YouTube controls account
 selection and may still show a chooser; a deep link is not a guarantee against
 future app changes. The pinned launcher has no per-app intent override, so the
-profile prefers the forwarding tile when installed and otherwise uses YouTube.
+profile uses the forwarding tile when SmartTube is absent, then official YouTube.
 
 Build locally with JDK 17+ and Android SDK platform/build-tools 34, then review
 the device plan:

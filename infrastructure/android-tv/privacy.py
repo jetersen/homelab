@@ -21,6 +21,8 @@ PROTECTED = {
     "com.google.android.apps.mediashell",
     "com.google.android.tv.remote.service",
     "com.google.android.youtube.tv",
+    "app.smarttube.fdroid",
+    "tv.homelab.smarttube",
     "org.jellyfin.androidtv",
     "ch.protonvpn.android",
     "tv.dumbtv.home",

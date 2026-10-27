@@ -9,10 +9,11 @@ from pathlib import Path
 from unittest.mock import patch
 
 import manage
+import smarttube
 import youtube_shortcut as shortcut
 
 IDENTITY = {"serial": "test-device", "build": "test-build"}
-PROFILE = json.loads((Path(__file__).parent / "profile.json").read_text())
+PROFILE = smarttube.legacy_profile(json.loads((Path(__file__).parent / "profile.json").read_text()))
 ORIGINAL = b"# exact configuration\r\napps.order=com.google.android.youtube.tv\r\n"
 
 

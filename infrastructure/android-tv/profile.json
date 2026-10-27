@@ -47,8 +47,24 @@
     "background": "graphite",
     "rotate": "off"
   },
+  "smarttube": {
+    "package": "app.smarttube.fdroid",
+    "version": "32.68",
+    "version_code": 2458,
+    "url": "https://f-droid.org/repo/app.smarttube.fdroid_2458.apk",
+    "sha256": "d88cafc1b204b7cdb7784e4f559051025fa1a5dd4985875121592d21925dafda",
+    "signer_sha256": "33791872daccf601a31bd73d329245f80f69044f76e1a794586fb857f09deaa8",
+    "source": "https://github.com/yuliskov/SmartTube/tree/94553dd7151e8a911926ef2c9e3ef30fca007b48"
+  },
+  "smarttube_tile": {
+    "package": "tv.homelab.smarttube",
+    "banner_url": "https://raw.githubusercontent.com/yuliskov/SmartTube/94553dd7151e8a911926ef2c9e3ef30fca007b48/smarttubetv/src/main/res/mipmap-nodpi/app_banner.png",
+    "banner_sha256": "f6ed7784cb0a4c972bf765157b213a13a00fdd9752f52300a71aacff7a158714",
+    "icon_url": "https://raw.githubusercontent.com/yuliskov/SmartTube/94553dd7151e8a911926ef2c9e3ef30fca007b48/smarttubetv/src/main/res/mipmap-nodpi/app_icon.png",
+    "icon_sha256": "6f31c66c712a4a4171b9127d77e09283af5cd16af1e28a4de391eb8d5b98f419"
+  },
   "apps": [
-    { "name": "YouTube", "candidates": ["tv.homelab.youtube", "com.google.android.youtube.tv"] },
+    { "name": "YouTube", "candidates": ["tv.homelab.smarttube", "app.smarttube.fdroid", "tv.homelab.youtube", "com.google.android.youtube.tv"] },
     { "name": "Jellyfin", "candidates": ["org.jellyfin.androidtv"] },
     { "name": "Proton VPN", "candidates": ["ch.protonvpn.android"] }
   ]

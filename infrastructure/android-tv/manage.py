@@ -353,7 +353,10 @@ def verify(device, profile, content):
     require(wait_for_home(device, package), "HOME still resolves to the vendor launcher.")
     require(device.read_config() == base64.b64encode(content).decode(), "Launcher config differs.")
     device.shell("input", "keyevent", "KEYCODE_HOME")
-    for _ in range(10):
+    for attempt in range(40):
+        # Package installation and TV Settings can delay or consume the first HOME event.
+        if attempt in {10, 20, 30}:
+            device.shell("input", "keyevent", "KEYCODE_HOME")
         activities = device.shell("dumpsys", "activity", "activities")
         resumed = [
             line
@@ -369,6 +372,11 @@ def verify(device, profile, content):
 def restore(device, state, path):
     import privacy
     import settings_fix
+    import smarttube
+
+    app_path = path.with_name("smarttube.json")
+    if app_path.exists():
+        smarttube.restore(device, smarttube.load(app_path, state["identity"]), app_path)
 
     child = settings_fix.state_path(path.parent)
     if child.exists():
@@ -421,7 +429,9 @@ def restore(device, state, path):
 
 def apply(device, profile, identity, content, path):
     import settings_fix
+    import smarttube
 
+    smarttube.require_inactive(path.parent, identity)
     settings_fix.require_inactive(path.parent, identity)
     shortcut_path = path.with_name("youtube.json")
     if shortcut_path.exists():
@@ -520,6 +530,16 @@ def main():
             "settings-apply",
             "settings-verify",
             "settings-restore",
+            "smarttube-fetch",
+            "smarttube-plan",
+            "smarttube-apply",
+            "smarttube-verify",
+            "smarttube-restore",
+            "smarttube-tile-build",
+            "smarttube-tile-plan",
+            "smarttube-tile-apply",
+            "smarttube-tile-verify",
+            "smarttube-tile-restore",
         ],
     )
     parser.add_argument("--adb", default="adb")
@@ -540,6 +560,16 @@ def main():
     )
     args = parser.parse_args()
     profile = json.loads(args.profile.read_text())
+    if args.action == "smarttube-tile-build":
+        import smarttube_tile
+
+        smarttube_tile.build(profile, args.sdk)
+        return
+    if args.action == "smarttube-fetch":
+        import smarttube
+
+        smarttube.fetch(profile, args.sdk)
+        return
     if args.action == "settings-build":
         import settings_fix
 
@@ -566,6 +596,48 @@ def main():
     repository = HERE.parents[1]
     require(not directory.is_relative_to(repository), "Keep rollback state outside the repository.")
     import settings_fix
+    import smarttube
+    import smarttube_tile
+
+    if args.action.startswith("smarttube-tile-"):
+        smarttube_tile.command(args.action, device, profile, identity, directory)
+        return
+    tile_path = directory / "smarttube_tile.json"
+    if tile_path.exists() and smarttube.load(tile_path, identity)["status"] != "restored":
+        operation = {
+            "plan": "plan",
+            "apply": "apply",
+            "verify": "verify",
+            "youtube-verify": "verify",
+            "smarttube-plan": "plan",
+            "smarttube-apply": "apply",
+            "smarttube-verify": "verify",
+        }.get(args.action)
+        if operation:
+            smarttube_tile.command(
+                "smarttube-tile-" + operation, device, profile, identity, directory
+            )
+            return
+    if args.action.startswith("smarttube-"):
+        smarttube.command(args.action, device, profile, identity, directory)
+        return
+    app_path = directory / "smarttube.json"
+    if app_path.exists() and smarttube.load(app_path, identity)["status"] != "restored":
+        if args.action in {"plan", "apply", "verify", "youtube-verify"}:
+            operation = "verify" if args.action == "youtube-verify" else args.action
+            smarttube.command("smarttube-" + operation, device, profile, identity, directory)
+            return
+        if args.action in {
+            "settings-apply",
+            "settings-restore",
+            "youtube-apply",
+            "youtube-restore",
+        }:
+            smarttube.require_inactive(directory, identity)
+        if args.action.endswith("-apply"):
+            smarttube.require_complete(directory, identity)
+    if args.action.startswith("youtube-"):
+        profile = smarttube.legacy_profile(profile)
 
     if args.action.startswith("settings-"):
         settings_fix.command(args.action, device, profile, identity, directory)
