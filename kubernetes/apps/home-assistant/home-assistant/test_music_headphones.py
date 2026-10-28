@@ -236,6 +236,7 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
             (None, disconnected, False),
             (connected, State(BLUETOOTH, "unavailable"), False),
             (connected, State(BLUETOOTH, "0"), False),
+            (State(BLUETOOTH, "unavailable", connected.attributes), disconnected, False),
             (disconnected, disconnected, False),
             (disconnected, connected, False),
         ]:
