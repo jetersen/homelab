@@ -32,8 +32,25 @@ script:
         required: true
         selector:
           select:
-            options: [resume, transfer]
+            options: [resume, transfer, handoff]
     sequence:
+      - condition: template
+        value_template: >-
+          {{ 'WH-1000XM6' in (state_attr('sensor.cph2709_bluetooth_connection',
+             'connected_paired_devices') or []) | join(' ') }}
+      - action: notify.mobile_app_oneplus_nord_5
+        data:
+          message: command_activity
+          data:
+            intent_action: android.intent.action.VIEW
+            intent_package_name: io.music_assistant.client
+            intent_uri: musicassistant://app/players?player=My%20Phone
+            ttl: 0
+            priority: high
+      - wait_template: "{{ has_value('media_player.my_phone') }}"
+        timeout: "00:00:30"
+        continue_on_timeout: true
+      # The headphones may disconnect while Android starts the player.
       - condition: template
         value_template: >-
           {{ 'WH-1000XM6' in (state_attr('sensor.cph2709_bluetooth_connection',
@@ -61,7 +78,7 @@ script:
                     else:
                       - variables:
                           problem: The phone queue is empty. Use Transfer desktop to bring your music over.
-              - conditions: "{{ operation == 'transfer' }}"
+              - conditions: "{{ operation in ['transfer', 'handoff'] }}"
                 sequence:
                   - action: music_assistant.get_queue
                     target:
@@ -82,7 +99,7 @@ script:
                           {% if has_value(entity) and queues.get(entity, {}).get('items', 0) > 0 %}
                             {% if is_state(entity, 'playing') %}
                               {% set candidates.playing = candidates.playing + [entity] %}
-                            {% else %}
+                            {% elif operation == 'transfer' %}
                               {% set candidates.other = candidates.other + [entity] %}
                             {% endif %}
                           {% endif %}
@@ -97,8 +114,12 @@ script:
                           source_player: "{{ source }}"
                           auto_play: true
                     else:
-                      - variables:
-                          problem: Neither desktop has an available music queue. Open Music Assistant to choose music.
+                      - if: "{{ operation == 'handoff' }}"
+                        then:
+                          - action: script.music_headphones_prompt
+                        else:
+                          - variables:
+                              problem: Neither desktop has an available music queue. Open Music Assistant to choose music.
       - if: "{{ problem != '' }}"
         then:
           - action: notify.mobile_app_oneplus_nord_5
@@ -117,7 +138,7 @@ script:
 
 automation:
   - id: music_headphones_connected
-    alias: Offer music when headphones connect
+    alias: Open music and transfer active desktop playback when headphones connect
     mode: restart
     triggers:
       - trigger: template
@@ -126,7 +147,9 @@ automation:
              'connected_paired_devices') or []) | join(' ') }}
         for: "00:00:02"
     actions:
-      - action: script.music_headphones_prompt
+      - action: script.music_headphones_play
+        data:
+          operation: handoff
 
   - id: music_headphones_disconnected
     alias: Clear music prompt when headphones disconnect

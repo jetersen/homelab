@@ -1,7 +1,9 @@
 """Exercise headphone actions in an isolated, matching Home Assistant runtime."""
 
+import asyncio
 import tempfile
 import unittest
+from copy import deepcopy
 from pathlib import Path
 
 import yaml
@@ -23,6 +25,7 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
         self.hass = HomeAssistant(self.directory.name)
         loader.async_setup(self.hass)
         self.calls = []
+        self.launches = []
         self.queues = {PHONE: 3, ROCKET: 3, FRAMEWORK: 3}
 
         async def queue(call):
@@ -32,7 +35,10 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
             return {entity: {"items": self.queues[entity]}}
 
         async def record(call):
-            self.calls.append((call.domain, call.service, dict(call.data)))
+            if call.data.get("message") == "command_activity":
+                self.launches.append(dict(call.data))
+            else:
+                self.calls.append((call.domain, call.service, dict(call.data)))
 
         self.hass.services.async_register(
             "music_assistant", "get_queue", queue, supports_response=SupportsResponse.ONLY
@@ -41,14 +47,17 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
             ("music_assistant", "transfer_queue"),
             ("media_player", "media_play"),
             ("notify", "mobile_app_oneplus_nord_5"),
+            ("script", "music_headphones_prompt"),
         ]:
             self.hass.services.async_register(domain, service, record)
         for entity in [PHONE, ROCKET, FRAMEWORK]:
             self.hass.states.async_set(entity, "paused")
         self.hass.states.async_set(BLUETOOTH, "1", {"connected_paired_devices": ["WH-1000XM6"]})
+        sequence = deepcopy(PACKAGE["script"]["music_headphones_play"]["sequence"])
+        next(step for step in sequence if "wait_template" in step)["timeout"] = 0.1
         self.script = Script(
             self.hass,
-            cv.SCRIPT_SCHEMA(PACKAGE["script"]["music_headphones_play"]["sequence"]),
+            cv.SCRIPT_SCHEMA(sequence),
             "Headphone regression",
             "script",
         )
@@ -64,7 +73,9 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
         self.hass.states.async_set(BLUETOOTH, "0", {"connected_paired_devices": []})
         await self.run_action("resume")
         await self.run_action("transfer")
+        await self.run_action("handoff")
         self.assertEqual(self.calls, [])
+        self.assertEqual(self.launches, [])
 
     async def test_resume_uses_phone_queue(self):
         await self.run_action("resume")
@@ -92,6 +103,45 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(self.calls), 1)
         self.assertEqual(self.calls[0][0], "notify")
         self.assertIn("Neither desktop", self.calls[0][2]["message"])
+
+    async def test_handoff_launches_app_and_transfers_playing_rocket(self):
+        self.hass.states.async_set(ROCKET, "playing")
+        await self.run_action("handoff")
+        self.assertEqual(
+            self.launches[0]["data"]["intent_package_name"], "io.music_assistant.client"
+        )
+        self.assertEqual(self.calls[0][2]["source_player"], ROCKET)
+        self.assertTrue(self.calls[0][2]["auto_play"])
+
+    async def test_handoff_prefers_playing_framework(self):
+        self.hass.states.async_set(FRAMEWORK, "playing")
+        await self.run_action("handoff")
+        self.assertEqual(self.calls[0][2]["source_player"], FRAMEWORK)
+
+    async def test_handoff_leaves_paused_queues_alone(self):
+        await self.run_action("handoff")
+        self.assertEqual([call[:2] for call in self.calls], [("script", "music_headphones_prompt")])
+
+    async def test_handoff_waits_for_phone_to_reconnect(self):
+        self.hass.states.async_set(PHONE, "unavailable")
+        self.hass.states.async_set(ROCKET, "playing")
+        task = asyncio.create_task(self.run_action("handoff"))
+        await asyncio.sleep(0.01)
+        self.assertEqual(self.calls, [])
+        self.assertEqual(len(self.launches), 1)
+        self.hass.states.async_set(PHONE, "idle")
+        await task
+        self.assertEqual(self.calls[0][2]["source_player"], ROCKET)
+
+    async def test_disconnect_during_startup_prevents_transfer(self):
+        self.hass.states.async_set(PHONE, "unavailable")
+        self.hass.states.async_set(ROCKET, "playing")
+        task = asyncio.create_task(self.run_action("handoff"))
+        await asyncio.sleep(0.01)
+        self.hass.states.async_set(BLUETOOTH, "0", {"connected_paired_devices": []})
+        self.hass.states.async_set(PHONE, "idle")
+        await task
+        self.assertEqual(self.calls, [])
 
     async def test_unavailable_phone_explains_reconnection(self):
         self.hass.states.async_set(PHONE, "unavailable")
