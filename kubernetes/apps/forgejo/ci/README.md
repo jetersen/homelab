@@ -54,7 +54,9 @@ The PVC survives backend pod replacement. Never mount its Docker data directory
 into multiple daemons. [Startup](docker-entrypoint.sh) removes stale stopped
 containers, networks, and job volumes before becoming ready, while retaining image
 layers and volumes labelled `ci.persistent=true`. Cache budgets are defined in the
-backend configuration; startup and periodic cleanup are defined in the entrypoint. Monitor PVC and thin-pool capacity.
+backend configuration; startup and periodic cleanup are defined in the entrypoint.
+The entrypoint also trims the Docker filesystem at startup and daily so deleted
+blocks return to the thin pool. Monitor PVC and thin-pool capacity.
 
 The backend uses `OnDelete` updates to avoid restarting the shared engine during
 CI. For an engine or configuration update, pause KEDA, let active Kubernetes jobs
