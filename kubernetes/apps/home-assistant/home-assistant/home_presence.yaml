@@ -2,3 +2,74 @@ input_boolean:
   at_home:
     name: At home
     icon: mdi:home-account
+
+timer:
+  home_presence_departure:
+    name: Confirm away from home
+    duration: "00:15:00"
+    # Reconfirm absence after a restart instead of counting unobserved time.
+    restore: false
+
+automation:
+  - id: home_presence_sync
+    alias: Update At home from phone presence
+    mode: restart
+    triggers:
+      - trigger: state
+        entity_id:
+          - person.joseph_petersen
+          - sensor.cph2709_wi_fi_connection
+        to: null
+      - trigger: homeassistant
+        event: start
+      - trigger: event
+        event_type: automation_reloaded
+      - trigger: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.home_presence_departure
+        id: departed
+    actions:
+      - choose:
+          - conditions: >-
+              {{ is_state('person.joseph_petersen', 'home') or
+                 is_state('sensor.cph2709_wi_fi_connection', 'The Creep Nextdoor 5G') }}
+            sequence:
+              - action: timer.cancel
+                target:
+                  entity_id: timer.home_presence_departure
+              - action: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.at_home
+          - conditions: >-
+              {{ has_value('person.joseph_petersen') and
+                 has_value('sensor.cph2709_wi_fi_connection') and
+                 not is_state('person.joseph_petersen', 'home') and
+                 not is_state('sensor.cph2709_wi_fi_connection', 'The Creep Nextdoor 5G') }}
+            sequence:
+              - choose:
+                  - conditions:
+                      - condition: trigger
+                        id: departed
+                      - condition: state
+                        entity_id: timer.home_presence_departure
+                        state: idle
+                    sequence:
+                      - action: input_boolean.turn_off
+                        target:
+                          entity_id: input_boolean.at_home
+                default:
+                  - condition: state
+                    entity_id: input_boolean.at_home
+                    state: "on"
+                  - condition: state
+                    entity_id: timer.home_presence_departure
+                    state: idle
+                  - action: timer.start
+                    target:
+                      entity_id: timer.home_presence_departure
+        default:
+          # Unknown presence cancels pending departure and preserves the helper.
+          - action: timer.cancel
+            target:
+              entity_id: timer.home_presence_departure
