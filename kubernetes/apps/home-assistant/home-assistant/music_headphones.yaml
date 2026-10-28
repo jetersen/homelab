@@ -1,4 +1,54 @@
+template:
+  - binary_sensor:
+      - name: Music headphones playback
+        unique_id: music_headphones_playback
+        default_entity_id: binary_sensor.music_headphones_playback
+        state: >-
+          {{ is_state('media_player.my_phone', 'playing') and
+             'WH-1000XM6' in (state_attr('sensor.cph2709_bluetooth_connection',
+             'connected_paired_devices') or []) | join(' ') }}
+        # Android can pause audio before reporting the Bluetooth disconnection.
+        delay_off: "00:00:10"
+
 script:
+  music_headphones_return:
+    alias: Return headphone music to Rocket at home
+    mode: single
+    sequence:
+      - &music_return_allowed
+        condition: and
+        conditions:
+          - condition: state
+            entity_id: input_boolean.at_home
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.rocket_sensor_power
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.music_headphones_playback
+            state: "on"
+          - condition: template
+            value_template: >-
+              {{ has_value('sensor.cph2709_bluetooth_connection') and
+                 state_attr('sensor.cph2709_bluetooth_connection', 'connected_paired_devices') is not none and
+                 'WH-1000XM6' not in (state_attr('sensor.cph2709_bluetooth_connection',
+                 'connected_paired_devices') or []) | join(' ') and
+                 states('media_player.my_phone') in ['playing', 'paused'] and
+                 states('media_player.rocket') in ['idle', 'paused', 'playing'] }}
+      - action: music_assistant.get_queue
+        target:
+          entity_id: media_player.my_phone
+        response_variable: phone_queue
+      - condition: template
+        value_template: "{{ phone_queue.get('media_player.my_phone', {}).get('items', 0) > 0 }}"
+      - *music_return_allowed
+      - action: music_assistant.transfer_queue
+        target:
+          entity_id: media_player.rocket
+        data:
+          source_player: media_player.my_phone
+          auto_play: true
+
   music_headphones_prompt:
     alias: Music headphones prompt
     mode: restart
@@ -152,13 +202,20 @@ automation:
           operation: handoff
 
   - id: music_headphones_disconnected
-    alias: Clear music prompt when headphones disconnect
+    alias: Clear music prompt and return playback when headphones disconnect
     mode: restart
     triggers:
-      - trigger: template
+      - trigger: state
+        entity_id: sensor.cph2709_bluetooth_connection
+        attribute: connected_paired_devices
+    conditions:
+      - condition: template
         value_template: >-
-          {{ 'WH-1000XM6' not in (state_attr('sensor.cph2709_bluetooth_connection',
-             'connected_paired_devices') or []) | join(' ') }}
+          {{ trigger.from_state is not none and trigger.to_state is not none and
+             trigger.to_state.state not in ['unknown', 'unavailable'] and
+             trigger.to_state.attributes.get('connected_paired_devices') is not none and
+             'WH-1000XM6' in (trigger.from_state.attributes.get('connected_paired_devices') or []) | join(' ') and
+             'WH-1000XM6' not in (trigger.to_state.attributes.get('connected_paired_devices') or []) | join(' ') }}
     actions:
       - repeat:
           for_each: [music-headphones, music-headphones-help]
@@ -168,6 +225,7 @@ automation:
                 message: clear_notification
                 data:
                   tag: "{{ repeat.item }}"
+      - action: script.music_headphones_return
 
   - id: music_headphones_notification_action
     alias: Handle headphone music notification

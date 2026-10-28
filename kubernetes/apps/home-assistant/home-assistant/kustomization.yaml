@@ -20,5 +20,6 @@ configMapGenerator:
       - glkvm_certificate_sync.py
       - co2_ventilation.yaml
       - music_headphones.yaml
+      - home_presence.yaml
     options:
       disableNameSuffixHash: true

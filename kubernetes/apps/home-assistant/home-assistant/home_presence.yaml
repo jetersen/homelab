@@ -1,0 +1,4 @@
+input_boolean:
+  at_home:
+    name: At home
+    icon: mdi:home-account
