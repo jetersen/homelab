@@ -19,9 +19,9 @@
       },
       "Pulumi": {
         "type": "Direct",
-        "requested": "[3.116.0, )",
-        "resolved": "3.116.0",
-        "contentHash": "QcnwCSZicK7bK9v0kTDUAf3hIYTxWMaqVzx9x7ZeCqxjBifE5ZuJiwT8RuaHfb/Tx1kkHz7NqWwB6K71qDbRTg==",
+        "requested": "[3.116.1, )",
+        "resolved": "3.116.1",
+        "contentHash": "/8QOg1WBzYeHIgkxK3WLx0st60t/GSuij9LN+vJn3UQMc5LgHul85cNpfIrNdk/61b34f8HKihWOw/rYf4b90w==",
         "dependencies": {
           "Ben.Demystifier": "0.4.1",
           "Google.Protobuf": "3.36.1",
