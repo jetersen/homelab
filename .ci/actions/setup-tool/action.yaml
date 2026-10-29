@@ -21,7 +21,7 @@ runs:
       if: inputs.tool == 'flux' && steps.bundled.outputs.installed != 'true'
       with:
         version: ${{ steps.bundled.outputs.version }}
-    - uses: https://github.com/taiki-e/install-action@1e29709c0ec63babbe8f266397a465f29a825f91 # v2.87.31
+    - uses: https://github.com/taiki-e/install-action@5488ac5a951645ce95062214902ac4b6bc1a1037 # v2.87.32
       if: inputs.tool == 'git-cliff' && steps.bundled.outputs.installed != 'true'
       with:
         tool: git-cliff@${{ steps.bundled.outputs.version }}
