@@ -37,6 +37,21 @@ spec:
         ScrapePoolHasNoTargets:
           spec:
             expr: (sum(vm_promscrape_scrape_pool_targets) without(status,instance,pod) == 0) unless on(scrape_job) label_replace(kube_deployment_spec_replicas{namespace="system-upgrade",deployment="tuppr"} == 0, "scrape_job", "serviceScrape/system-upgrade/tuppr/0", "deployment", ".*")
+        # Personal devices are scraped when online but have no availability requirement.
+        TargetDown:
+          spec:
+            expr: (100 * (count(up{host!~"rocket|framework",job!~"(rocket|framework)(-.*)?"} == 0) by(cluster,job,namespace,service) / count(up{host!~"rocket|framework",job!~"(rocket|framework)(-.*)?"}) by(cluster,job,namespace,service))) > 10
+        # The global failure counter includes expected offline devices; use target health.
+        TooManyScrapeErrors:
+          spec:
+            expr: up{host!~"rocket|framework",job!~"(rocket|framework)(-.*)?"} == 0
+            annotations:
+              summary: Scraping {{ $labels.job }} on {{ $labels.instance }} has failed for 15 minutes
+              description: Check the target error on vmagent's /targets page.
+        # Scrape availability is covered above. Keep other warning logs actionable.
+        TooManyLogs:
+          spec:
+            expr: sum(increase(vm_log_messages_total{level="warn",location!~".*/promscrape/scrapework[.]go:.*"}[5m])) without(app_version,location,is_printed) > 0
         # Fixed rate windows need several samples at the one-minute scrape cadence.
         instance:node_cpu:rate:sum:
           spec:
