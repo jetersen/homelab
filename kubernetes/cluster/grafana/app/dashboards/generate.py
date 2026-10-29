@@ -394,31 +394,84 @@ def diagnostics():
 def rocket():
     specs = [
         ("Available RAM", 'node_memory_MemAvailable_bytes{host="rocket"}', "bytes", "Available"),
-        ("Swap used", 'node_memory_SwapTotal_bytes{host="rocket"} - node_memory_SwapFree_bytes{host="rocket"}', "bytes", "Swap"),
+        (
+            "Swap used",
+            'node_memory_SwapTotal_bytes{host="rocket"} - node_memory_SwapFree_bytes{host="rocket"}',
+            "bytes",
+            "Swap",
+        ),
         ("Shared memory", 'node_memory_Shmem_bytes{host="rocket"}', "bytes", "Shared memory"),
-        ("GPU system memory (GTT)", 'node_drm_memory_gtt_used_bytes{host="rocket"}', "bytes", "{{card}}"),
+        (
+            "GPU system memory (GTT)",
+            'node_drm_memory_gtt_used_bytes{host="rocket"}',
+            "bytes",
+            "{{card}}",
+        ),
         ("GPU VRAM", 'node_drm_memory_vram_used_bytes{host="rocket"}', "bytes", "{{card}}"),
-        ("Memory pressure stall fraction", 'rate(node_pressure_memory_stalled_seconds_total{host="rocket"}[$__rate_interval])', "percentunit", "Full stall"),
-        ("Process proportional RAM (top 15)", 'topk(15, namedprocess_namegroup_memory_bytes{host="rocket",memtype="proportionalResident"})', "bytes", "{{groupname}}"),
-        ("Process resident RAM (top 15)", 'topk(15, namedprocess_namegroup_memory_bytes{host="rocket",memtype="resident"})', "bytes", "{{groupname}}"),
-        ("Process swap (top 15)", 'topk(15, namedprocess_namegroup_memory_bytes{host="rocket",memtype="swapped"})', "bytes", "{{groupname}}"),
-        ("Process CPU cores (top 15)", 'topk(15, sum by(groupname) (rate(namedprocess_namegroup_cpu_seconds_total{host="rocket"}[$__rate_interval])))', "short", "{{groupname}}"),
-        ("Process counts", 'namedprocess_namegroup_num_procs{host="rocket"}', "short", "{{groupname}}"),
-        ("Kernel OOM kills (rolling 5m)", 'increase(node_vmstat_oom_kill{host="rocket"}[5m])', "short", "OOM kills"),
+        (
+            "Memory pressure stall fraction",
+            'rate(node_pressure_memory_stalled_seconds_total{host="rocket"}[$__rate_interval])',
+            "percentunit",
+            "Full stall",
+        ),
+        (
+            "Process proportional RAM (top 15)",
+            'topk(15, namedprocess_namegroup_memory_bytes{host="rocket",memtype="proportionalResident"})',
+            "bytes",
+            "{{groupname}}",
+        ),
+        (
+            "Process resident RAM (top 15)",
+            'topk(15, namedprocess_namegroup_memory_bytes{host="rocket",memtype="resident"})',
+            "bytes",
+            "{{groupname}}",
+        ),
+        (
+            "Process swap (top 15)",
+            'topk(15, namedprocess_namegroup_memory_bytes{host="rocket",memtype="swapped"})',
+            "bytes",
+            "{{groupname}}",
+        ),
+        (
+            "Process CPU cores (top 15)",
+            'topk(15, sum by(groupname) (rate(namedprocess_namegroup_cpu_seconds_total{host="rocket"}[$__rate_interval])))',
+            "short",
+            "{{groupname}}",
+        ),
+        (
+            "Process counts",
+            'namedprocess_namegroup_num_procs{host="rocket"}',
+            "short",
+            "{{groupname}}",
+        ),
+        (
+            "Kernel OOM kills (rolling 5m)",
+            'increase(node_vmstat_oom_kill{host="rocket"}[5m])',
+            "short",
+            "OOM kills",
+        ),
     ]
     return {
-        "uid": "rocket-process-memory", "title": "Rocket / Processes and memory",
-        "schemaVersion": 39, "version": 1, "tags": ["homelab", "workstation"],
-        "timezone": "browser", "refresh": "15s", "time": {"from": "now-1h", "to": "now"},
+        "uid": "rocket-process-memory",
+        "title": "Rocket / Processes and memory",
+        "schemaVersion": 39,
+        "version": 1,
+        "tags": ["homelab", "workstation"],
+        "timezone": "browser",
+        "refresh": "15s",
+        "time": {"from": "now-1h", "to": "now"},
         "description": "Process groups use executable names, not PIDs or arguments. PSS apportions shared pages; RSS may double-count them. GPU totals are per device and cannot identify the owning process. Scrapes can miss processes shorter than 15 seconds.",
         "panels": [
             {
-                "id": i + 1, "title": title, "type": "timeseries",
+                "id": i + 1,
+                "title": title,
+                "type": "timeseries",
                 "datasource": {"type": "prometheus", "uid": DATASOURCE},
                 "gridPos": {"x": i % 2 * 12, "y": i // 2 * 8, "w": 12, "h": 8},
                 "fieldConfig": {"defaults": {"unit": unit, "min": 0}, "overrides": []},
                 "targets": [{"refId": "A", "expr": expr, "legendFormat": legend}],
-            } for i, (title, expr, unit, legend) in enumerate(specs)
+            }
+            for i, (title, expr, unit, legend) in enumerate(specs)
         ],
     }
 
