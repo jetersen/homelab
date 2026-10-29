@@ -25,6 +25,7 @@ configMapGenerator:
       - dashboards/global.json
       - dashboards/namespaces.json
       - dashboards/diagnostics.json
+      - dashboards/rocket.json
     options:
       disableNameSuffixHash: true
       labels:

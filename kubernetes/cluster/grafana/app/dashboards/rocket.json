@@ -1,0 +1,367 @@
+{
+  "uid": "rocket-process-memory",
+  "title": "Rocket / Processes and memory",
+  "schemaVersion": 39,
+  "version": 1,
+  "tags": [
+    "homelab",
+    "workstation"
+  ],
+  "timezone": "browser",
+  "refresh": "15s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "description": "Process groups use executable names, not PIDs or arguments. PSS apportions shared pages; RSS may double-count them. GPU totals are per device and cannot identify the owning process. Scrapes can miss processes shorter than 15 seconds.",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Available RAM",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "node_memory_MemAvailable_bytes{host=\"rocket\"}",
+          "legendFormat": "Available"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Swap used",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "node_memory_SwapTotal_bytes{host=\"rocket\"} - node_memory_SwapFree_bytes{host=\"rocket\"}",
+          "legendFormat": "Swap"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Shared memory",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "node_memory_Shmem_bytes{host=\"rocket\"}",
+          "legendFormat": "Shared memory"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "GPU system memory (GTT)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "node_drm_memory_gtt_used_bytes{host=\"rocket\"}",
+          "legendFormat": "{{card}}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "GPU VRAM",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "node_drm_memory_vram_used_bytes{host=\"rocket\"}",
+          "legendFormat": "{{card}}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Memory pressure stall fraction",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(node_pressure_memory_stalled_seconds_total{host=\"rocket\"}[$__rate_interval])",
+          "legendFormat": "Full stall"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Process proportional RAM (top 15)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 24,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "topk(15, namedprocess_namegroup_memory_bytes{host=\"rocket\",memtype=\"proportionalResident\"})",
+          "legendFormat": "{{groupname}}"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Process resident RAM (top 15)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 24,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "topk(15, namedprocess_namegroup_memory_bytes{host=\"rocket\",memtype=\"resident\"})",
+          "legendFormat": "{{groupname}}"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Process swap (top 15)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 32,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "topk(15, namedprocess_namegroup_memory_bytes{host=\"rocket\",memtype=\"swapped\"})",
+          "legendFormat": "{{groupname}}"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Process CPU cores (top 15)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 32,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "topk(15, sum by(groupname) (rate(namedprocess_namegroup_cpu_seconds_total{host=\"rocket\"}[$__rate_interval])))",
+          "legendFormat": "{{groupname}}"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "title": "Process counts",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 40,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "namedprocess_namegroup_num_procs{host=\"rocket\"}",
+          "legendFormat": "{{groupname}}"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "title": "Kernel OOM kills (rolling 5m)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 40,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "increase(node_vmstat_oom_kill{host=\"rocket\"}[5m])",
+          "legendFormat": "OOM kills"
+        }
+      ]
+    }
+  ]
+}

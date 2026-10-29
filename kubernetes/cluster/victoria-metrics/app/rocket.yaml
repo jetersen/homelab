@@ -1,0 +1,19 @@
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMStaticScrape
+metadata:
+  name: rocket
+spec:
+  jobName: rocket
+  targetEndpoints:
+    - targets: ["192.168.1.128:9100"]
+      interval: 15s
+      scrapeTimeout: 10s
+      labels:
+        host: rocket
+        job: rocket-node
+    - targets: ["192.168.1.128:9256"]
+      interval: 15s
+      scrapeTimeout: 10s
+      labels:
+        host: rocket
+        job: rocket-process

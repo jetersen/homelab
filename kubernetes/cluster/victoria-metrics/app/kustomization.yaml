@@ -6,6 +6,7 @@ resources:
   - helmrelease.yaml
   - source.yaml
   - infrastructure-scrapes.yaml
+  - rocket.yaml
   - blackbox.yaml
   - probes.yaml
   - monitoring-rules.yaml
