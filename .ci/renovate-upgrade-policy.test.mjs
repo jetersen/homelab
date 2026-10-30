@@ -56,16 +56,18 @@ test("fails closed on stale, missing, future, ambiguous, or malformed observatio
   assert.throws(() => liveVersions(input, 1050));
   assert.throws(() => version("1.37.0-rc.1"));
 });
-test("intersection blocks unsupported minors and only live-minor patches auto-merge", () => {
+test("intersection blocks unsupported minors without enabling automerge", () => {
   const result = policy(liveVersions(badges(), 1050), [
     ["1.35", "1.36", "1.37"],
     ["1.35", "1.36"],
   ]);
   assert.deepEqual(result.supported, ["1.35", "1.36"]);
-  assert.equal(result.packageRules[2].allowedVersions, ">=1.36.5 <1.37.0");
-  assert.equal(result.packageRules[2].automerge, false);
-  assert.equal(result.packageRules[3].matchCurrentVersion, ">=1.36.0 <1.37.0");
-  assert.deepEqual(result.packageRules[3].matchUpdateTypes, ["patch"]);
+  assert.equal(result.packageRules[3].allowedVersions, ">=1.36.5 <1.37.0");
+  assert.equal(result.packageRules[3].automerge, undefined);
+  assert.equal(result.packageRules[4].automerge, false);
+  assert.deepEqual(result.packageRules[4].matchUpdateTypes, ["!patch"]);
+  assert.equal(result.packageRules[5].matchCurrentVersion, "!/^v?1[.]36[.][0-9]+$/");
+  assert.deepEqual(result.packageRules[5].matchUpdateTypes, ["patch"]);
 });
 test("permits only one reviewed minor step and rejects an unsupported running cluster", () => {
   const live = liveVersions(badges(), 1050);
@@ -77,7 +79,7 @@ test("permits only one reviewed minor step and rejects an unsupported running cl
     ],
     ["1.14", "1.15"],
   );
-  assert.equal(result.packageRules[2].allowedVersions, ">=1.36.5 <1.38.0");
+  assert.equal(result.packageRules[3].allowedVersions, ">=1.36.5 <1.38.0");
   assert.equal(result.packageRules[0].allowedVersions, ">=1.14.2 <1.16.0");
   assert.throws(() => policy(live, [["1.36"], ["1.35"]]));
 });
@@ -194,7 +196,7 @@ test("all five deployed projects constrain the Kubernetes intersection", () => {
   for (let i = 0; i < matrices.length; i++) {
     const input = structuredClone(matrices);
     input[i] = ["1.36"];
-    assert.equal(policy(live, input).packageRules[2].allowedVersions, ">=1.36.5 <1.37.0");
+    assert.equal(policy(live, input).packageRules[3].allowedVersions, ">=1.36.5 <1.37.0");
   }
 });
 
@@ -229,7 +231,7 @@ test("uses minor compatibility without patch floors for current and next-minor v
     live,
     Object.values(matrices).map((entry) => entry.supportedKubernetes),
   );
-  assert.equal(result.packageRules[2].allowedVersions, ">=1.35.0 <1.37.0");
+  assert.equal(result.packageRules[3].allowedVersions, ">=1.35.0 <1.37.0");
 });
 
 for (const project of ["sonarr", "radarr", "prowlarr"]) {
@@ -338,10 +340,11 @@ test("Flux 2.10 stays blocked on operator 0.61 even when operator 0.62 is publis
   ]).projects["flux-operator"].versions["v0.62.0"];
   const result = fluxUpgradePolicy(value, liveVersions(badges(), 1050));
   assert.equal(result.packageRules[0].allowedVersions, ">=2.9.6 <2.10.0");
-  assert.equal(result.packageRules[0].automerge, false);
-  assert.equal(result.packageRules[1].automerge, true);
-  assert.deepEqual(result.packageRules[1].matchUpdateTypes, ["patch"]);
-  assert.equal(result.packageRules[1].matchCurrentVersion, ">=2.9.0 <2.10.0");
+  assert.equal(result.packageRules[0].automerge, undefined);
+  assert.equal(result.packageRules[1].automerge, false);
+  assert.deepEqual(result.packageRules[1].matchUpdateTypes, ["!patch"]);
+  assert.equal(result.packageRules[2].matchCurrentVersion, "!/^v?2[.]9[.][0-9]+$/");
+  assert.equal(result.packageRules[2].automerge, false);
 });
 
 test("deployed operator 0.62 enables one compatible Flux minor step", () => {
@@ -350,7 +353,7 @@ test("deployed operator 0.62 enables one compatible Flux minor step", () => {
   const value = fluxCatalog("0.62.0", ["2.9", "2.10", "2.11"]);
   const rules = fluxUpgradePolicy(value, live).packageRules;
   assert.equal(rules[0].allowedVersions, ">=2.9.6 <2.11.0");
-  assert.equal(rules[0].automerge, false);
+  assert.equal(rules[0].automerge, undefined);
   live.kubernetes = version("1.34.9");
   assert.equal(fluxUpgradePolicy(value, live).packageRules[0].allowedVersions, ">=2.9.6 <2.10.0");
 });
@@ -436,7 +439,7 @@ test("operator proposals retain the running Flux minor and reject unverified rel
   value.projects["flux-operator"].versions["v0.62.1"] = {
     ...value.projects["flux-operator"].versions["v0.62.0"],
   };
-  const rule = fluxUpgradePolicy(value, liveVersions(badges(), 1050)).packageRules[2];
+  const rule = fluxUpgradePolicy(value, liveVersions(badges(), 1050)).packageRules[3];
   const pattern = new RegExp(rule.allowedVersions.slice(1, -1));
   for (const tag of ["0.61.0", "0.62.0", "v0.62.0"]) {
     assert.ok(pattern.test(tag));
@@ -481,4 +484,57 @@ test("Flux grouping covers charts and distribution while minor distribution upda
         rule.separateMinorPatch === true,
     ),
   );
+});
+
+test("a deployed Flux patch reuses its released minor matrix without a catalog refresh", () => {
+  const value = fluxCatalog("0.62.0", ["2.9", "2.10"]);
+  const live = liveVersions(badges(), 1050);
+  live.flux = version("2.10.1");
+  live["flux-operator"] = version("0.62.0");
+  assert.equal(value.projects.flux.versions["v2.10.1"], undefined);
+  const matrix = cachedMatrices(value, live, Date.parse("2026-10-04")).flux;
+  assert.deepEqual(matrix.supportedKubernetes, ["1.35", "1.36", "1.37"]);
+  assert.equal(matrix.source, "https://api.github.com/repos/fluxcd/flux2/releases/tags/v2.10.0");
+  assert.equal(fluxUpgradePolicy(value, live).packageRules[0].allowedVersions, ">=2.10.1 <2.11.0");
+  live.flux = version("2.11.0");
+  assert.throws(() => cachedMatrices(value, live, Date.parse("2026-10-04")));
+});
+
+test("Flux minor lookup rejects untrusted or inconsistent patch records", () => {
+  const live = liveVersions(badges(), 1050);
+  live.flux = version("2.10.1");
+  for (const mutate of [
+    (entry) => {
+      entry.source = "https://api.github.com/repos/fluxcd/flux2/releases/tags/v2.9.0";
+    },
+    (entry) => {
+      entry.sourceSha256 = "c".repeat(64);
+    },
+    (entry) => {
+      entry.supportedKubernetes = ["1.36"];
+    },
+    (entry) => {
+      entry.unavailable = "Released row missing";
+    },
+  ]) {
+    const value = fluxCatalog();
+    const entry = structuredClone(value.projects.flux.versions["v2.10.0"]);
+    value.projects.flux.versions["v2.10.1"] = entry;
+    mutate(entry);
+    assert.throws(() => cachedMatrices(value, live, Date.parse("2026-10-04")));
+  }
+});
+
+test("multiple Flux patches with identical minor provenance share one matrix", () => {
+  const value = fluxCatalog();
+  const live = liveVersions(badges(), 1050);
+  live.flux = version("2.10.2");
+  value.projects.flux.versions["v2.10.1"] = structuredClone(
+    value.projects.flux.versions["v2.10.0"],
+  );
+  assert.deepEqual(cachedMatrices(value, live, Date.parse("2026-10-04")).flux.supportedKubernetes, [
+    "1.35",
+    "1.36",
+    "1.37",
+  ]);
 });

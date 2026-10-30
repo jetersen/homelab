@@ -28,7 +28,9 @@ records Kubernetes ranges and the Flux minors bundled with each operator release
 Flux upgrades require support from the deployed operator and running Kubernetes;
 operator upgrades must retain support for the running Flux minor. Missing candidate
 data blocks the candidate. Minor Flux upgrades require review, while patches on
-the running minor may auto-merge.
+the running minor may auto-merge when repository policy enables it. Global gate
+rules only restrict automerge and preserve repository opt-outs. Flux patches reuse
+their minor's upstream compatibility table without waiting for a catalog refresh.
 
 The source adapter implements Renovate's automerge retry hook, which the
 released Forgejo adapter lacks, so eligible PRs are re-armed for native CI-gated
@@ -39,6 +41,8 @@ regenerated commit when only history changed; equal trees still cannot fast-forw
 across divergent commits.
 Upgrade the base image and pinned source together; the build rejects a version
 mismatch. Rebuild generated imports through the upstream generator.
+Worker publication tests rule merging against its bundled Renovate source before
+pushing the image.
 It includes Nix; Renovate's Containerbase installs other required tools in
 the repository checkout used by post-upgrade commands. Keep the explicit command
 allowlist narrow.

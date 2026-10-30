@@ -48,6 +48,14 @@ elif grep -Eqi 'manifest unknown|MANIFEST_UNKNOWN|: not found|no such manifest' 
   elif [ "$component" = renovate-worker ]; then
     docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges \
       --entrypoint bash "$release" -c 'node --check /opt/renovate/config.cjs && nix --version && python3 --version && command -v install-tool'
+    docker run --rm -i --network none --cap-drop ALL --security-opt no-new-privileges \
+      --entrypoint bash \
+      -e RENOVATE_SOURCE_PATH=/usr/local/renovate \
+      -e RENOVATE_POLICY_PATH=/opt/renovate/renovate-upgrade-policy.mjs \
+      "$release" -c '
+        cat > /tmp/upgrade-policy.integration.test.mjs
+        exec /usr/local/renovate/node --test /tmp/upgrade-policy.integration.test.mjs
+      ' < infrastructure/renovate/worker/upgrade-policy.integration.test.mjs
   else
     docker run --rm -i --network none --read-only --cap-drop ALL \
       --security-opt no-new-privileges "$release" \

@@ -89,7 +89,31 @@ export function cachedMatrices(catalog, live, now = Date.now()) {
   ]) {
     const data = catalog.projects?.[project];
     const tag = ["talos", "cert-manager"].includes(id) ? `v${live[id].line}` : `v${live[id].text}`;
-    const entry = data?.versions?.[tag];
+    let entry = data?.versions?.[tag];
+    if (id === "flux") {
+      // All patches use the minor's initial release notes. A patch deployment
+      // must not depend on the catalog refreshing its exact version key first.
+      const pattern = new RegExp(`^v${live.flux.line.replaceAll(".", "[.]")}[.]\\d+$`);
+      const entries = Object.entries(data?.versions ?? {})
+        .filter(([tag]) => pattern.test(tag))
+        .map(([, candidate]) => candidate);
+      const expected = `https://api.github.com/repos/fluxcd/flux2/releases/tags/v${live.flux.line}.0`;
+      if (entries.some((candidate) => candidate?.source !== expected)) {
+        throw new Error("Invalid upstream Flux release provenance");
+      }
+      entry = entries[0];
+      if (
+        entries.some(
+          (candidate) =>
+            candidate.unavailable ||
+            candidate.sourceSha256 !== entry.sourceSha256 ||
+            JSON.stringify(candidate.supportedKubernetes) !==
+              JSON.stringify(entry.supportedKubernetes),
+        )
+      ) {
+        throw new Error("Inconsistent upstream Flux minor compatibility cache");
+      }
+    }
     const versions = entry?.supportedKubernetes;
     if (
       entry?.unavailable ||
@@ -102,15 +126,33 @@ export function cachedMatrices(catalog, live, now = Date.now()) {
     ) {
       throw new Error(`Missing or invalid released compatibility cache: ${project}/${tag}`);
     }
-    if (id === "flux") {
-      const expected = `https://api.github.com/repos/fluxcd/flux2/releases/tags/v${live.flux.line}.0`;
-      if (entry.source !== expected) {
-        throw new Error("Invalid upstream Flux release provenance");
-      }
-    }
     result[id] = { source: data.source, ...entry };
   }
   return result;
+}
+
+function upgradeRules(name, current, upper) {
+  return [
+    {
+      description: `Constrain ${name} to the live cluster and released compatibility matrices`,
+      matchPackageNames: packages[name],
+      allowedVersions: `>=${current.text} <${upper}`,
+    },
+    {
+      description: `Require review for ${name} updates other than patches`,
+      matchPackageNames: packages[name],
+      matchUpdateTypes: ["!patch"],
+      automerge: false,
+    },
+    {
+      // Global rules may restrict automerge, but repository policy owns opt-in.
+      description: `Require review for ${name} patches outside the live minor`,
+      matchPackageNames: packages[name],
+      matchUpdateTypes: ["patch"],
+      matchCurrentVersion: `!/^v?${current.line.replaceAll(".", "[.]")}[.][0-9]+$/`,
+      automerge: false,
+    },
+  ];
 }
 
 export function policy(live, matrices, talosLines = [live.talos.line]) {
@@ -128,21 +170,7 @@ export function policy(live, matrices, talosLines = [live.talos.line]) {
     const next = `${current.major}.${current.minor + 1}`;
     const allowNext = name === "talos" ? talosLines.includes(next) : supported.includes(next);
     const upper = `${current.major}.${current.minor + (allowNext ? 2 : 1)}.0`;
-    packageRules.push(
-      {
-        description: `Constrain ${name} to the live cluster and released compatibility matrices`,
-        matchPackageNames: packages[name],
-        allowedVersions: `>=${current.text} <${upper}`,
-        automerge: false,
-      },
-      {
-        description: `Allow ${name} patches only on the live minor`,
-        matchPackageNames: packages[name],
-        matchCurrentVersion: `>=${current.line}.0 <${current.major}.${current.minor + 1}.0`,
-        matchUpdateTypes: ["patch"],
-        automerge: true,
-      },
-    );
+    packageRules.push(...upgradeRules(name, current, upper));
   }
   return { supported, packageRules };
 }
@@ -200,20 +228,7 @@ export function fluxUpgradePolicy(catalog, live) {
   return {
     operatorSource: entry.source,
     packageRules: [
-      {
-        description:
-          "Constrain Flux to deployed operator support and cached Kubernetes compatibility",
-        matchPackageNames: packages.flux,
-        allowedVersions: `>=${current.text} <${current.major}.${current.minor + (allowNext ? 2 : 1)}.0`,
-        automerge: false,
-      },
-      {
-        description: "Allow Flux patches only on the live minor",
-        matchPackageNames: packages.flux,
-        matchCurrentVersion: `>=${current.line}.0 <${current.major}.${current.minor + 1}.0`,
-        matchUpdateTypes: ["patch"],
-        automerge: true,
-      },
+      ...upgradeRules("flux", current, `${current.major}.${current.minor + (allowNext ? 2 : 1)}.0`),
       {
         description:
           "Only deploy operator releases whose bundled manifests support the running Flux minor",

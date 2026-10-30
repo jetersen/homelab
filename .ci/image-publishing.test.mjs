@@ -185,9 +185,18 @@ test("rewritten identity with different build inputs cannot reuse a release", (t
   assert.equal(f.git("rev-parse", "runner-job/v0.1.1"), original);
 });
 
-function publisher(t, scenario = "existing") {
+function publisher(t, scenario = "existing", component = "runner-job") {
   const f = fixture(t);
-  const values = f.release("runner-job").values;
+  if (component === "renovate-worker") {
+    f.commit("infrastructure/renovate/worker/Dockerfile", "worker", "fix: initial worker");
+    f.commit(
+      "infrastructure/renovate/worker/upgrade-policy.integration.test.mjs",
+      "test",
+      "test: worker policy",
+    );
+  }
+  const prefix = component.toUpperCase().replaceAll("-", "_");
+  const values = f.release(component).values;
   const bin = join(f.root, "bin");
   mkdirSync(bin);
   const log = join(f.root, "docker.log");
@@ -201,9 +210,10 @@ fs.appendFileSync(process.env.DOCKER_LOG, JSON.stringify(args) + '\\n');
 const mode = process.env.SCENARIO;
 const built = process.env.DOCKER_LOG + '.built';
 const labels = {
-  'org.opencontainers.image.revision': mode.endsWith('wrong-labels') ? 'wrong' : process.env.RUNNER_JOB_REVISION,
-  'org.opencontainers.image.version': process.env.RUNNER_JOB_VERSION
+  'org.opencontainers.image.revision': mode.endsWith('wrong-labels') ? 'wrong' : process.env.${prefix}_REVISION,
+  'org.opencontainers.image.version': process.env.${prefix}_VERSION
 };
+if (args[0] === 'run' && args.some(a => a.includes('node --test')) && mode === 'missing-integration-failure') process.exit(1);
 if (args[0] === 'build') fs.writeFileSync(built, 'yes');
 if (args.slice(0,2).join(' ') === 'image inspect') console.log(JSON.stringify({Config:{Labels:labels}}));
 if (args.slice(0,3).join(' ') === 'buildx imagetools inspect') {
@@ -223,7 +233,7 @@ if (args.slice(0,3).join(' ') === 'buildx imagetools create') {
   const publish = () =>
     f.run(
       "bash",
-      [".ci/publish-image.sh", "runner-job"],
+      [".ci/publish-image.sh", component],
       {
         ...values,
         PATH: `${bin}:${process.env.PATH}`,
@@ -260,6 +270,25 @@ test("missing release builds, smoke tests, and pushes only the SemVer tag", (t) 
     calls.filter((a) => a[0] === "push"),
     [["push", "registry.invalid/owner/repo/runner-job:0.1.0"]],
   );
+});
+test("worker publication checks real Renovate policy matching before pushing", (t) => {
+  const f = publisher(t, "missing", "renovate-worker");
+  assert.equal(f.publish().status, 0);
+  const calls = f.calls();
+  const integration = calls.findIndex(
+    (args) => args[0] === "run" && args.some((a) => a.includes("node --test")),
+  );
+  assert.ok(integration >= 0);
+  assert.ok(calls[integration].includes("RENOVATE_SOURCE_PATH=/usr/local/renovate"));
+  assert.ok(integration < calls.findIndex((args) => args[0] === "push"));
+});
+test("a policy integration failure prevents publishing the worker", (t) => {
+  const f = publisher(t, "missing-integration-failure", "renovate-worker");
+  assert.notEqual(f.publish().status, 0);
+  assert.ok(
+    f.calls().some((args) => args[0] === "run" && args.some((a) => a.includes("node --test"))),
+  );
+  assert.ok(f.calls().every((args) => args[0] !== "push"));
 });
 test("new images with incorrect release labels stop before smoke tests or registry writes", (t) => {
   const f = publisher(t, "missing-wrong-labels");
