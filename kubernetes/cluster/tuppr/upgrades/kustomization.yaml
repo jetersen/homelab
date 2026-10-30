@@ -35,5 +35,5 @@ patches:
             kind: Deployment
             name: coredns
             namespace: kube-system
-            expr: has(status.availableReplicas) && status.availableReplicas == spec.replicas
+            expr: has(status.availableReplicas) && status.availableReplicas == object.spec.replicas
             timeout: 10m
