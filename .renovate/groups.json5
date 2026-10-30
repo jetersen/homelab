@@ -8,10 +8,10 @@
       matchPackageNames: ["technitium/dns-server", "docker.io/technitium/dns-server"],
     },
     {
-      description: "Flux Group",
+      description: "Keep Flux charts and distribution updates together within the live compatibility gate",
       groupName: "Flux",
-      matchDatasources: ["docker"],
-      matchPackageNames: ["/flux-operator/", "/flux-instance/"],
+      matchDatasources: ["docker", "github-releases"],
+      matchPackageNames: ["/flux-operator/", "/flux-instance/", "controlplaneio-fluxcd/distribution"],
       group: {
         commitMessageTopic: "{{{groupName}}} group",
       },

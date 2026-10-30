@@ -5,6 +5,7 @@ import { pathToFileURL } from "node:url";
 const packages = {
   talos: ["siderolabs/talos", "ghcr.io/siderolabs/talos"],
   kubernetes: ["kubernetes/kubernetes", "ghcr.io/siderolabs/kubelet"],
+  flux: ["controlplaneio-fluxcd/distribution"],
 };
 
 export function version(value) {
@@ -17,7 +18,7 @@ export function version(value) {
 }
 
 export function liveVersions(badges, now = Date.now() / 1000) {
-  for (const id of ["node", "cilium", "envoy", "flux", "cert-manager"]) {
+  for (const id of ["node", "cilium", "envoy", "flux", "flux-operator", "cert-manager"]) {
     const badge = badges[id];
     if (
       badge?.id !== id ||
@@ -43,6 +44,7 @@ export function liveVersions(badges, now = Date.now() / 1000) {
     cilium: imageVersion("cilium", "cilium/cilium"),
     envoy: imageVersion("envoy", "envoyproxy/gateway"),
     flux: version(/^(v\d+\.\d+\.\d+)@sha256:[a-f0-9]{64}$/.exec(badges.flux.labels?.revision)?.[1]),
+    "flux-operator": imageVersion("flux-operator", "controlplaneio-fluxcd/flux-operator"),
     "cert-manager": imageVersion("cert-manager", "jetstack/cert-manager-controller"),
   };
 }
@@ -145,6 +147,86 @@ export function policy(live, matrices, talosLines = [live.talos.line]) {
   return { supported, packageRules };
 }
 
+function validOperatorEntry(entry, tag) {
+  return (
+    /^v\d+\.\d+\.\d+$/.test(tag) &&
+    entry?.source ===
+      `https://api.github.com/repos/controlplaneio-fluxcd/flux-operator/contents/config/data/flux?ref=${tag}` &&
+    /^[a-f0-9]{64}$/.test(entry?.sourceSha256 ?? "") &&
+    entry.unavailable === undefined &&
+    Array.isArray(entry.supportedFlux) &&
+    entry.supportedFlux.length > 0 &&
+    entry.supportedFlux.every((line) => typeof line === "string" && /^\d+\.\d+$/.test(line)) &&
+    new Set(entry.supportedFlux).size === entry.supportedFlux.length
+  );
+}
+
+export function fluxUpgradePolicy(catalog, live) {
+  const project = catalog.projects?.["flux-operator"];
+  const tag = `v${live["flux-operator"].text}`;
+  const entry = project?.versions?.[tag];
+  if (!validOperatorEntry(entry, tag)) {
+    throw new Error("Missing or invalid released Flux operator compatibility cache");
+  }
+  const current = live.flux;
+  if (!entry.supportedFlux.includes(current.line)) {
+    throw new Error("Running Flux minor is not supported by the deployed operator");
+  }
+  const operators = Object.entries(project.versions)
+    .filter(
+      ([tag, candidate]) =>
+        validOperatorEntry(candidate, tag) && candidate.supportedFlux.includes(current.line),
+    )
+    .map(([tag]) => tag.slice(1).replaceAll(".", "\\."));
+  const next = `${current.major}.${current.minor + 1}`;
+  const nextEntries = Object.entries(catalog.projects?.flux?.versions ?? {}).filter(([tag]) =>
+    new RegExp(`^v${current.major}[.]${current.minor + 1}[.]\\d+$`).test(tag),
+  );
+  // Missing candidate data blocks that minor without preventing operator updates.
+  const allowNext =
+    entry.supportedFlux.includes(next) &&
+    nextEntries.some(
+      ([, candidate]) =>
+        candidate?.source ===
+          `https://api.github.com/repos/fluxcd/flux2/releases/tags/v${next}.0` &&
+        /^[a-f0-9]{64}$/.test(candidate.sourceSha256 ?? "") &&
+        candidate.unavailable === undefined &&
+        Array.isArray(candidate.supportedKubernetes) &&
+        candidate.supportedKubernetes.every(
+          (line) => typeof line === "string" && /^\d+\.\d+$/.test(line),
+        ) &&
+        candidate.supportedKubernetes.includes(live.kubernetes.line),
+    );
+  return {
+    operatorSource: entry.source,
+    packageRules: [
+      {
+        description:
+          "Constrain Flux to deployed operator support and cached Kubernetes compatibility",
+        matchPackageNames: packages.flux,
+        allowedVersions: `>=${current.text} <${current.major}.${current.minor + (allowNext ? 2 : 1)}.0`,
+        automerge: false,
+      },
+      {
+        description: "Allow Flux patches only on the live minor",
+        matchPackageNames: packages.flux,
+        matchCurrentVersion: `>=${current.line}.0 <${current.major}.${current.minor + 1}.0`,
+        matchUpdateTypes: ["patch"],
+        automerge: true,
+      },
+      {
+        description:
+          "Only deploy operator releases whose bundled manifests support the running Flux minor",
+        matchPackageNames: [
+          "ghcr.io/controlplaneio-fluxcd/charts/flux-operator",
+          "ghcr.io/controlplaneio-fluxcd/flux-operator",
+        ],
+        allowedVersions: `/^v?(${operators.join("|")})$/`,
+      },
+    ],
+  };
+}
+
 // Arr applications publish numeric Docker tags for both stable and prerelease builds.
 const arrProjects = {
   sonarr: "Sonarr/Sonarr",
@@ -220,7 +302,7 @@ async function fetchText(url, headers = {}) {
 
 export async function generate(base = "https://upgrade-versions.jetersen.dev") {
   const entries = await Promise.all(
-    ["node", "cilium", "envoy", "flux", "cert-manager"].map(async (id) => [
+    ["node", "cilium", "envoy", "flux", "flux-operator", "cert-manager"].map(async (id) => [
       id,
       JSON.parse(await fetchText(`${base}/badges/${id}?format=json`)),
     ]),
@@ -254,7 +336,10 @@ export async function generate(base = "https://upgrade-versions.jetersen.dev") {
         .map(([tag]) => tag.slice(1)),
     ),
   };
+  const fluxPolicy = fluxUpgradePolicy(catalog, live);
+  result.urls["flux-operator"] = fluxPolicy.operatorSource;
   result.packageRules.push(
+    ...fluxPolicy.packageRules,
     ...(await Promise.all(
       Object.entries(arrProjects).map(async ([project, repository]) =>
         arrStableRule(

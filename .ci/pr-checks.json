@@ -48,7 +48,9 @@
   "upgrade_policy": [
     "infrastructure/renovate/**",
     ".ci/renovate-upgrade-policy*.mjs",
-    ".forgejo/workflows/check-upgrade-policy.yaml"
+    ".forgejo/workflows/check-upgrade-policy.yaml",
+    ".renovate/groups.json5",
+    ".renovate/autoMerge.json5"
   ],
   "dns": [
     "infrastructure/dns/**",

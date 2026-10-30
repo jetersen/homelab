@@ -1,10 +1,13 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 import {
   arrStableRule,
   cachedMatrices,
   completeCiliumPatchMatrix,
+  fluxUpgradePolicy,
   liveVersions,
   policy,
   version,
@@ -22,6 +25,11 @@ const badges = () => ({
     labels: { image_spec: `quay.io/cilium/cilium:v1.20.2@sha256:${"a".repeat(64)}` },
   },
   flux: { id: "flux", result: 1000, labels: { revision: `v2.9.6@sha256:${"a".repeat(64)}` } },
+  "flux-operator": {
+    id: "flux-operator",
+    result: 1000,
+    labels: { image_spec: "ghcr.io/controlplaneio-fluxcd/flux-operator:v0.61.0" },
+  },
   "cert-manager": {
     id: "cert-manager",
     result: 1000,
@@ -300,5 +308,177 @@ test("missing Cilium patches require the exact released matrix to match the cach
       assert.fail("existing entries must still use normal cache validation");
     }),
     result,
+  );
+});
+
+function fluxCatalog(operator = "0.61.0", supportedFlux = ["2.9"]) {
+  const value = catalog();
+  value.projects["flux-operator"] = {
+    versions: {
+      [`v${operator}`]: {
+        source: `https://api.github.com/repos/controlplaneio-fluxcd/flux-operator/contents/config/data/flux?ref=v${operator}`,
+        sourceSha256: "a".repeat(64),
+        supportedFlux,
+      },
+    },
+  };
+  value.projects.flux.versions["v2.10.0"] = {
+    source: "https://api.github.com/repos/fluxcd/flux2/releases/tags/v2.10.0",
+    sourceSha256: "b".repeat(64),
+    supportedKubernetes: ["1.35", "1.36", "1.37"],
+  };
+  return value;
+}
+
+test("Flux 2.10 stays blocked on operator 0.61 even when operator 0.62 is published", () => {
+  const value = fluxCatalog();
+  value.projects["flux-operator"].versions["v0.62.0"] = fluxCatalog("0.62.0", [
+    "2.9",
+    "2.10",
+  ]).projects["flux-operator"].versions["v0.62.0"];
+  const result = fluxUpgradePolicy(value, liveVersions(badges(), 1050));
+  assert.equal(result.packageRules[0].allowedVersions, ">=2.9.6 <2.10.0");
+  assert.equal(result.packageRules[0].automerge, false);
+  assert.equal(result.packageRules[1].automerge, true);
+  assert.deepEqual(result.packageRules[1].matchUpdateTypes, ["patch"]);
+  assert.equal(result.packageRules[1].matchCurrentVersion, ">=2.9.0 <2.10.0");
+});
+
+test("deployed operator 0.62 enables one compatible Flux minor step", () => {
+  const live = liveVersions(badges(), 1050);
+  live["flux-operator"] = version("0.62.0");
+  const value = fluxCatalog("0.62.0", ["2.9", "2.10", "2.11"]);
+  const rules = fluxUpgradePolicy(value, live).packageRules;
+  assert.equal(rules[0].allowedVersions, ">=2.9.6 <2.11.0");
+  assert.equal(rules[0].automerge, false);
+  live.kubernetes = version("1.34.9");
+  assert.equal(fluxUpgradePolicy(value, live).packageRules[0].allowedVersions, ">=2.9.6 <2.10.0");
+});
+
+test("missing or invalid future Flux matrices block the candidate without blocking operator upgrades", () => {
+  const live = liveVersions(badges(), 1050);
+  live["flux-operator"] = version("0.62.0");
+  for (const mutate of [
+    (c) => {
+      delete c.projects.flux.versions["v2.10.0"];
+    },
+    (c) => {
+      c.projects.flux.versions["v2.10.0"].source = "https://example.com/matrix";
+    },
+    (c) => {
+      c.projects.flux.versions["v2.10.0"].sourceSha256 = "invalid";
+    },
+    (c) => {
+      c.projects.flux.versions["v2.10.0"].unavailable = "No released table";
+    },
+    (c) => {
+      c.projects.flux.versions["v2.10.0"].supportedKubernetes = ["latest"];
+    },
+  ]) {
+    const value = fluxCatalog("0.62.0", ["2.9", "2.10"]);
+    mutate(value);
+    assert.equal(fluxUpgradePolicy(value, live).packageRules[0].allowedVersions, ">=2.9.6 <2.10.0");
+  }
+});
+
+test("missing or untrusted deployed operator matrices fail closed", () => {
+  const live = liveVersions(badges(), 1050);
+  for (const mutate of [
+    (c) => {
+      delete c.projects["flux-operator"];
+    },
+    (c) => {
+      c.projects["flux-operator"].versions["v0.61.0"].source = "https://example.com/latest";
+    },
+    (c) => {
+      c.projects["flux-operator"].versions["v0.61.0"].sourceSha256 = "invalid";
+    },
+    (c) => {
+      c.projects["flux-operator"].versions["v0.61.0"].supportedFlux = ["2.10"];
+    },
+    (c) => {
+      c.projects["flux-operator"].versions["v0.61.0"].supportedFlux = ["latest"];
+    },
+    (c) => {
+      c.projects["flux-operator"].versions["v0.61.0"].supportedFlux = ["2.9", "2.9"];
+    },
+  ]) {
+    const value = fluxCatalog();
+    mutate(value);
+    assert.throws(() => fluxUpgradePolicy(value, live));
+  }
+});
+
+test("live operator observations require freshness, readiness, and a stable image version", () => {
+  for (const mutate of [
+    (b) => {
+      delete b["flux-operator"];
+    },
+    (b) => {
+      b["flux-operator"].result = 800;
+    },
+    (b) => {
+      b["flux-operator"].labels.image_spec = "ghcr.io/controlplaneio-fluxcd/flux-operator:latest";
+    },
+  ]) {
+    const input = badges();
+    mutate(input);
+    assert.throws(() => liveVersions(input, 1050));
+  }
+});
+
+test("operator proposals retain the running Flux minor and reject unverified releases", () => {
+  const value = fluxCatalog();
+  Object.assign(value.projects["flux-operator"].versions, {
+    ...fluxCatalog("0.62.0", ["2.9", "2.10"]).projects["flux-operator"].versions,
+    ...fluxCatalog("0.63.0", ["2.10", "2.11"]).projects["flux-operator"].versions,
+  });
+  value.projects["flux-operator"].versions["v0.62.1"] = {
+    ...value.projects["flux-operator"].versions["v0.62.0"],
+  };
+  const rule = fluxUpgradePolicy(value, liveVersions(badges(), 1050)).packageRules[2];
+  const pattern = new RegExp(rule.allowedVersions.slice(1, -1));
+  for (const tag of ["0.61.0", "0.62.0", "v0.62.0"]) {
+    assert.ok(pattern.test(tag));
+  }
+  for (const tag of ["0.62.1", "0.63.0", "0.64.0", "0.62.0-rc.1", "0x62x0"]) {
+    assert.equal(pattern.test(tag), false);
+  }
+});
+
+test("Flux grouping covers charts and distribution while minor distribution updates require review", async () => {
+  const preset = async (name) =>
+    runInNewContext(
+      `(${await readFile(new URL(`../.renovate/${name}.json5`, import.meta.url), "utf8")})`,
+    );
+  const groups = await preset("groups");
+  const group = groups.packageRules.find((rule) => rule.groupName === "Flux");
+  for (const packageName of [
+    "ghcr.io/controlplaneio-fluxcd/charts/flux-operator",
+    "ghcr.io/controlplaneio-fluxcd/charts/flux-instance",
+    "ghcr.io/controlplaneio-fluxcd/charts/flux-operator-mcp",
+    "controlplaneio-fluxcd/distribution",
+  ]) {
+    assert.ok(
+      group.matchPackageNames.some((match) =>
+        match.startsWith("/")
+          ? new RegExp(match.slice(1, -1)).test(packageName)
+          : match === packageName,
+      ),
+    );
+  }
+  assert.ok(group.matchDatasources.includes("docker"));
+  assert.ok(group.matchDatasources.includes("github-releases"));
+  const autoMerge = await preset("autoMerge");
+  const minor = autoMerge.packageRules.find((rule) => rule.matchUpdateTypes?.includes("minor"));
+  assert.ok(minor.matchPackageNames.includes("controlplaneio-fluxcd/distribution"));
+  assert.equal(minor.automerge, false);
+  assert.equal(minor.dependencyDashboardApproval, true);
+  assert.ok(
+    autoMerge.packageRules.some(
+      (rule) =>
+        rule.matchPackageNames.includes("controlplaneio-fluxcd/distribution") &&
+        rule.separateMinorPatch === true,
+    ),
   );
 });

@@ -14,14 +14,14 @@
       separateMultipleMinor: false,
     },
     {
-      description: "Separate operating-system and Kubernetes patch updates from reviewed minor upgrades",
-      matchPackageNames: ["siderolabs/talos", "ghcr.io/siderolabs/talos", "kubernetes/kubernetes", "ghcr.io/siderolabs/kubelet"],
+      description: "Separate operating-system, Kubernetes, and Flux patches from reviewed minor upgrades",
+      matchPackageNames: ["siderolabs/talos", "ghcr.io/siderolabs/talos", "kubernetes/kubernetes", "ghcr.io/siderolabs/kubelet", "controlplaneio-fluxcd/distribution"],
       separateMajorMinor: true,
       separateMinorPatch: true,
     },
     {
-      description: "Talos and Kubernetes minor or major upgrades need explicit review",
-      matchPackageNames: ["siderolabs/talos", "ghcr.io/siderolabs/talos", "kubernetes/kubernetes", "ghcr.io/siderolabs/kubelet"],
+      description: "Talos, Kubernetes, and Flux minor or major upgrades need explicit review",
+      matchPackageNames: ["siderolabs/talos", "ghcr.io/siderolabs/talos", "kubernetes/kubernetes", "ghcr.io/siderolabs/kubelet", "controlplaneio-fluxcd/distribution"],
       matchUpdateTypes: ["major", "minor"],
       dependencyDashboardApproval: true,
       automerge: false,

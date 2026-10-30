@@ -2,7 +2,7 @@ name: Check upgrade policy
 on:
   push:
     branches: [main]
-    paths: ['.ci/renovate-upgrade-policy*.mjs', 'infrastructure/renovate/**', '.forgejo/workflows/check-upgrade-policy.yaml']
+    paths: ['.ci/renovate-upgrade-policy*.mjs', '.renovate/groups.json5', '.renovate/autoMerge.json5', 'infrastructure/renovate/**', '.forgejo/workflows/check-upgrade-policy.yaml']
 jobs:
   check:
     runs-on: linux-docker
