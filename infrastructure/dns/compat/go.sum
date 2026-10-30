@@ -38,6 +38,8 @@ github.com/DNSControl/dnscontrol/v5 v5.6.0 h1:vpW9w+RO8YFW/0CtKzwyW22x0qL0xKBlj9
 github.com/DNSControl/dnscontrol/v5 v5.6.0/go.mod h1:NuKsKui4xFP9A3yqszxeFojkLb9Q+e4zBHRBgFXNdKc=
 github.com/DNSControl/dnscontrol/v5 v5.7.0 h1:r/IUIItOYUirk3oSRfjaxjZk37ZHC5cx+DAkTYeBc+o=
 github.com/DNSControl/dnscontrol/v5 v5.7.0/go.mod h1:oTuAEUHQ+iCV+dO0xRXOVk+stOPe1MIif5/zmNmoPqg=
+github.com/DNSControl/dnscontrol/v5 v5.7.1 h1:5fRTKcMa+n7968hLWzJNNB6dWq4u7qDvGfeW4MiZ+IM=
+github.com/DNSControl/dnscontrol/v5 v5.7.1/go.mod h1:Jb3pN2NKdw0MxsoyOhGV5Ep/RJ1BnFRlDWAdUBQgA2c=
 github.com/DisposaBoy/JsonConfigReader v0.0.0-20201129172854-99cf318d67e7 h1:AJKJCKcb/psppPl/9CUiQQnTG+Bce0/cIweD5w5Q7aQ=
 github.com/DisposaBoy/JsonConfigReader v0.0.0-20201129172854-99cf318d67e7/go.mod h1:GCzqZQHydohgVLSIqRKZeTt8IGb1Y4NaFfim3H40uUI=
 github.com/G-Core/gcore-dns-sdk-go v0.3.3 h1:McILJSbJ5nOcT0MI0aBYhEuufCF329YbqKwFIN0RjCI=
@@ -249,6 +251,8 @@ github.com/netnod/netnod-primary-dns-client v1.1.1 h1:hGZIMTNmsSLicgMOJ7yneLvbQi
 github.com/netnod/netnod-primary-dns-client v1.1.1/go.mod h1:MLvJf4UhbAB8WQdypLqYv9rwtOGD+3cZlAVXMwgad3c=
 github.com/nicholas-fedor/shoutrrr v0.22.0 h1:hfMU3ayuK0tm68iT5YsdQL+Y6skCF6NDEKBBtmXLZlM=
 github.com/nicholas-fedor/shoutrrr v0.22.0/go.mod h1:qiWfC+p3d0cAhV2R8BTrah2cHRgK6lRMxQ9CSWjkdTU=
+github.com/nicholas-fedor/shoutrrr v0.22.1 h1:9B/sTQyE5BrtUKPpOyRO+XdYIrU0QRIjDdvfUbunWiE=
+github.com/nicholas-fedor/shoutrrr v0.22.1/go.mod h1:kvUu4xf3cgZzkbHCqw0cxu7cxxj4Y//WZeJ6KC0+Q0o=
 github.com/nozzle/throttler v0.0.0-20180817012639-2ea982251481 h1:Up6+btDp321ZG5/zdSLo48H9Iaq0UQGthrhWC6pCxzE=
 github.com/nozzle/throttler v0.0.0-20180817012639-2ea982251481/go.mod h1:yKZQO8QE2bHlgozqWDiRVqTFlLQSj30K/6SAK8EeYFw=
 github.com/nrdcg/goinwx v0.12.0 h1:ujdUqDBnaRSFwzVnImvPHYw3w3m9XgmGImNUw1GyMb4=

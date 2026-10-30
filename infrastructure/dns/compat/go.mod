@@ -4,7 +4,7 @@ go 1.27.3
 
 require (
 	codeberg.org/miekg/dns v0.6.125
-	github.com/DNSControl/dnscontrol/v5 v5.7.0
+	github.com/DNSControl/dnscontrol/v5 v5.7.1
 )
 
 require (
@@ -26,7 +26,7 @@ require (
 	github.com/mattn/go-colorable v0.1.16 // indirect
 	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
-	github.com/nicholas-fedor/shoutrrr v0.22.0 // indirect
+	github.com/nicholas-fedor/shoutrrr v0.22.1 // indirect
 	github.com/nozzle/throttler v0.0.0-20180817012639-2ea982251481 // indirect
 	github.com/ovh/go-ovh v1.9.0 // indirect
 	github.com/qdm12/reprint v0.0.0-20200326205758-722754a53494 // indirect
