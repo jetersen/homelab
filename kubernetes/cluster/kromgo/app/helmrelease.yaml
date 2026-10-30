@@ -47,6 +47,13 @@ spec:
             (max by (revision) (timestamp(flux_instance_info{name="flux",exported_namespace="flux-system",ready="True"})))
             and on() (count(max by (revision) (timestamp(flux_instance_info{name="flux",exported_namespace="flux-system",ready="True"})))
             == 1)
+        - id: flux-operator
+          query: >-
+            (max by (image_spec) (timestamp(kube_pod_container_info{namespace="flux-system",container="manager",pod=~"flux-operator-[a-z0-9]+-[a-z0-9]+"})
+            and on(namespace,pod,container) (kube_pod_container_status_ready{namespace="flux-system",container="manager"}
+            == 1))) and on() (count(max by (image_spec) (timestamp(kube_pod_container_info{namespace="flux-system",container="manager",pod=~"flux-operator-[a-z0-9]+-[a-z0-9]+"})
+            and on(namespace,pod,container) (kube_pod_container_status_ready{namespace="flux-system",container="manager"}
+            == 1))) == 1)
         - id: cert-manager
           query: >-
             (max by (image_spec) (timestamp(kube_pod_container_info{namespace="cert-manager",container="cert-manager-controller"})
