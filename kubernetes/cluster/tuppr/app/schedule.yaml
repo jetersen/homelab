@@ -64,8 +64,8 @@ kind: CronJob
 metadata:
   name: tuppr-wake
 spec:
-  schedule: 55 3 * * 0
-  timeZone: Europe/Copenhagen
+  schedule: 55 5 * * 0
+  timeZone: Etc/UTC
   concurrencyPolicy: Forbid
   startingDeadlineSeconds: 900
   successfulJobsHistoryLimit: 1
@@ -119,8 +119,8 @@ kind: CronJob
 metadata:
   name: tuppr-sleep
 spec:
-  schedule: 15 6 * * 0
-  timeZone: Europe/Copenhagen
+  schedule: 15 8 * * 0
+  timeZone: Etc/UTC
   concurrencyPolicy: Forbid
   startingDeadlineSeconds: 900
   successfulJobsHistoryLimit: 1

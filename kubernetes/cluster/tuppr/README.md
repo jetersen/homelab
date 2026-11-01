@@ -3,6 +3,11 @@ Tuppr runs around the configured maintenance window. The
 both upgrade plans to be `Completed` for their current generation. Pending, running,
 failed, or unreadable plans leave the controller enabled for recovery and alerts.
 
+Keep the upgrade window after backup and replication schedules and before
+verification schedules. Use UTC for both upgrade and backup schedules so daylight
+saving changes cannot make them overlap. The upgrade health checks require
+Forgejo to be available without a backup pause marker.
+
 Version changes made while the controller is off wait for the next scheduled
 window. Admission webhook call failures are ignored while its endpoint is
 offline; CRD schema validation still applies, and an available webhook still

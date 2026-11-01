@@ -14,12 +14,18 @@ patches:
         path: /spec/maintenance
         value:
           windows:
-            - start: "0 4 * * 0"
+            - start: "0 6 * * 0"
               duration: 2h
-              timezone: Europe/Copenhagen
+              timezone: Etc/UTC
       - op: add
         path: /spec/healthChecks
         value:
+          - apiVersion: apps/v1
+            kind: Deployment
+            name: forgejo
+            namespace: forgejo
+            expr: object.spec.replicas == 1 && has(status.availableReplicas) && status.availableReplicas == 1 && (!has(object.metadata.annotations) || !('backup.jetersen.dev/forgejo-pause' in object.metadata.annotations))
+            timeout: 10m
           - apiVersion: v1
             kind: Node
             name: talos01
