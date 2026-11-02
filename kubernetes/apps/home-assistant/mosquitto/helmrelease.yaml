@@ -155,6 +155,10 @@ spec:
             topic write {{ $host }}/state
             topic write {{ $host }}/binary_sensor/availability
             topic write {{ $host }}/deployment/state
+            topic write {{ $host }}/audio/volume/state
+            topic write homeassistant/number/{{ $deviceId }}/{{ $host }}_speaker_volume/config
+            topic read {{ $host }}/audio/volume/set
+            topic read {{ $host }}/audio/volume/limit
             topic write homeassistant/binary_sensor/{{ $deviceId }}/{{ $host }}_sensor_power/config
             topic write homeassistant/sensor/{{ $deviceId }}/{{ $host }}_deployment/config
             topic write homeassistant/sensor/{{ $deviceId }}/{{ $host }}_deployed_revision/config
