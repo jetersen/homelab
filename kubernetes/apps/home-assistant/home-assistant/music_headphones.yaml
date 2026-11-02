@@ -42,6 +42,23 @@ script:
       - condition: template
         value_template: "{{ phone_queue.get('media_player.my_phone', {}).get('items', 0) > 0 }}"
       - *music_return_allowed
+      - variables:
+          rocket_volume: "{{ state_attr('media_player.rocket', 'volume_level') }}"
+      - condition: template
+        value_template: "{{ is_number(rocket_volume) }}"
+      - if: "{{ rocket_volume | float > 0.4 }}"
+        then:
+          - action: media_player.volume_set
+            target:
+              entity_id: media_player.rocket
+            data:
+              volume_level: 0.4
+      - wait_template: >-
+          {{ is_number(state_attr('media_player.rocket', 'volume_level')) and
+             state_attr('media_player.rocket', 'volume_level') | float <= 0.4 }}
+        timeout: "00:00:05"
+        continue_on_timeout: false
+      - *music_return_allowed
       - action: music_assistant.transfer_queue
         target:
           entity_id: media_player.rocket

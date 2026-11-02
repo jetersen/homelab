@@ -32,6 +32,8 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
         self.calls = []
         self.launches = []
         self.queue_hook = None
+        self.acknowledge_volume = True
+        self.volume_hook = None
         self.queues = {PHONE: 3, ROCKET: 3, FRAMEWORK: 3}
 
         async def queue(call):
@@ -47,6 +49,16 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
                 self.launches.append(dict(call.data))
             else:
                 self.calls.append((call.domain, call.service, dict(call.data)))
+                if call.domain == "media_player" and call.service == "volume_set":
+                    if self.acknowledge_volume:
+                        state = self.hass.states.get(ROCKET)
+                        self.hass.states.async_set(
+                            ROCKET,
+                            state.state,
+                            {**state.attributes, "volume_level": call.data["volume_level"]},
+                        )
+                    if self.volume_hook:
+                        self.volume_hook()
 
         self.hass.services.async_register(
             "music_assistant", "get_queue", queue, supports_response=SupportsResponse.ONLY
@@ -54,12 +66,15 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
         for domain, service in [
             ("music_assistant", "transfer_queue"),
             ("media_player", "media_play"),
+            ("media_player", "volume_set"),
             ("notify", "mobile_app_oneplus_nord_5"),
             ("script", "music_headphones_prompt"),
         ]:
             self.hass.services.async_register(domain, service, record)
         for entity in [PHONE, ROCKET, FRAMEWORK]:
-            self.hass.states.async_set(entity, "paused")
+            self.hass.states.async_set(
+                entity, "paused", {"volume_level": 0.34} if entity == ROCKET else {}
+            )
         self.hass.states.async_set(BLUETOOTH, "1", {"connected_paired_devices": ["WH-1000XM6"]})
         sequence = deepcopy(PACKAGE["script"]["music_headphones_play"]["sequence"])
         next(step for step in sequence if "wait_template" in step)["timeout"] = 0.1
@@ -177,9 +192,11 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
         }.items():
             self.hass.states.async_set(entity, state)
         self.hass.states.async_set(BLUETOOTH, "0", {"connected_paired_devices": []})
+        sequence = deepcopy(PACKAGE["script"]["music_headphones_return"]["sequence"])
+        next(step for step in sequence if "wait_template" in step)["timeout"] = 0.05
         return Script(
             self.hass,
-            cv.SCRIPT_SCHEMA(PACKAGE["script"]["music_headphones_return"]["sequence"]),
+            cv.SCRIPT_SCHEMA(sequence),
             "Return regression",
             "script",
         )
@@ -192,6 +209,50 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.calls[0][2]["source_player"], PHONE)
         self.assertEqual(self.calls[0][2]["entity_id"], [ROCKET])
         self.assertTrue(self.calls[0][2]["auto_play"])
+
+    async def test_return_lowers_loud_music_assistant_before_transferring(self):
+        script = self.prepare_return()
+        self.hass.states.async_set(ROCKET, "idle", {"volume_level": 0.8})
+        await script.async_run(context=Context())
+        self.assertEqual(
+            [call[:2] for call in self.calls],
+            [("media_player", "volume_set"), ("music_assistant", "transfer_queue")],
+        )
+        self.assertEqual(self.calls[0][2]["volume_level"], 0.4)
+        self.assertEqual(self.calls[0][2]["entity_id"], [ROCKET])
+
+    async def test_return_preserves_quieter_and_muted_volume_levels(self):
+        for volume in [0, 0.2, 0.4]:
+            with self.subTest(volume=volume):
+                self.calls.clear()
+                script = self.prepare_return()
+                self.hass.states.async_set(ROCKET, "idle", {"volume_level": volume})
+                await script.async_run(context=Context())
+                self.assertEqual(
+                    [c[:2] for c in self.calls], [("music_assistant", "transfer_queue")]
+                )
+
+    async def test_return_does_not_play_when_volume_is_unknown(self):
+        script = self.prepare_return()
+        self.hass.states.async_set(ROCKET, "idle")
+        await script.async_run(context=Context())
+        self.assertEqual(self.calls, [])
+
+    async def test_return_waits_for_volume_confirmation_before_playing(self):
+        script = self.prepare_return()
+        self.acknowledge_volume = False
+        self.hass.states.async_set(ROCKET, "idle", {"volume_level": 0.8})
+        await script.async_run(context=Context())
+        self.assertEqual([c[:2] for c in self.calls], [("media_player", "volume_set")])
+
+    async def test_return_rechecks_headphones_after_adjusting_volume(self):
+        script = self.prepare_return()
+        self.hass.states.async_set(ROCKET, "idle", {"volume_level": 0.8})
+        self.volume_hook = lambda: self.hass.states.async_set(
+            BLUETOOTH, "1", {"connected_paired_devices": ["WH-1000XM6"]}
+        )
+        await script.async_run(context=Context())
+        self.assertEqual([c[:2] for c in self.calls], [("media_player", "volume_set")])
 
     async def test_return_handles_android_pause_on_disconnect(self):
         script = self.prepare_return()
