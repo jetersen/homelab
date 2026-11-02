@@ -1,6 +1,7 @@
 """Exercise headphone actions in an isolated, matching Home Assistant runtime."""
 
 import asyncio
+import json
 import tempfile
 import unittest
 from copy import deepcopy
@@ -34,6 +35,11 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
         self.queue_hook = None
         self.acknowledge_volume = True
         self.volume_hook = None
+        self.speaker_commands = []
+        self.speaker_acknowledges = True
+        self.speaker_success = True
+        self.speaker_wrong_request = False
+        self.timeline = []
         self.queues = {PHONE: 3, ROCKET: 3, FRAMEWORK: 3}
 
         async def queue(call):
@@ -45,6 +51,29 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
             return {entity: {"items": self.queues[entity]}}
 
         async def record(call):
+            self.timeline.append((call.domain, call.service))
+            if call.domain == "mqtt":
+                payload = json.loads(call.data["payload"])
+                self.speaker_commands.append(dict(call.data))
+                if self.speaker_acknowledges:
+                    current = self.hass.states.get("number.rocket_speaker_volume")
+                    self.hass.states.async_set(
+                        "number.rocket_speaker_volume",
+                        str(min(float(current.state), payload["maximum"])),
+                        {
+                            "request_id": "stale"
+                            if self.speaker_wrong_request
+                            else payload["request_id"],
+                            "limit_ok": self.speaker_success,
+                            "muted": not self.speaker_success,
+                        },
+                    )
+                return
+            if call.domain == "media_player" and call.service == "volume_mute":
+                state = self.hass.states.get(ROCKET)
+                self.hass.states.async_set(
+                    ROCKET, state.state, {**state.attributes, "is_volume_muted": False}
+                )
             if call.data.get("message") == "command_activity":
                 self.launches.append(dict(call.data))
             else:
@@ -67,14 +96,19 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
             ("music_assistant", "transfer_queue"),
             ("media_player", "media_play"),
             ("media_player", "volume_set"),
+            ("media_player", "volume_mute"),
+            ("mqtt", "publish"),
             ("notify", "mobile_app_oneplus_nord_5"),
             ("script", "music_headphones_prompt"),
         ]:
             self.hass.services.async_register(domain, service, record)
         for entity in [PHONE, ROCKET, FRAMEWORK]:
             self.hass.states.async_set(
-                entity, "paused", {"volume_level": 0.34} if entity == ROCKET else {}
+                entity,
+                "paused",
+                {"volume_level": 0.34, "is_volume_muted": False} if entity == ROCKET else {},
             )
+        self.hass.states.async_set("number.rocket_speaker_volume", "35", {"muted": False})
         self.hass.states.async_set(BLUETOOTH, "1", {"connected_paired_devices": ["WH-1000XM6"]})
         sequence = deepcopy(PACKAGE["script"]["music_headphones_play"]["sequence"])
         next(step for step in sequence if "wait_template" in step)["timeout"] = 0.1
@@ -193,7 +227,9 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
             self.hass.states.async_set(entity, state)
         self.hass.states.async_set(BLUETOOTH, "0", {"connected_paired_devices": []})
         sequence = deepcopy(PACKAGE["script"]["music_headphones_return"]["sequence"])
-        next(step for step in sequence if "wait_template" in step)["timeout"] = 0.05
+        for step in sequence:
+            if "wait_template" in step:
+                step["timeout"] = 0.05
         return Script(
             self.hass,
             cv.SCRIPT_SCHEMA(sequence),
@@ -212,7 +248,7 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_return_lowers_loud_music_assistant_before_transferring(self):
         script = self.prepare_return()
-        self.hass.states.async_set(ROCKET, "idle", {"volume_level": 0.8})
+        self.hass.states.async_set(ROCKET, "idle", {"volume_level": 0.8, "is_volume_muted": False})
         await script.async_run(context=Context())
         self.assertEqual(
             [call[:2] for call in self.calls],
@@ -221,12 +257,14 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.calls[0][2]["volume_level"], 0.4)
         self.assertEqual(self.calls[0][2]["entity_id"], [ROCKET])
 
-    async def test_return_preserves_quieter_and_muted_volume_levels(self):
+    async def test_return_preserves_quieter_and_zero_volume_levels(self):
         for volume in [0, 0.2, 0.4]:
             with self.subTest(volume=volume):
                 self.calls.clear()
                 script = self.prepare_return()
-                self.hass.states.async_set(ROCKET, "idle", {"volume_level": volume})
+                self.hass.states.async_set(
+                    ROCKET, "idle", {"volume_level": volume, "is_volume_muted": False}
+                )
                 await script.async_run(context=Context())
                 self.assertEqual(
                     [c[:2] for c in self.calls], [("music_assistant", "transfer_queue")]
@@ -241,18 +279,55 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
     async def test_return_waits_for_volume_confirmation_before_playing(self):
         script = self.prepare_return()
         self.acknowledge_volume = False
-        self.hass.states.async_set(ROCKET, "idle", {"volume_level": 0.8})
+        self.hass.states.async_set(ROCKET, "idle", {"volume_level": 0.8, "is_volume_muted": False})
         await script.async_run(context=Context())
         self.assertEqual([c[:2] for c in self.calls], [("media_player", "volume_set")])
 
     async def test_return_rechecks_headphones_after_adjusting_volume(self):
         script = self.prepare_return()
-        self.hass.states.async_set(ROCKET, "idle", {"volume_level": 0.8})
+        self.hass.states.async_set(ROCKET, "idle", {"volume_level": 0.8, "is_volume_muted": False})
         self.volume_hook = lambda: self.hass.states.async_set(
             BLUETOOTH, "1", {"connected_paired_devices": ["WH-1000XM6"]}
         )
         await script.async_run(context=Context())
         self.assertEqual([c[:2] for c in self.calls], [("media_player", "volume_set")])
+
+    async def test_return_caps_and_unmutes_both_levels_before_playback(self):
+        script = self.prepare_return()
+        self.hass.states.async_set(ROCKET, "idle", {"volume_level": 0.8, "is_volume_muted": True})
+        self.hass.states.async_set("number.rocket_speaker_volume", "80", {"muted": True})
+        await script.async_run(context=Context())
+        self.assertEqual(
+            self.timeline,
+            [
+                ("media_player", "volume_set"),
+                ("mqtt", "publish"),
+                ("media_player", "volume_mute"),
+                ("music_assistant", "transfer_queue"),
+            ],
+        )
+        request = json.loads(self.speaker_commands[0]["payload"])
+        self.assertEqual(request["maximum"], 50)
+        self.assertTrue(request["unmute"])
+        self.assertFalse(self.speaker_commands[0]["retain"])
+        self.assertEqual(float(self.hass.states.get("number.rocket_speaker_volume").state), 50.0)
+
+    async def test_return_preserves_quieter_system_output(self):
+        script = self.prepare_return()
+        await script.async_run(context=Context())
+        self.assertEqual(self.hass.states.get("number.rocket_speaker_volume").state, "35.0")
+        self.assertEqual(self.calls[0][:2], ("music_assistant", "transfer_queue"))
+
+    async def test_return_rejects_missing_failed_or_stale_speaker_confirmation(self):
+        for behavior in ["missing", "failed", "stale"]:
+            with self.subTest(behavior=behavior):
+                self.calls.clear()
+                script = self.prepare_return()
+                self.speaker_acknowledges = behavior != "missing"
+                self.speaker_success = behavior != "failed"
+                self.speaker_wrong_request = behavior == "stale"
+                await script.async_run(context=Context())
+                self.assertEqual(self.calls, [])
 
     async def test_return_handles_android_pause_on_disconnect(self):
         script = self.prepare_return()
