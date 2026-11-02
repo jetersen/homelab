@@ -130,6 +130,23 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
         await self.run_action("handoff")
         self.assertEqual([call[:2] for call in self.calls], [("script", "music_headphones_prompt")])
 
+    async def test_away_handoff_resumes_phone_without_taking_playing_desktop(self):
+        self.hass.states.async_set("input_boolean.at_home", "off")
+        self.hass.states.async_set(ROCKET, "playing")
+        await self.run_action("handoff")
+        self.assertEqual(len(self.launches), 1)
+        self.assertEqual([call[:2] for call in self.calls], [("media_player", "media_play")])
+        self.assertEqual(self.calls[0][2]["entity_id"], [PHONE])
+
+    async def test_away_handoff_with_empty_phone_queue_does_not_take_desktop(self):
+        self.hass.states.async_set("input_boolean.at_home", "off")
+        self.hass.states.async_set(ROCKET, "playing")
+        self.queues[PHONE] = 0
+        await self.run_action("handoff")
+        self.assertEqual(len(self.calls), 1)
+        self.assertEqual(self.calls[0][0], "notify")
+        self.assertIn("empty", self.calls[0][2]["message"])
+
     async def test_handoff_waits_for_phone_to_reconnect(self):
         self.hass.states.async_set(PHONE, "unavailable")
         self.hass.states.async_set(ROCKET, "playing")
@@ -182,6 +199,20 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
         await script.async_run(context=Context())
         self.assertEqual(self.calls[0][2]["source_player"], PHONE)
 
+    async def test_return_handles_android_idle_before_bluetooth_disconnect(self):
+        script = self.prepare_return()
+        self.hass.states.async_set(PHONE, "idle")
+        await script.async_run(context=Context())
+        self.assertEqual(self.calls[0][2]["source_player"], PHONE)
+        self.assertEqual(self.calls[0][2]["entity_id"], [ROCKET])
+
+    async def test_idle_phone_without_recent_headphone_playback_never_transfers(self):
+        script = self.prepare_return()
+        self.hass.states.async_set(PHONE, "idle")
+        self.hass.states.async_set("binary_sensor.music_headphones_playback", "off")
+        await script.async_run(context=Context())
+        self.assertEqual(self.calls, [])
+
     async def test_return_requires_home_power_recent_playback_and_available_players(self):
         for entity, state in [
             ("input_boolean.at_home", "off"),
@@ -190,7 +221,6 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
             ("binary_sensor.rocket_sensor_power", "unavailable"),
             ("binary_sensor.music_headphones_playback", "off"),
             (PHONE, "unavailable"),
-            (PHONE, "idle"),
             (ROCKET, "unavailable"),
             (ROCKET, "off"),
             (BLUETOOTH, "unavailable"),
@@ -246,10 +276,10 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
                     expected,
                 )
 
-    async def test_playback_sensor_retains_brief_pause_then_expires(self):
+    async def test_idle_then_disconnect_returns_only_within_playback_grace(self):
         self.hass.states.async_set(PHONE, "playing")
         config = deepcopy(PACKAGE["template"])
-        config[0]["binary_sensor"][0]["delay_off"] = 0.05
+        config[0]["binary_sensor"][0]["delay_off"] = 0.1
         self.hass.config_entries = ConfigEntries(self.hass, {})
         await self.hass.config_entries.async_initialize()
         dr.async_setup(self.hass)
@@ -260,13 +290,27 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
         await self.hass.async_block_till_done()
         sensor = "binary_sensor.music_headphones_playback"
         self.assertEqual(self.hass.states.get(sensor).state, "on")
-        self.hass.states.async_set(PHONE, "paused")
+        self.hass.states.async_set(PHONE, "idle")
         self.hass.states.async_set(BLUETOOTH, "0", {"connected_paired_devices": []})
         await self.hass.async_block_till_done()
         self.assertEqual(self.hass.states.get(sensor).state, "on")
-        await asyncio.sleep(0.1)
+        self.hass.states.async_set("input_boolean.at_home", "on")
+        self.hass.states.async_set("binary_sensor.rocket_sensor_power", "on")
+        script = Script(
+            self.hass,
+            cv.SCRIPT_SCHEMA(PACKAGE["script"]["music_headphones_return"]["sequence"]),
+            "Disconnect timing regression",
+            "script",
+        )
+        await script.async_run(context=Context())
+        self.assertEqual(self.calls[0][2]["source_player"], PHONE)
+        self.assertEqual(self.calls[0][2]["entity_id"], [ROCKET])
+        self.calls.clear()
+        await asyncio.sleep(0.15)
         await self.hass.async_block_till_done()
         self.assertEqual(self.hass.states.get(sensor).state, "off")
+        await script.async_run(context=Context())
+        self.assertEqual(self.calls, [])
 
     async def test_unavailable_phone_explains_reconnection(self):
         self.hass.states.async_set(PHONE, "unavailable")

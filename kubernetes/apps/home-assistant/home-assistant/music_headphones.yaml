@@ -7,7 +7,7 @@ template:
           {{ is_state('media_player.my_phone', 'playing') and
              'WH-1000XM6' in (state_attr('sensor.cph2709_bluetooth_connection',
              'connected_paired_devices') or []) | join(' ') }}
-        # Android can pause audio before reporting the Bluetooth disconnection.
+        # Android can pause or stop audio before reporting the Bluetooth disconnection.
         delay_off: "00:00:10"
 
 script:
@@ -33,7 +33,7 @@ script:
                  state_attr('sensor.cph2709_bluetooth_connection', 'connected_paired_devices') is not none and
                  'WH-1000XM6' not in (state_attr('sensor.cph2709_bluetooth_connection',
                  'connected_paired_devices') or []) | join(' ') and
-                 states('media_player.my_phone') in ['playing', 'paused'] and
+                 states('media_player.my_phone') in ['playing', 'paused', 'idle'] and
                  states('media_player.rocket') in ['idle', 'paused', 'playing'] }}
       - action: music_assistant.get_queue
         target:
@@ -107,6 +107,10 @@ script:
              'connected_paired_devices') or []) | join(' ') }}
       - variables:
           problem: ""
+          # Away from home, resume the phone instead of taking a desktop queue.
+          operation: >-
+            {{ 'resume' if operation == 'handoff' and
+               is_state('input_boolean.at_home', 'off') else operation }}
       - choose:
           - conditions: "{{ not has_value('media_player.my_phone') }}"
             sequence:
