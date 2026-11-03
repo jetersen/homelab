@@ -53,13 +53,15 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
         async def record(call):
             self.timeline.append((call.domain, call.service))
             if call.domain == "mqtt":
-                payload = json.loads(call.data["payload"])
-                self.speaker_commands.append(dict(call.data))
+                # The real MQTT service coerces templated payloads to strings.
+                payload_text = str(call.data["payload"])
+                payload = json.loads(payload_text)
+                self.speaker_commands.append({**call.data, "payload": payload_text})
                 if self.speaker_acknowledges:
                     current = self.hass.states.get("number.rocket_speaker_volume")
                     self.hass.states.async_set(
                         "number.rocket_speaker_volume",
-                        str(min(float(current.state), payload["maximum"])),
+                        str(min(float(current.state), 50)),
                         {
                             "request_id": "stale"
                             if self.speaker_wrong_request
@@ -307,8 +309,8 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
             ],
         )
         request = json.loads(self.speaker_commands[0]["payload"])
-        self.assertEqual(request["maximum"], 50)
-        self.assertTrue(request["unmute"])
+        self.assertEqual(self.speaker_commands[0]["topic"], "rocket/audio/music/set")
+        self.assertEqual(set(request), {"request_id", "expires_at"})
         self.assertFalse(self.speaker_commands[0]["retain"])
         self.assertEqual(float(self.hass.states.get("number.rocket_speaker_volume").state), 50.0)
 

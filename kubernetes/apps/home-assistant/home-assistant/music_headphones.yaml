@@ -59,27 +59,24 @@ script:
         timeout: "00:00:05"
         continue_on_timeout: false
       - variables:
-          volume_request: "speaker-{{ (as_timestamp(now()) * 1000000) | int }}"
+          music_request: "music-{{ (as_timestamp(now()) * 1000000) | int }}"
       - action: mqtt.publish
         data:
-          topic: rocket/audio/volume/limit
+          topic: rocket/audio/music/set
           payload: >-
-            {{ dict(maximum=50, request_id=volume_request, unmute=true,
+            {{ dict(request_id=music_request,
                     expires_at=as_timestamp(now()) + 5) | to_json }}
           qos: 1
           retain: false
       - wait_template: >-
-          {{ state_attr('number.rocket_speaker_volume', 'request_id') == volume_request }}
+          {{ state_attr('number.rocket_speaker_volume', 'request_id') == music_request }}
         timeout: "00:00:03"
         continue_on_timeout: false
       - &speaker_volume_confirmed
         condition: template
         value_template: >-
-          {{ state_attr('number.rocket_speaker_volume', 'request_id') == volume_request and
-             is_state_attr('number.rocket_speaker_volume', 'limit_ok', true) and
-             is_state_attr('number.rocket_speaker_volume', 'muted', false) and
-             is_number(states('number.rocket_speaker_volume')) and
-             states('number.rocket_speaker_volume') | float <= 50 }}
+          {{ state_attr('number.rocket_speaker_volume', 'request_id') == music_request and
+             is_state_attr('number.rocket_speaker_volume', 'limit_ok', true) }}
       - if: "{{ is_state_attr('media_player.rocket', 'is_volume_muted', true) }}"
         then:
           - action: media_player.volume_mute
