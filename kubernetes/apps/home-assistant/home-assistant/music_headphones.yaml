@@ -127,6 +127,61 @@ script:
                 title: Open app
                 uri: deep-link://musicassistant://app/players?player=My%20Phone
 
+  music_headphones_fill_queue:
+    alias: Start a playlist or recent-track radio for headphones
+    mode: single
+    sequence:
+      - repeat:
+          for_each: [playlist, track]
+          sequence:
+            - &headphones_connected
+              condition: template
+              value_template: >-
+                {{ 'WH-1000XM6' in (state_attr('sensor.cph2709_bluetooth_connection',
+                   'connected_paired_devices') or []) | join(' ') }}
+            - variables:
+                library_result: {}
+            - action: music_assistant.get_library
+              data:
+                config_entry_id: "{{ config_entry_id('media_player.my_phone') }}"
+                media_type: "{{ repeat.item }}"
+                order_by: last_played_desc
+                limit: 1
+              response_variable: library_result
+              continue_on_error: true
+            - variables:
+                fallback_uri: >-
+                  {{ (library_result | default({})).get('items', [])
+                     | selectattr('uri', 'defined') | map(attribute='uri')
+                     | first | default('') }}
+            - if: "{{ fallback_uri != '' }}"
+              then:
+                # Keep music the user selected while the library was loading.
+                - action: music_assistant.get_queue
+                  target:
+                    entity_id: media_player.my_phone
+                  response_variable: current_queue
+                - if: "{{ current_queue['media_player.my_phone']['items'] > 0 }}"
+                  then:
+                    - stop: Phone queue already populated
+                - *headphones_connected
+                - action: music_assistant.play_media
+                  target:
+                    entity_id: media_player.my_phone
+                  data:
+                    media_id: "{{ fallback_uri }}"
+                    media_type: "{{ repeat.item }}"
+                    enqueue: play
+                    radio_mode: "{{ repeat.item == 'track' }}"
+                  continue_on_error: true
+                - action: music_assistant.get_queue
+                  target:
+                    entity_id: media_player.my_phone
+                  response_variable: current_queue
+                - if: "{{ current_queue['media_player.my_phone']['items'] > 0 }}"
+                  then:
+                    - stop: Headphone music started
+
   music_headphones_play:
     alias: Play music through connected headphones
     mode: single
@@ -137,10 +192,7 @@ script:
           select:
             options: [resume, transfer, handoff]
     sequence:
-      - condition: template
-        value_template: >-
-          {{ 'WH-1000XM6' in (state_attr('sensor.cph2709_bluetooth_connection',
-             'connected_paired_devices') or []) | join(' ') }}
+      - *headphones_connected
       - action: notify.mobile_app_oneplus_nord_5
         data:
           message: command_activity
@@ -180,12 +232,20 @@ script:
                     response_variable: phone_queue
                   - if: "{{ phone_queue['media_player.my_phone']['items'] > 0 }}"
                     then:
+                      - *headphones_connected
                       - action: media_player.media_play
                         target:
                           entity_id: media_player.my_phone
                     else:
-                      - variables:
-                          problem: The phone queue is empty. Use Transfer desktop to bring your music over.
+                      - action: script.music_headphones_fill_queue
+                      - action: music_assistant.get_queue
+                        target:
+                          entity_id: media_player.my_phone
+                        response_variable: phone_queue
+                      - if: "{{ phone_queue['media_player.my_phone']['items'] == 0 }}"
+                        then:
+                          - variables:
+                              problem: Your phone queue is empty, and no playlist or recent track could be started. Open Music Assistant to choose music.
               - conditions: "{{ operation in ['transfer', 'handoff'] }}"
                 sequence:
                   - action: music_assistant.get_queue
@@ -230,6 +290,7 @@ script:
                               problem: Neither desktop has an available music queue. Open Music Assistant to choose music.
       - if: "{{ problem != '' }}"
         then:
+          - *headphones_connected
           - action: notify.mobile_app_oneplus_nord_5
             data:
               title: Music Assistant

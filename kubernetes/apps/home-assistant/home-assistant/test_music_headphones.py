@@ -15,6 +15,7 @@ import yaml
 from homeassistant import loader
 from homeassistant.config_entries import ConfigEntries
 from homeassistant.core import Context, HomeAssistant, State, SupportsResponse
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
@@ -44,6 +45,17 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
         clock = patch("homeassistant.util.dt.now", side_effect=local_clock)
         clock.start()
         self.addCleanup(clock.stop)
+        entry_lookup = patch(
+            "homeassistant.helpers.template.extensions.config_entries.ConfigEntryExtension.config_entry_id",
+            return_value="fixture_music_entry",
+        )
+        entry_lookup.start()
+        self.addCleanup(entry_lookup.stop)
+        self.library_items = {"playlist": [], "track": []}
+        self.library_requests = []
+        self.library_failures = set()
+        self.media_failures = set()
+        self.library_hook = None
         self.calls = []
         self.launches = []
         self.queue_hook = None
@@ -65,6 +77,18 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
             if self.queue_hook:
                 self.queue_hook()
             return {entity: {"items": self.queues[entity]}}
+
+        async def library(call):
+            self.library_requests.append(dict(call.data))
+            media_type = call.data["media_type"]
+            if media_type in self.library_failures:
+                raise HomeAssistantError("Fixture library unavailable")
+            if self.library_hook:
+                self.library_hook()
+            return {"items": self.library_items[media_type]}
+
+        async def fill_queue(call):
+            await self.fill_script.async_run(context=call.context)
 
         async def record(call):
             self.timeline.append((call.domain, call.service))
@@ -100,6 +124,10 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
                 self.launches.append(dict(call.data))
             else:
                 self.calls.append((call.domain, call.service, dict(call.data)))
+                if call.domain == "music_assistant" and call.service == "play_media":
+                    if call.data["media_id"] in self.media_failures:
+                        raise HomeAssistantError("Fixture media unavailable")
+                    self.queues[PHONE] = 5
                 if call.domain == "media_player" and call.service == "volume_set":
                     if self.acknowledge_volume:
                         state = self.hass.states.get(ROCKET)
@@ -114,8 +142,19 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
         self.hass.services.async_register(
             "music_assistant", "get_queue", queue, supports_response=SupportsResponse.ONLY
         )
+        self.hass.services.async_register(
+            "music_assistant", "get_library", library, supports_response=SupportsResponse.ONLY
+        )
+        self.hass.services.async_register("script", "music_headphones_fill_queue", fill_queue)
+        self.fill_script = Script(
+            self.hass,
+            cv.SCRIPT_SCHEMA(PACKAGE["script"]["music_headphones_fill_queue"]["sequence"]),
+            "Empty queue regression",
+            "script",
+        )
         for domain, service in [
             ("music_assistant", "transfer_queue"),
+            ("music_assistant", "play_media"),
             ("media_player", "media_play"),
             ("media_player", "volume_set"),
             ("media_player", "volume_mute"),
@@ -160,13 +199,100 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
         await self.run_action("resume")
         self.assertEqual(self.calls[0][:2], ("media_player", "media_play"))
         self.assertEqual(self.calls[0][2]["entity_id"], [PHONE])
+        self.assertEqual(self.library_requests, [])
 
-    async def test_empty_phone_queue_explains_transfer_without_starting_music(self):
+    async def test_empty_phone_queue_without_fallback_explains_problem(self):
         self.queues[PHONE] = 0
         await self.run_action("resume")
         self.assertEqual(len(self.calls), 1)
         self.assertEqual(self.calls[0][0], "notify")
         self.assertIn("empty", self.calls[0][2]["message"])
+
+    async def test_empty_phone_queue_starts_recent_playlist(self):
+        self.queues[PHONE] = 0
+        self.library_items["playlist"] = [{"uri": "library://playlist/42"}]
+        self.library_items["track"] = [{"uri": "library://track/99"}]
+        await self.run_action("resume")
+        self.assertEqual(len(self.calls), 1)
+        self.assertEqual(self.calls[0][:2], ("music_assistant", "play_media"))
+        self.assertEqual(self.calls[0][2]["media_id"], "library://playlist/42")
+        self.assertFalse(self.calls[0][2]["radio_mode"])
+        self.assertEqual(self.calls[0][2]["enqueue"], "play")
+        self.assertEqual(self.calls[0][2]["entity_id"], [PHONE])
+        self.assertEqual(
+            self.library_requests,
+            [
+                {
+                    "config_entry_id": "fixture_music_entry",
+                    "media_type": "playlist",
+                    "order_by": "last_played_desc",
+                    "limit": 1,
+                }
+            ],
+        )
+
+    async def test_empty_phone_queue_without_playlist_starts_recent_track_radio(self):
+        self.queues[PHONE] = 0
+        self.library_items["track"] = [{"uri": "library://track/99"}]
+        await self.run_action("resume")
+        self.assertEqual(len(self.calls), 1)
+        self.assertEqual(self.calls[0][2]["media_id"], "library://track/99")
+        self.assertTrue(self.calls[0][2]["radio_mode"])
+        self.assertEqual([r["media_type"] for r in self.library_requests], ["playlist", "track"])
+
+    async def test_unplayable_playlist_falls_back_to_recent_track_radio(self):
+        self.queues[PHONE] = 0
+        self.library_items["playlist"] = [{"uri": "library://playlist/42"}]
+        self.library_items["track"] = [{"uri": "library://track/99"}]
+        self.media_failures.add("library://playlist/42")
+        await self.run_action("resume")
+        self.assertEqual(
+            [c[2]["media_id"] for c in self.calls],
+            [
+                "library://playlist/42",
+                "library://track/99",
+            ],
+        )
+        self.assertTrue(self.calls[-1][2]["radio_mode"])
+
+    async def test_failed_playlist_query_still_uses_recent_track(self):
+        self.queues[PHONE] = 0
+        self.library_failures.add("playlist")
+        self.library_items["track"] = [{"uri": "library://track/99"}]
+        await self.run_action("resume")
+        self.assertEqual(len(self.calls), 1)
+        self.assertEqual(self.calls[0][2]["media_id"], "library://track/99")
+
+    async def test_failed_track_query_does_not_reuse_playlist_response(self):
+        self.queues[PHONE] = 0
+        self.library_items["playlist"] = [{"uri": "library://playlist/42"}]
+        self.media_failures.add("library://playlist/42")
+        self.library_failures.add("track")
+        await self.run_action("resume")
+        self.assertEqual(
+            [c[:2] for c in self.calls],
+            [
+                ("music_assistant", "play_media"),
+                ("notify", "mobile_app_oneplus_nord_5"),
+            ],
+        )
+
+    async def test_disconnect_while_loading_library_never_starts_music(self):
+        self.queues[PHONE] = 0
+        self.library_items["playlist"] = [{"uri": "library://playlist/42"}]
+        self.library_hook = lambda: self.hass.states.async_set(
+            BLUETOOTH, "0", {"connected_paired_devices": []}
+        )
+        await self.run_action("resume")
+        self.assertEqual(self.calls, [])
+
+    async def test_queue_populated_while_library_loads_is_preserved(self):
+        self.queues[PHONE] = 0
+        self.library_items["playlist"] = [{"uri": "library://playlist/42"}]
+        self.library_hook = lambda: self.queues.update({PHONE: 3})
+        await self.run_action("resume")
+        self.assertEqual(self.calls, [])
+        self.assertEqual(self.queues[PHONE], 3)
 
     async def test_transfer_prefers_playing_desktop_over_paused_queue(self):
         self.hass.states.async_set(FRAMEWORK, "playing")
