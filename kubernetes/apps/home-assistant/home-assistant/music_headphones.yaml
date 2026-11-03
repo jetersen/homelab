@@ -160,10 +160,11 @@ script:
              'connected_paired_devices') or []) | join(' ') }}
       - variables:
           problem: ""
-          # Away from home, resume the phone instead of taking a desktop queue.
+          # Resume the phone when away or during the weekday morning window.
           operation: >-
             {{ 'resume' if operation == 'handoff' and
-               is_state('input_boolean.at_home', 'off') else operation }}
+               (is_state('input_boolean.at_home', 'off') or
+                (now().weekday() < 5 and 6 <= now().hour < 10)) else operation }}
       - choose:
           - conditions: "{{ not has_value('media_player.my_phone') }}"
             sequence:

@@ -5,7 +5,11 @@ import json
 import tempfile
 import unittest
 from copy import deepcopy
+from datetime import datetime, timedelta
 from pathlib import Path
+from time import monotonic
+from unittest.mock import patch
+from zoneinfo import ZoneInfo
 
 import yaml
 from homeassistant import loader
@@ -30,6 +34,16 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
         self.directory = tempfile.TemporaryDirectory()
         self.hass = HomeAssistant(self.directory.name)
         loader.async_setup(self.hass)
+        self.local_now = datetime(2026, 11, 3, 12, tzinfo=ZoneInfo("Europe/Copenhagen"))
+        clock_started = monotonic()
+
+        def local_clock(time_zone=None):
+            current = self.local_now + timedelta(seconds=monotonic() - clock_started)
+            return current.astimezone(time_zone) if time_zone else current
+
+        clock = patch("homeassistant.util.dt.now", side_effect=local_clock)
+        clock.start()
+        self.addCleanup(clock.stop)
         self.calls = []
         self.launches = []
         self.queue_hook = None
@@ -203,6 +217,57 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(self.calls), 1)
         self.assertEqual(self.calls[0][0], "notify")
         self.assertIn("empty", self.calls[0][2]["message"])
+
+    async def test_weekday_morning_at_home_resumes_phone_at_window_boundaries(self):
+        self.hass.states.async_set("input_boolean.at_home", "on")
+        self.hass.states.async_set(ROCKET, "playing")
+        for day in range(2, 7):  # Monday through Friday.
+            for hour, minute in [(6, 0), (9, 59)]:
+                with self.subTest(day=day, hour=hour, minute=minute):
+                    self.local_now = datetime(
+                        2026, 11, day, hour, minute, tzinfo=ZoneInfo("Europe/Copenhagen")
+                    )
+                    self.calls.clear()
+                    await self.run_action("handoff")
+                    self.assertEqual([c[:2] for c in self.calls], [("media_player", "media_play")])
+                    self.assertEqual(self.calls[0][2]["entity_id"], [PHONE])
+
+    async def test_outside_morning_or_on_weekends_keeps_desktop_handoff(self):
+        self.hass.states.async_set("input_boolean.at_home", "on")
+        self.hass.states.async_set(ROCKET, "playing")
+        for day, hour, minute in [(3, 5, 59), (3, 10, 0), (7, 8, 0), (8, 8, 0)]:
+            with self.subTest(day=day, hour=hour, minute=minute):
+                self.local_now = datetime(
+                    2026, 11, day, hour, minute, tzinfo=ZoneInfo("Europe/Copenhagen")
+                )
+                self.calls.clear()
+                await self.run_action("handoff")
+                self.assertEqual(self.calls[0][:2], ("music_assistant", "transfer_queue"))
+                self.assertEqual(self.calls[0][2]["source_player"], ROCKET)
+
+    async def test_morning_empty_phone_queue_does_not_take_desktop(self):
+        self.local_now = self.local_now.replace(hour=8)
+        self.hass.states.async_set("input_boolean.at_home", "on")
+        self.hass.states.async_set(ROCKET, "playing")
+        self.queues[PHONE] = 0
+        await self.run_action("handoff")
+        self.assertEqual(len(self.calls), 1)
+        self.assertEqual(self.calls[0][0], "notify")
+        self.assertIn("empty", self.calls[0][2]["message"])
+
+    async def test_morning_manual_transfer_still_uses_desktop(self):
+        self.local_now = self.local_now.replace(hour=8)
+        self.hass.states.async_set("input_boolean.at_home", "on")
+        self.hass.states.async_set(ROCKET, "playing")
+        await self.run_action("transfer")
+        self.assertEqual(self.calls[0][:2], ("music_assistant", "transfer_queue"))
+        self.assertEqual(self.calls[0][2]["source_player"], ROCKET)
+
+    async def test_weekend_away_still_resumes_phone(self):
+        self.local_now = datetime(2026, 11, 7, 8, tzinfo=ZoneInfo("Europe/Copenhagen"))
+        self.hass.states.async_set("input_boolean.at_home", "off")
+        await self.run_action("handoff")
+        self.assertEqual([c[:2] for c in self.calls], [("media_player", "media_play")])
 
     async def test_handoff_waits_for_phone_to_reconnect(self):
         self.hass.states.async_set(PHONE, "unavailable")
