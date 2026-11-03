@@ -122,6 +122,10 @@ Environment lists append during strategic merge. For environment changes, pass a
 delete-document patch followed by the service patch in the same invocation so
 old values are replaced rather than duplicated.
 
+For tailnet TCP forwarding, mount a Serve JSON file with `configFiles` and point
+`TS_SERVE_CONFIG` to it. Backend hostnames must resolve to the intended internal
+service. Tailnet access rules apply to the forwarding listener's port.
+
 Keep kubelet and etcd addresses pinned to the LAN through [the node configuration](patches/all/00-cluster.yaml) and
 [the etcd patch](patches/control-plane/etcd-lan.yaml). Check Cilium still selects the physical
 interface after changing native Tailscale networking.

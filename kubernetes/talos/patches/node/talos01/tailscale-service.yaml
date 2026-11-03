@@ -14,3 +14,14 @@ environment:
   - TS_ROUTES=192.168.1.1/32,192.168.1.10/32,192.168.1.20/32,192.168.1.21/32,fde2:b84e:c4cd:1::1000/128,fde2:b84e:c4cd:1::1001/128
   - TS_EXTRA_ARGS=--accept-routes=false --advertise-tags=tag:k8s-subnet-router
   - TS_TUN_DISABLE_UDP_GRO=true
+  - TS_SERVE_CONFIG=/etc/tailscale/serve.json
+configFiles:
+  - mountPath: /etc/tailscale/serve.json
+    content: |
+      {
+        "TCP": {
+          "1883": {
+            "TCPForward": "mqtt.jetersen.dev:1883"
+          }
+        }
+      }
