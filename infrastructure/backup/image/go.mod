@@ -4,7 +4,7 @@ go 1.27.1
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.5.1
-	modernc.org/sqlite v1.61.0
+	modernc.org/sqlite v1.61.1
 )
 
 require (
