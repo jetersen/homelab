@@ -37,6 +37,8 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
         self.volume_hook = None
         self.speaker_commands = []
         self.speaker_acknowledges = True
+        self.speaker_delay = 0
+        self.unmute_delay = 0
         self.speaker_success = True
         self.speaker_wrong_request = False
         self.timeline = []
@@ -57,6 +59,8 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
                 payload_text = str(call.data["payload"])
                 payload = json.loads(payload_text)
                 self.speaker_commands.append({**call.data, "payload": payload_text})
+                if self.speaker_delay:
+                    await asyncio.sleep(self.speaker_delay)
                 if self.speaker_acknowledges:
                     current = self.hass.states.get("number.rocket_speaker_volume")
                     self.hass.states.async_set(
@@ -72,6 +76,8 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
                     )
                 return
             if call.domain == "media_player" and call.service == "volume_mute":
+                if self.unmute_delay:
+                    await asyncio.sleep(self.unmute_delay)
                 state = self.hass.states.get(ROCKET)
                 self.hass.states.async_set(
                     ROCKET, state.state, {**state.attributes, "is_volume_muted": False}
@@ -219,7 +225,7 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
         await task
         self.assertEqual(self.calls, [])
 
-    def prepare_return(self):
+    def prepare_return(self, deadline_seconds=None):
         for entity, state in {
             "input_boolean.at_home": "on",
             "binary_sensor.rocket_sensor_power": "on",
@@ -230,6 +236,8 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
         self.hass.states.async_set(BLUETOOTH, "0", {"connected_paired_devices": []})
         sequence = deepcopy(PACKAGE["script"]["music_headphones_return"]["sequence"])
         for step in sequence:
+            if deadline_seconds is not None and "music_deadline" in step.get("variables", {}):
+                step["variables"]["music_deadline"] = "{{ as_timestamp(now()) + " + str(deadline_seconds) + " }}"
             if "wait_template" in step:
                 step["timeout"] = 0.05
         return Script(
@@ -330,6 +338,21 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
                 self.speaker_wrong_request = behavior == "stale"
                 await script.async_run(context=Context())
                 self.assertEqual(self.calls, [])
+
+    async def test_return_rejects_a_matching_success_delivered_after_expiry(self):
+        script = self.prepare_return(deadline_seconds=0.1)
+        self.speaker_delay = 0.2
+        await script.async_run(context=Context())
+        self.assertEqual(len(self.speaker_commands), 1)
+        self.assertNotIn(("music_assistant", "transfer_queue"), self.timeline)
+
+    async def test_return_rechecks_expiry_after_software_unmute(self):
+        script = self.prepare_return(deadline_seconds=0.1)
+        self.hass.states.async_set(ROCKET, "idle", {"volume_level": 0.3, "is_volume_muted": True})
+        self.unmute_delay = 0.2
+        await script.async_run(context=Context())
+        self.assertIn(("media_player", "volume_mute"), self.timeline)
+        self.assertNotIn(("music_assistant", "transfer_queue"), self.timeline)
 
     async def test_return_handles_android_pause_on_disconnect(self):
         script = self.prepare_return()

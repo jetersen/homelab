@@ -59,13 +59,14 @@ script:
         timeout: "00:00:05"
         continue_on_timeout: false
       - variables:
+          music_deadline: "{{ as_timestamp(now()) + 5 }}"
           music_request: "music-{{ (as_timestamp(now()) * 1000000) | int }}"
       - action: mqtt.publish
         data:
           topic: rocket/audio/music/set
           payload: >-
             {{ dict(request_id=music_request,
-                    expires_at=as_timestamp(now()) + 5) | to_json }}
+                    expires_at=music_deadline | float) | to_json }}
           qos: 1
           retain: false
       - wait_template: >-
@@ -76,7 +77,8 @@ script:
         condition: template
         value_template: >-
           {{ state_attr('number.rocket_speaker_volume', 'request_id') == music_request and
-             is_state_attr('number.rocket_speaker_volume', 'limit_ok', true) }}
+             is_state_attr('number.rocket_speaker_volume', 'limit_ok', true) and
+             as_timestamp(now()) < music_deadline | float(0) }}
       - if: "{{ is_state_attr('media_player.rocket', 'is_volume_muted', true) }}"
         then:
           - action: media_player.volume_mute
