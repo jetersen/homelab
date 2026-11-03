@@ -237,7 +237,9 @@ class HeadphoneTests(unittest.IsolatedAsyncioTestCase):
         sequence = deepcopy(PACKAGE["script"]["music_headphones_return"]["sequence"])
         for step in sequence:
             if deadline_seconds is not None and "music_deadline" in step.get("variables", {}):
-                step["variables"]["music_deadline"] = "{{ as_timestamp(now()) + " + str(deadline_seconds) + " }}"
+                step["variables"]["music_deadline"] = (
+                    "{{ as_timestamp(now()) + " + str(deadline_seconds) + " }}"
+                )
             if "wait_template" in step:
                 step["timeout"] = 0.05
         return Script(
