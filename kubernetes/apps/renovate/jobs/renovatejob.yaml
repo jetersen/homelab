@@ -3,8 +3,9 @@ kind: RenovateJob
 metadata:
   name: forgejo
 spec:
-  # Discovery also queues dependency scans. Events maintain PRs between scans.
-  schedule: '17 */6 * * *'
+  # Scan daily inside the shared branch-maintenance window. Manual retries still
+  # arrive through webhooks; routine events cannot rebase PRs outside the window.
+  schedule: '17 6 * * *'
   suspend: false
   image: forgejo.jetersen.dev/jetersen/homelab/renovate-worker:0.1.8@sha256:37cf0bc475ddfa73897c22c1c0834d69ce7aebe673f030186d118e3d720fc457
   provider:

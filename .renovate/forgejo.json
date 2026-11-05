@@ -5,6 +5,9 @@
     ":disableRateLimiting"
   ],
   "branchConcurrentLimit": 0,
+  "timezone": "Etc/UTC",
+  "schedule": ["* 6-7 * * *"],
+  "updateNotScheduled": false,
   "automergeStrategy": "auto",
   "automergeType": "pr",
   "platformAutomerge": true,
