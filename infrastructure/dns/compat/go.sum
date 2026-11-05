@@ -46,6 +46,8 @@ github.com/DNSControl/dnscontrol/v5 v5.7.0 h1:r/IUIItOYUirk3oSRfjaxjZk37ZHC5cx+D
 github.com/DNSControl/dnscontrol/v5 v5.7.0/go.mod h1:oTuAEUHQ+iCV+dO0xRXOVk+stOPe1MIif5/zmNmoPqg=
 github.com/DNSControl/dnscontrol/v5 v5.7.1 h1:5fRTKcMa+n7968hLWzJNNB6dWq4u7qDvGfeW4MiZ+IM=
 github.com/DNSControl/dnscontrol/v5 v5.7.1/go.mod h1:Jb3pN2NKdw0MxsoyOhGV5Ep/RJ1BnFRlDWAdUBQgA2c=
+github.com/DNSControl/dnscontrol/v5 v5.7.2 h1:4wgyfmIIIaKFBlaHsbhuPfneIMavT8Jmm2l9mo1s8iI=
+github.com/DNSControl/dnscontrol/v5 v5.7.2/go.mod h1:76xbOF6lSpWt7z7IAlsObrF/uzB/4LbTCEJOnWjQx50=
 github.com/DisposaBoy/JsonConfigReader v0.0.0-20201129172854-99cf318d67e7 h1:AJKJCKcb/psppPl/9CUiQQnTG+Bce0/cIweD5w5Q7aQ=
 github.com/DisposaBoy/JsonConfigReader v0.0.0-20201129172854-99cf318d67e7/go.mod h1:GCzqZQHydohgVLSIqRKZeTt8IGb1Y4NaFfim3H40uUI=
 github.com/G-Core/gcore-dns-sdk-go v0.3.3 h1:McILJSbJ5nOcT0MI0aBYhEuufCF329YbqKwFIN0RjCI=
@@ -167,6 +169,8 @@ github.com/go-viper/mapstructure/v2 v2.5.0 h1:vM5IJoUAy3d7zRSVtIwQgBj7BiWtMPfmPE
 github.com/go-viper/mapstructure/v2 v2.5.0/go.mod h1:oJDH3BJKyqBA2TXFhDsKDGDTlndYOZ6rGS0BRZIxGhM=
 github.com/gobwas/glob v1.0.0 h1:p+FKbLEIsK1yZ39/OINwFvqNb5oyPY4H8xcy6uYu8dg=
 github.com/gobwas/glob v1.0.0/go.mod h1:oWCdo522i2P1n/hMXGNWs7yoV4wy/ciZuUIbvKj5rkc=
+github.com/gobwas/glob v1.1.0 h1:CS8tIr7+5fu50N+tKsQy3osOU5jmhjHv0/ildcKAn2Q=
+github.com/gobwas/glob v1.1.0/go.mod h1:5OYLTTNYHcww+D/XwWAjGpmIE8sD41kWneKyzWkK7/k=
 github.com/goccy/go-json v0.11.2 h1:jdZv93Tt4ioR8yW1CoNsvSxrcZlCXAUU1aZXN7gpXUA=
 github.com/goccy/go-json v0.11.2/go.mod h1:3NdmfEkZlB7YI5UFw/qdFKq8XN1aiWR0YyRPWZNQltY=
 github.com/goccy/go-yaml v1.19.2 h1:PmFC1S6h8ljIz6gMRBopkjP1TVT7xuwrButHID66PoM=
@@ -402,6 +406,8 @@ golang.org/x/net v0.0.0-20210226172049-e18ecbb05110/go.mod h1:m0MpNAwzfU5UDzcl9v
 golang.org/x/net v0.0.0-20220722155237-a158d28d115b/go.mod h1:XRhObCWvk6IyKnWLug+ECip1KBveYUHfp+8e9klMJ9c=
 golang.org/x/net v0.61.0 h1:RR+6j/BTBCrggOLugxa+66R8FvoN6MHlzDlZIbN9YFw=
 golang.org/x/net v0.61.0/go.mod h1:WgDCOTH8iwtB66T4/GfI94AHo/hhdb7Hah9NDseQfiI=
+golang.org/x/net v0.62.0 h1:18ELalfM5+XNRwzM2nYqXsZQ9ByS1uhj2O/U7+5jqRY=
+golang.org/x/net v0.62.0/go.mod h1:WgDCOTH8iwtB66T4/GfI94AHo/hhdb7Hah9NDseQfiI=
 golang.org/x/oauth2 v0.37.0 h1:JUlcxA8oAtauLfiH8FX2/FkAWHAdi0QtGCGc+hofE98=
 golang.org/x/oauth2 v0.37.0/go.mod h1:IxwZNxUULJmpBFf9K/9NTMSIfZZuvuTy1gGxhigP/58=
 golang.org/x/sync v0.0.0-20190423024810-112230192c58/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=

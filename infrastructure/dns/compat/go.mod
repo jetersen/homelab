@@ -4,7 +4,7 @@ go 1.27.3
 
 require (
 	codeberg.org/miekg/dns v0.6.128
-	github.com/DNSControl/dnscontrol/v5 v5.7.1
+	github.com/DNSControl/dnscontrol/v5 v5.7.2
 )
 
 require (
@@ -17,7 +17,7 @@ require (
 	github.com/dustin/go-humanize v1.1.0 // indirect
 	github.com/eclipse/paho.golang v0.23.0 // indirect
 	github.com/fatih/color v1.19.0 // indirect
-	github.com/gobwas/glob v1.0.0 // indirect
+	github.com/gobwas/glob v1.1.0 // indirect
 	github.com/goccy/go-json v0.11.2 // indirect
 	github.com/google/go-querystring v1.2.0 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
@@ -39,7 +39,7 @@ require (
 	github.com/xddxdd/ottoext v0.0.0-20221109171055-210517fa4419 // indirect
 	golang.org/x/crypto v0.58.0 // indirect
 	golang.org/x/mod v0.42.0 // indirect
-	golang.org/x/net v0.61.0 // indirect
+	golang.org/x/net v0.62.0 // indirect
 	golang.org/x/oauth2 v0.37.0 // indirect
 	golang.org/x/sync v0.24.0 // indirect
 	golang.org/x/sys v0.49.0 // indirect
