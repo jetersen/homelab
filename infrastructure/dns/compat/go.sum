@@ -52,6 +52,8 @@ github.com/DNSControl/dnscontrol/v5 v5.7.1 h1:5fRTKcMa+n7968hLWzJNNB6dWq4u7qDvGf
 github.com/DNSControl/dnscontrol/v5 v5.7.1/go.mod h1:Jb3pN2NKdw0MxsoyOhGV5Ep/RJ1BnFRlDWAdUBQgA2c=
 github.com/DNSControl/dnscontrol/v5 v5.7.2 h1:4wgyfmIIIaKFBlaHsbhuPfneIMavT8Jmm2l9mo1s8iI=
 github.com/DNSControl/dnscontrol/v5 v5.7.2/go.mod h1:76xbOF6lSpWt7z7IAlsObrF/uzB/4LbTCEJOnWjQx50=
+github.com/DNSControl/dnscontrol/v5 v5.8.0 h1:n3aF6Nlly2oxLuQ4eYuHrpVykHhtIDZhrgzGbuMnWi8=
+github.com/DNSControl/dnscontrol/v5 v5.8.0/go.mod h1:Fn3jMvKez4iQGkTF37HSxg3FkvMVN30vX/KdsageA5w=
 github.com/DisposaBoy/JsonConfigReader v0.0.0-20201129172854-99cf318d67e7 h1:AJKJCKcb/psppPl/9CUiQQnTG+Bce0/cIweD5w5Q7aQ=
 github.com/DisposaBoy/JsonConfigReader v0.0.0-20201129172854-99cf318d67e7/go.mod h1:GCzqZQHydohgVLSIqRKZeTt8IGb1Y4NaFfim3H40uUI=
 github.com/G-Core/gcore-dns-sdk-go v0.3.3 h1:McILJSbJ5nOcT0MI0aBYhEuufCF329YbqKwFIN0RjCI=
@@ -122,6 +124,8 @@ github.com/cloudflare/cloudflare-go v0.119.0 h1:E1Qaf8AbXrNA5tBhYYpvH2NsPfpUtTpe
 github.com/cloudflare/cloudflare-go v0.119.0/go.mod h1:Ds6urDwn/TF2uIU24mu7H91xkKP8gSAHxQ44DSZgVmU=
 github.com/cloudflare/cloudflare-go/v7 v7.13.1 h1:fRe8JpKifizF3WafGmTQiI5+lNVZht/khSDL2g9KrOs=
 github.com/cloudflare/cloudflare-go/v7 v7.13.1/go.mod h1:nHsJfu5TjVpYVJVpmRhB4WJ6Dd91fckUGgw5t9fKe54=
+github.com/cloudflare/cloudflare-go/v7 v7.14.0 h1:5+UBaPtXewYw6Bta1TLthCxTHFA0s1Mb3SCotpftc9o=
+github.com/cloudflare/cloudflare-go/v7 v7.14.0/go.mod h1:nHsJfu5TjVpYVJVpmRhB4WJ6Dd91fckUGgw5t9fKe54=
 github.com/creack/pty v1.1.17 h1:QeVUsEDNrLBW4tMgZHvxy18sKtr6VI492kBhUfhDJNI=
 github.com/creack/pty v1.1.17/go.mod h1:MOBLtS5ELjhRRrroQr9kyvTxUAFNvYEK993ew/Vr4O4=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -267,6 +271,8 @@ github.com/nicholas-fedor/shoutrrr v0.22.0 h1:hfMU3ayuK0tm68iT5YsdQL+Y6skCF6NDEK
 github.com/nicholas-fedor/shoutrrr v0.22.0/go.mod h1:qiWfC+p3d0cAhV2R8BTrah2cHRgK6lRMxQ9CSWjkdTU=
 github.com/nicholas-fedor/shoutrrr v0.22.1 h1:9B/sTQyE5BrtUKPpOyRO+XdYIrU0QRIjDdvfUbunWiE=
 github.com/nicholas-fedor/shoutrrr v0.22.1/go.mod h1:kvUu4xf3cgZzkbHCqw0cxu7cxxj4Y//WZeJ6KC0+Q0o=
+github.com/nicholas-fedor/shoutrrr v0.23.0 h1:8SaNzoCpC/0rGQGLd3MYROMdljVehgt0z27n32P7MEA=
+github.com/nicholas-fedor/shoutrrr v0.23.0/go.mod h1:JB8tJB46KFrkUuF8s7FvY9HBg+ZYWcotDBVhnw0ufPQ=
 github.com/nozzle/throttler v0.0.0-20180817012639-2ea982251481 h1:Up6+btDp321ZG5/zdSLo48H9Iaq0UQGthrhWC6pCxzE=
 github.com/nozzle/throttler v0.0.0-20180817012639-2ea982251481/go.mod h1:yKZQO8QE2bHlgozqWDiRVqTFlLQSj30K/6SAK8EeYFw=
 github.com/nrdcg/goinwx v0.12.0 h1:ujdUqDBnaRSFwzVnImvPHYw3w3m9XgmGImNUw1GyMb4=
@@ -414,6 +420,8 @@ golang.org/x/net v0.62.0 h1:18ELalfM5+XNRwzM2nYqXsZQ9ByS1uhj2O/U7+5jqRY=
 golang.org/x/net v0.62.0/go.mod h1:WgDCOTH8iwtB66T4/GfI94AHo/hhdb7Hah9NDseQfiI=
 golang.org/x/oauth2 v0.37.0 h1:JUlcxA8oAtauLfiH8FX2/FkAWHAdi0QtGCGc+hofE98=
 golang.org/x/oauth2 v0.37.0/go.mod h1:IxwZNxUULJmpBFf9K/9NTMSIfZZuvuTy1gGxhigP/58=
+golang.org/x/oauth2 v0.38.0 h1:uW7XQbcu1eoiQS7uMJvLOjPMl04bTbmY1VeRPxvbspI=
+golang.org/x/oauth2 v0.38.0/go.mod h1:IxwZNxUULJmpBFf9K/9NTMSIfZZuvuTy1gGxhigP/58=
 golang.org/x/sync v0.0.0-20190423024810-112230192c58/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.24.0 h1:iqiDrGoDgyuvAKrhLQthUEzU/R378N78gXbBjxed7oA=
