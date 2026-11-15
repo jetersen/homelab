@@ -4,7 +4,7 @@ go 1.27.3
 
 require (
 	codeberg.org/miekg/dns v0.6.132
-	github.com/DNSControl/dnscontrol/v5 v5.8.0
+	github.com/DNSControl/dnscontrol/v5 v5.8.1
 )
 
 require (

@@ -54,6 +54,8 @@ github.com/DNSControl/dnscontrol/v5 v5.7.2 h1:4wgyfmIIIaKFBlaHsbhuPfneIMavT8Jmm2
 github.com/DNSControl/dnscontrol/v5 v5.7.2/go.mod h1:76xbOF6lSpWt7z7IAlsObrF/uzB/4LbTCEJOnWjQx50=
 github.com/DNSControl/dnscontrol/v5 v5.8.0 h1:n3aF6Nlly2oxLuQ4eYuHrpVykHhtIDZhrgzGbuMnWi8=
 github.com/DNSControl/dnscontrol/v5 v5.8.0/go.mod h1:Fn3jMvKez4iQGkTF37HSxg3FkvMVN30vX/KdsageA5w=
+github.com/DNSControl/dnscontrol/v5 v5.8.1 h1:1hiSRe03fIzKM9jlz7MSIF7Ih+Z7n7+hnVYYoXQREK8=
+github.com/DNSControl/dnscontrol/v5 v5.8.1/go.mod h1:Fn3jMvKez4iQGkTF37HSxg3FkvMVN30vX/KdsageA5w=
 github.com/DisposaBoy/JsonConfigReader v0.0.0-20201129172854-99cf318d67e7 h1:AJKJCKcb/psppPl/9CUiQQnTG+Bce0/cIweD5w5Q7aQ=
 github.com/DisposaBoy/JsonConfigReader v0.0.0-20201129172854-99cf318d67e7/go.mod h1:GCzqZQHydohgVLSIqRKZeTt8IGb1Y4NaFfim3H40uUI=
 github.com/G-Core/gcore-dns-sdk-go v0.3.3 h1:McILJSbJ5nOcT0MI0aBYhEuufCF329YbqKwFIN0RjCI=
