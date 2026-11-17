@@ -33,6 +33,9 @@ during manual and CO2 ventilation; those demands do not restart its cycle.
 
 Only the controller should operate the physical fan. See the package for demand
 handling, entity mappings, thresholds, timers, and safety limits.
+When the fan is on without a known demand, a cancellable one-minute delay retries
+the controller until the reason changes. Unavailable demand helpers still block
+automatic shutoff.
 
 ## KVM certificate delivery
 

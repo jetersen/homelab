@@ -252,3 +252,29 @@ automation:
       - action: "{{ 'switch.turn_on' if fan_required else 'switch.turn_off' }}"
         target:
           entity_id: switch.utility_fan_plug
+  - id: ventilation_fan_retry
+    alias: Ventilation fan retry
+    description: Retry a missed shutoff only while the fan is on without a known demand.
+    mode: restart
+    triggers:
+      - trigger: state
+        entity_id: sensor.utility_fan_reason
+        to: null
+      - trigger: homeassistant
+        event: start
+    actions:
+      # A command sent during bridge startup can be lost without a state change.
+      # Restart mode cancels the pending delay when the reason changes.
+      - repeat:
+          while:
+            - condition: state
+              entity_id: sensor.utility_fan_reason
+              state: On (reason unknown)
+          sequence:
+            - delay: "00:01:00"
+            - condition: state
+              entity_id: sensor.utility_fan_reason
+              state: On (reason unknown)
+            - action: automation.trigger
+              target:
+                entity_id: automation.ventilation_fan_override

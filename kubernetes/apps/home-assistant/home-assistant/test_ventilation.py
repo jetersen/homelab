@@ -1,5 +1,7 @@
 """Exercise fan demand transitions in the matching Home Assistant Python runtime."""
 
+import asyncio
+import copy
 import tempfile
 import unittest
 from pathlib import Path
@@ -25,9 +27,13 @@ class VentilationTests(unittest.IsolatedAsyncioTestCase):
         self.hass = HomeAssistant(self.directory.name)
         loader.async_setup(self.hass)
         self.commands = []
+        self.dropped_commands = 0
 
         async def switch(service):
             self.commands.append(service.service)
+            if self.dropped_commands:
+                self.dropped_commands -= 1
+                return
             self.hass.states.async_set(FAN, "on" if service.service == "turn_on" else "off")
 
         self.hass.services.async_register("switch", "turn_on", switch)
@@ -48,6 +54,26 @@ class VentilationTests(unittest.IsolatedAsyncioTestCase):
             "automation",
         )
         self.reason = Template(PACKAGE["template"][0]["sensor"][0]["state"], self.hass)
+        retry = next(a for a in PACKAGE["automation"] if a["id"] == "ventilation_fan_retry")
+        actions = copy.deepcopy(retry["actions"])
+        # Exercise the retry loop without waiting a minute for each dropped command.
+        actions[0]["repeat"]["sequence"][0]["delay"] = {"milliseconds": 10}
+        self.retry = Script(
+            self.hass,
+            cv.SCRIPT_SCHEMA(actions),
+            "Ventilation retry regression",
+            "automation",
+            script_mode=retry["mode"],
+        )
+
+        async def reconcile(service):
+            self.assertEqual(service.data["entity_id"], ["automation.ventilation_fan_override"])
+            await self.controller.async_run(context=Context())
+            self.hass.states.async_set(
+                "sensor.utility_fan_reason", self.reason.async_render().strip()
+            )
+
+        self.hass.services.async_register("automation", "trigger", reconcile)
 
     async def asyncTearDown(self):
         await self.hass.async_stop()
@@ -149,6 +175,43 @@ class VentilationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.commands, ["turn_on"])
         await self.change(HUMIDITY, "off")
         self.assert_fan("off", "Off")
+
+    async def test_retry_repeats_lost_shutoff_until_confirmed(self):
+        self.hass.states.async_set(FAN, "on")
+        self.hass.states.async_set("sensor.utility_fan_reason", "On (reason unknown)")
+        self.dropped_commands = 2
+        await asyncio.wait_for(self.retry.async_run(context=Context()), timeout=2)
+        self.assert_fan("off", "Off")
+        self.assertEqual(self.commands, ["turn_off"] * 3)
+
+    async def test_retry_does_not_start_for_known_reasons(self):
+        for reason in ["Off", "CO2 ventilation", "Timed manual run", "Always on", "unavailable"]:
+            self.hass.states.async_set("sensor.utility_fan_reason", reason)
+            await self.retry.async_run(context=Context())
+        self.assertEqual(self.commands, [])
+
+    async def test_reason_change_cancels_pending_retry(self):
+        self.hass.states.async_set(FAN, "on")
+        self.hass.states.async_set("sensor.utility_fan_reason", "On (reason unknown)")
+        pending = asyncio.create_task(self.retry.async_run(context=Context()))
+        await asyncio.sleep(0)
+        self.hass.states.async_set(HUMIDITY, "on")
+        self.hass.states.async_set("sensor.utility_fan_reason", "Bathroom humidity / run-on")
+        # The state trigger restarts the script, cancelling its pending delay.
+        await self.retry.async_run(context=Context())
+        with self.assertRaises(asyncio.CancelledError):
+            await pending
+        self.assert_fan("on", "Bathroom humidity / run-on")
+        self.assertEqual(self.commands, [])
+
+    async def test_retry_keeps_unavailable_demand_guard(self):
+        self.hass.states.async_set(FAN, "on")
+        self.hass.states.async_set(HUMIDITY, "unavailable")
+        self.hass.states.async_set("sensor.utility_fan_reason", "On (reason unknown)")
+        with self.assertRaises(TimeoutError):
+            await asyncio.wait_for(self.retry.async_run(context=Context()), timeout=0.05)
+        self.assert_fan("on", "On (reason unknown)")
+        self.assertEqual(self.commands, [])
 
 
 if __name__ == "__main__":
