@@ -3,7 +3,7 @@ module github.com/jetersen/homelab/infrastructure/dns/compat
 go 1.27.3
 
 require (
-	codeberg.org/miekg/dns v0.6.132
+	codeberg.org/miekg/dns v0.6.133
 	github.com/DNSControl/dnscontrol/v5 v5.8.2
 )
 
