@@ -13,6 +13,7 @@ configMapGenerator:
   - name: homelab-alerts-dashboard
     files:
       - alerts-dashboard.json
+      - agent-observability.json
     options:
       disableNameSuffixHash: true
       labels:

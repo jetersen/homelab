@@ -1,0 +1,11 @@
+[Unit]
+Description=Back up agent session history
+
+[Timer]
+OnBootSec=10min
+OnUnitInactiveSec=6h
+Persistent=true
+RandomizedDelaySec=5min
+
+[Install]
+WantedBy=timers.target

@@ -71,6 +71,11 @@ spec:
             access: proxy
             jsonData:
               timeInterval: 60s
+          - name: VictoriaTraces
+            uid: agent-traces
+            type: jaeger
+            url: http://agent-traces:10428/select/jaeger/
+            access: proxy
           - name: Alertmanager
             uid: homelab-alertmanager
             type: alertmanager

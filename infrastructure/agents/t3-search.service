@@ -1,0 +1,15 @@
+[Unit]
+Description=Refresh T3 conversations in private session search
+After=agentsview.service
+
+[Service]
+Type=oneshot
+Environment=AGENTSVIEW_DATA_DIR=/media/games/agent-observability/search
+Environment=AGENTSVIEW_TELEMETRY_ENABLED=0
+Environment=GOMEMLIMIT=1GiB
+ExecStart=/usr/bin/env python3 %h/.local/share/agent-observability/t3_search.py
+UMask=0077
+CPUWeight=20
+IOWeight=20
+MemoryMax=2G
+TimeoutStartSec=30min

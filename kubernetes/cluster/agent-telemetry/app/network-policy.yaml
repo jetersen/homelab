@@ -1,0 +1,15 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: agent-collector
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: agent-collector
+  ingress:
+    - fromCIDR: [192.168.1.128/32]
+      toPorts:
+        - ports: [{port: "4318", protocol: TCP}]
+    - fromEntities: [host]
+      toPorts:
+        - ports: [{port: "13133", protocol: TCP}]

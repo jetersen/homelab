@@ -1,0 +1,81 @@
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+  file_storage:
+    directory: /data/queue
+    create_directory: true
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 384
+    spike_limit_mib: 64
+  transform/privacy:
+    error_mode: propagate
+    metric_statements:
+      - context: resource
+        statements:
+          - keep_keys(attributes, ["service.name", "service.version", "host.name"])
+      - context: datapoint
+        statements:
+          - keep_keys(attributes, ["model", "model.name", "tool_name", "tool.name", "type", "token.type", "status", "success", "decision", "reason", "error.type", "http.response.status_code"])
+    log_statements:
+      - context: resource
+        statements:
+          - keep_keys(attributes, ["service.name", "service.version", "host.name"])
+      - context: log
+        statements:
+          - set(body, "agent operational event")
+          - keep_keys(attributes, ["event.name", "event.kind", "event_name", "conversation.id", "session.id", "thread.id", "run.id", "model", "model.name", "tool_name", "tool.name", "call_id", "duration_ms", "success", "decision", "source", "attempt", "http.response.status_code", "input_tokens", "output_tokens", "input_token_count", "output_token_count", "cached_token_count", "reasoning_token_count", "cost_usd", "error.type"])
+    trace_statements:
+      - context: resource
+        statements:
+          - keep_keys(attributes, ["service.name", "service.version", "host.name"])
+      - context: span
+        statements:
+          - keep_keys(attributes, ["conversation.id", "session.id", "thread.id", "run.id", "model", "gen_ai.request.model", "gen_ai.response.model", "gen_ai.usage.input_tokens", "gen_ai.usage.output_tokens", "tool.name", "tool_name", "success", "error.type", "http.response.status_code"])
+          - set(status.message, "")
+      - context: spanevent
+        statements:
+          - set(name, "agent event")
+          - keep_keys(attributes, ["event.name", "error.type"])
+  deltatocumulative:
+    max_stale: 1h
+  batch:
+    timeout: 5s
+    send_batch_size: 512
+    send_batch_max_size: 1024
+exporters:
+  otlp_http/metrics:
+    metrics_endpoint: http://vmsingle-vm:8428/opentelemetry/v1/metrics
+    sending_queue: {storage: file_storage, queue_size: 1000}
+    retry_on_failure: {max_elapsed_time: 0s}
+  otlp_http/logs:
+    logs_endpoint: http://victoria-logs-single-server:9428/insert/opentelemetry/v1/logs
+    headers:
+      VL-Stream-Fields: service.name,host.name
+    sending_queue: {storage: file_storage, queue_size: 1000}
+    retry_on_failure: {max_elapsed_time: 0s}
+  otlp_http/traces:
+    traces_endpoint: http://agent-traces:10428/insert/opentelemetry/v1/traces
+    sending_queue: {storage: file_storage, queue_size: 1000}
+    retry_on_failure: {max_elapsed_time: 0s}
+service:
+  extensions: [health_check, file_storage]
+  pipelines:
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, transform/privacy, deltatocumulative, batch]
+      exporters: [otlp_http/metrics]
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, transform/privacy, batch]
+      exporters: [otlp_http/logs]
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, transform/privacy, batch]
+      exporters: [otlp_http/traces]

@@ -1,0 +1,12 @@
+[Unit]
+Description=Private session search path on shared Tailscale HTTPS listener
+After=t3code.service agentsview.service
+PartOf=t3code.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/env tailscale serve --bg --https=443 --set-path=/sessions http://127.0.0.1:8120/sessions
+
+[Install]
+WantedBy=default.target

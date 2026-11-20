@@ -1,0 +1,24 @@
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+metadata:
+  name: agent-sessions
+spec:
+  groups:
+    - name: agent-sessions
+      rules:
+        - alert: AgentSessionIndexStale
+          expr: (time() - last_over_time(agent_session_index_last_success_timestamp_seconds[24h]) > 1800) or absent_over_time(agent_session_index_last_success_timestamp_seconds[24h])
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: Agent session search has not refreshed successfully
+            description: Check the t3-search user service and its timer on the agent host.
+        - alert: AgentSessionBackupStale
+          expr: (time() - last_over_time(agent_backup_last_success_timestamp_seconds[7d]) > 43200) or absent_over_time(agent_backup_last_success_timestamp_seconds[24h])
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: Agent session offsite backup is overdue
+            description: Check the agent-backup user service, credentials, and repository access.

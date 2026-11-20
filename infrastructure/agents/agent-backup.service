@@ -1,0 +1,14 @@
+[Unit]
+Description=Encrypted offsite agent sessions and consistent T3 database backup
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/git/homelab
+Environment=BACKUP_S3_CONFIGURED=true
+ExecStart=/usr/bin/env npm exec -- varlock run -- python3 %h/.local/share/agent-observability/backup.py
+UMask=0077
+CPUWeight=20
+IOWeight=20
+MemoryMax=2G
+TimeoutStartSec=2h

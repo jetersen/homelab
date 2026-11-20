@@ -1,0 +1,147 @@
+{
+  "uid": "agent-observability",
+  "title": "Agent observability",
+  "schemaVersion": 39,
+  "version": 1,
+  "tags": [
+    "agents"
+  ],
+  "timezone": "browser",
+  "refresh": "1m",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "T3 threads",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "last_over_time(agent_t3_threads_total[24h])"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "T3 explicitly marked settled",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "last_over_time(agent_t3_threads_explicitly_settled[24h])"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Session index age",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 7,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "time() - last_over_time(agent_session_index_last_success_timestamp_seconds[24h])"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Offsite backup age",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 7,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "time() - last_over_time(agent_backup_last_success_timestamp_seconds[7d])"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Agent process starts",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "P4169E866C3094E38"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 14,
+        "w": 12,
+        "h": 7
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (\"service.name\") (increase({__name__=\"codex.process.start\"}[$__rate_interval]))"
+        }
+      ]
+    }
+  ]
+}
