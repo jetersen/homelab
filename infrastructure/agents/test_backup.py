@@ -1,12 +1,14 @@
 """Verify snapshots are self-contained and preserve the source."""
 
+import hashlib
+import json
 import sqlite3
 import tempfile
 import unittest
 from contextlib import closing
 from pathlib import Path
 
-from backup import snapshot_database
+from backup import snapshot_database, write_snapshot_manifest
 
 
 class SnapshotTests(unittest.TestCase):
@@ -29,6 +31,25 @@ class SnapshotTests(unittest.TestCase):
                 )
             self.assertFalse(Path(str(target) + "-wal").exists())
             self.assertFalse(target.with_suffix(".partial").exists())
+
+    def test_manifest_can_validate_recovered_database_independently(self):
+        with tempfile.TemporaryDirectory() as directory:
+            database = Path(directory) / "statev2.sqlite"
+            tables = [
+                "projection_projects",
+                "orchestration_v2_projection_threads",
+                "orchestration_v2_projection_messages",
+            ]
+            with closing(sqlite3.connect(database)) as db:
+                for table in tables:
+                    db.execute("CREATE TABLE " + table + " (id INTEGER)")
+                    db.execute("INSERT INTO " + table + " VALUES (1)")
+                db.commit()
+            write_snapshot_manifest(database)
+            manifest = json.loads((database.parent / "snapshot-manifest.json").read_text())
+            self.assertEqual(manifest["database"], database.name)
+            self.assertEqual(manifest["sha256"], hashlib.sha256(database.read_bytes()).hexdigest())
+            self.assertEqual(manifest["counts"], {table: 1 for table in tables})
 
 
 if __name__ == "__main__":

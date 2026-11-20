@@ -1,5 +1,6 @@
 """Consistent T3 snapshots and encrypted agent transcript backups to Kopia S3."""
 
+import hashlib
 import json
 import os
 import shutil
@@ -27,6 +28,28 @@ def snapshot_database(source, target):
                 raise RuntimeError("T3 backup integrity check failed")
             dest.execute("PRAGMA journal_mode=DELETE").fetchone()
     partial.replace(target)
+
+
+def write_snapshot_manifest(database):
+    digest = hashlib.sha256()
+    with database.open("rb") as source:
+        while chunk := source.read(4 * 1024 * 1024):
+            digest.update(chunk)
+    tables = [
+        "projection_projects",
+        "orchestration_v2_projection_threads",
+        "orchestration_v2_projection_messages",
+    ]
+    with closing(sqlite3.connect(database.as_uri() + "?mode=ro", uri=True)) as db:
+        counts = {
+            table: db.execute("SELECT count(*) FROM " + table).fetchone()[0] for table in tables
+        }
+    manifest = {"database": database.name, "sha256": digest.hexdigest(), "counts": counts}
+    target = database.parent / "snapshot-manifest.json"
+    temporary = target.with_suffix(".partial")
+    temporary.write_text(json.dumps(manifest) + "\n")
+    temporary.replace(target)
+    return manifest
 
 
 def main():
@@ -70,6 +93,7 @@ def main():
     stage.mkdir(exist_ok=True)
     source = home / ".t3/userdata"
     snapshot_database(source / "statev2.sqlite", stage / "statev2.sqlite")
+    write_snapshot_manifest(stage / "statev2.sqlite")
     for name in ["environment-id", "settings.json", "keybindings.json"]:
         if (source / name).exists():
             shutil.copy2(source / name, stage / name)

@@ -32,10 +32,13 @@ through Varlock. Initialize a separate Kopia repository prefix before enabling
 the timer. Retain the repository password and S3 access independently of the
 machine. The service takes an online SQLite backup within a read transaction,
 checks it, and snapshots it alongside original transcript and attachment roots.
+A snapshot manifest records the database checksum and project, thread, and message
+counts so a restored copy can be checked without access to the original machine.
 It excludes working trees, repository contents, and unrelated application state.
 
 For recovery, stop T3 before replacing its database. Restore the T3 snapshot and
-attachments using Kopia, run SQLite `PRAGMA quick_check`, and preserve the matching
+attachments using Kopia, run SQLite `PRAGMA quick_check`, verify the checksum and counts against the
+snapshot manifest, and preserve the matching
 environment ID. Restore transcripts to their original agent roots. The search
 index is disposable and can be rebuilt. Restore tests must use a separate
 scratch directory and must never overwrite live data.
