@@ -1,0 +1,19 @@
+[Unit]
+Description=Local Nomic embeddings for agent session search
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=%h/.kenn/embeddings/bin/v0.48.2-face.6/kennembed -data-dir %h/.kenn/embeddings -listen 127.0.0.1:18121
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+Nice=10
+CPUWeight=10
+IOWeight=10
+MemoryHigh=3G
+MemoryMax=4G
+
+[Install]
+WantedBy=default.target

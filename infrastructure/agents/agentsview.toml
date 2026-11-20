@@ -14,7 +14,7 @@ document_prefix = "search_document: "
 default_server = "shared"
 
 [vector.embeddings.servers.shared]
-local = true
+endpoint = "http://127.0.0.1:18121/v1"
 concurrency = 1
 batch_size = 4
 timeout = "120s"

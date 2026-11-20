@@ -30,14 +30,14 @@ processors:
       - context: log
         statements:
           - set(body, "agent operational event")
-          - keep_keys(attributes, ["event.name", "event.kind", "event_name", "conversation.id", "session.id", "thread.id", "run.id", "model", "model.name", "tool_name", "tool.name", "call_id", "duration_ms", "success", "decision", "source", "attempt", "http.response.status_code", "input_tokens", "output_tokens", "input_token_count", "output_token_count", "cached_token_count", "reasoning_token_count", "cost_usd", "error.type"])
+          - keep_keys(attributes, ["event.name", "event.kind", "event_name", "conversation.id", "session.id", "thread.id", "run.id", "orchestration_v2.thread_id", "orchestration_v2.run_id", "model", "model.name", "tool_name", "tool.name", "call_id", "duration_ms", "success", "decision", "source", "attempt", "http.response.status_code", "input_tokens", "output_tokens", "input_token_count", "output_token_count", "cached_token_count", "reasoning_token_count", "cost_usd", "error.type"])
     trace_statements:
       - context: resource
         statements:
           - keep_keys(attributes, ["service.name", "service.version", "host.name"])
       - context: span
         statements:
-          - keep_keys(attributes, ["conversation.id", "session.id", "thread.id", "run.id", "model", "gen_ai.request.model", "gen_ai.response.model", "gen_ai.usage.input_tokens", "gen_ai.usage.output_tokens", "tool.name", "tool_name", "success", "error.type", "http.response.status_code"])
+          - keep_keys(attributes, ["conversation.id", "session.id", "thread.id", "run.id", "orchestration_v2.thread_id", "orchestration_v2.run_id", "model", "gen_ai.request.model", "gen_ai.response.model", "gen_ai.usage.input_tokens", "gen_ai.usage.output_tokens", "tool.name", "tool_name", "success", "error.type", "http.response.status_code"])
           - set(status.message, "")
       - context: spanevent
         statements:

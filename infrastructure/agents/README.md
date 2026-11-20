@@ -7,8 +7,12 @@ is required. The archive retains conversation text but omits tool payloads.
 Run `python3 install.py` to install the pinned AgentsView release and Kopia under
 `~/.local/share/agent-observability/bin`. Verify release checksums before use.
 The installer also copies the user units and initial configuration. Enable the
-search service, HTTPS route, and refresh timer with `systemctl --user enable --now
-agentsview.service agent-session-route.service t3-search.timer`. The data filesystem must be mounted before
+embedding service, search service, HTTPS route, and refresh timer with `systemctl --user enable --now
+agent-embeddings.service agentsview.service agent-session-route.service t3-search.timer`. Bootstrap the shared runtime and Nomic model through AgentsView’s built-in
+local provider before enabling `agent-embeddings.service`. The unit pins the
+runtime path; update it together with the model provider when upgrading. Restore
+the tracked endpoint configuration after bootstrap so systemd owns the runtime.
+The data filesystem must be mounted before
 starting the services. Keep it private to the service user.
 
 `t3_search.py` reads the T3 SQLite database without modifying it and imports

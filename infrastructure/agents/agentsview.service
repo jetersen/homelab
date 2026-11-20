@@ -1,6 +1,7 @@
 [Unit]
 Description=Private agent session search and archive
-After=network-online.target
+After=network-online.target agent-embeddings.service
+Wants=agent-embeddings.service
 
 [Service]
 Type=simple
