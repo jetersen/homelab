@@ -1,4 +1,5 @@
 [Unit]
+ConditionPathIsMountPoint=/media/games
 Description=Refresh T3 conversations in private session search
 After=agentsview.service
 

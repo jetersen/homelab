@@ -1,4 +1,5 @@
 [Unit]
+ConditionPathIsMountPoint=/media/games
 Description=Private agent session search and archive
 After=network-online.target agent-embeddings.service
 Wants=agent-embeddings.service

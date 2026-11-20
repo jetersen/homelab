@@ -1,4 +1,5 @@
 [Unit]
+ConditionPathIsMountPoint=/media/games
 Description=Encrypted offsite agent sessions and consistent T3 database backup
 After=network-online.target
 
@@ -10,5 +11,6 @@ ExecStart=/usr/bin/env npm exec -- varlock run -- python3 %h/.local/share/agent-
 UMask=0077
 CPUWeight=20
 IOWeight=20
-MemoryMax=2G
+MemoryHigh=3G
+MemoryMax=4G
 TimeoutStartSec=2h
