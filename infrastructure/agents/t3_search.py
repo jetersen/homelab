@@ -10,6 +10,7 @@ import os
 import sqlite3
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 import zipfile
 from pathlib import Path
@@ -57,6 +58,62 @@ def conversation(thread, messages, environment):
     }
 
 
+def post_import(batch, replace=()):
+    archive = io.BytesIO()
+    with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as zipped:
+        zipped.writestr("conversations.json", json.dumps(batch))
+    boundary = "agent-session-import"
+    body = (
+        (
+            f'--{boundary}\r\nContent-Disposition: form-data; name="file"; '
+            'filename="conversations.zip"\r\nContent-Type: application/zip\r\n\r\n'
+        ).encode()
+        + archive.getvalue()
+        + f"\r\n--{boundary}--\r\n".encode()
+    )
+    query = urllib.parse.urlencode([("replace", sid) for sid in replace])
+    request = urllib.request.Request(
+        "http://127.0.0.1:8120/sessions/api/v1/import/chatgpt" + ("?" + query if query else ""),
+        data=body,
+        headers={
+            "Content-Type": f"multipart/form-data; boundary={boundary}",
+            "Origin": "http://127.0.0.1:8120",
+        },
+    )
+    with urllib.request.urlopen(request, timeout=180) as response:
+        result = json.load(response)
+    return result
+
+
+def import_batch(batch, post=post_import):
+    result = post(batch)
+    errors = result.get("errors", 0)
+    if not errors:
+        return
+    refusals = result.get("refusals", [])
+    expected = {"chatgpt:" + item["id"]: item for item in batch if item["id"].startswith("t3-")}
+    if len(refusals) != errors or len({r.get("session_id") for r in refusals}) != errors:
+        raise RuntimeError("Unexpected import errors; cursor preserved")
+    replacements = []
+    for refusal in refusals:
+        sid = refusal.get("session_id")
+        if sid not in expected:
+            raise RuntimeError("Import refusal does not match this T3 batch; cursor preserved")
+        reason = refusal.get("reason")
+        if reason in ("diverged", "shorter_export"):
+            replacements.append(sid)
+        elif reason != "trashed":
+            raise RuntimeError("T3 conversation import failed; cursor preserved")
+    # T3 is authoritative for its derived search copies. AgentsView's supported
+    # replacement path retains the previous version in trash. Never resurrect
+    # copies a user has explicitly trashed, or replace an unrelated session.
+    if replacements:
+        edited = [expected[sid] for sid in replacements]
+        retried = post(edited, replace=replacements)
+        if retried.get("errors", 0):
+            raise RuntimeError("T3 conversation replacement failed; cursor preserved")
+
+
 def main():
     for attempt in range(90):
         try:
@@ -100,34 +157,13 @@ def main():
                     (thread["id"],),
                 )
             ]
+            if any(message.get("streaming") for message in messages):
+                continue
             item = conversation(thread, messages, environment)
             if item["mapping"]:
                 batch.append(item)
         if batch:
-            archive = io.BytesIO()
-            with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as zipped:
-                zipped.writestr("conversations.json", json.dumps(batch))
-            boundary = "agent-session-import"
-            body = (
-                (
-                    f'--{boundary}\r\nContent-Disposition: form-data; name="file"; '
-                    'filename="conversations.zip"\r\nContent-Type: application/zip\r\n\r\n'
-                ).encode()
-                + archive.getvalue()
-                + f"\r\n--{boundary}--\r\n".encode()
-            )
-            request = urllib.request.Request(
-                "http://127.0.0.1:8120/sessions/api/v1/import/chatgpt",
-                data=body,
-                headers={
-                    "Content-Type": f"multipart/form-data; boundary={boundary}",
-                    "Origin": "http://127.0.0.1:8120",
-                },
-            )
-            with urllib.request.urlopen(request, timeout=180) as response:
-                result = json.load(response)
-            if result.get("errors", 0):
-                raise RuntimeError("T3 conversation import reported refusals; cursor preserved")
+            import_batch(batch)
             exported += len(batch)
     records = [
         json.loads(row[0])

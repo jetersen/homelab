@@ -18,8 +18,11 @@ starting the services. Keep it private to the service user.
 `t3_search.py` reads the T3 SQLite database without modifying it and imports
 conversations through AgentsView's supported ChatGPT exchange API. These appear
 as ChatGPT imports with a T3 title prefix and a link to the original thread.
-The importer excludes streaming messages and advances its cursor only after all
-imports succeed. A copied completion marker is informational; review and mark
+The importer defers conversations while messages are streaming and advances its
+cursor only after all imports succeed. When T3 edits or removes existing turns,
+the importer replaces only the affected derived search copy through AgentsView’s
+API, which retains its previous version in trash. Copies explicitly trashed by
+the user stay hidden; transient or unrecognized failures still block the cursor. A copied completion marker is informational; review and mark
 threads settled in T3. A completed agent run does not establish task completion.
 
 For subpath hosting, use AgentsView's `--base-path` and an origin-only
