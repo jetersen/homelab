@@ -11,7 +11,7 @@ runs:
       id: bundled
       shell: bash
       run: echo "build=$(bash infrastructure/dns/install.sh --needs-build)" >> "$GITHUB_OUTPUT"
-    - uses: https://github.com/actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+    - uses: https://github.com/actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
       if: steps.bundled.outputs.build == 'true'
       with:
         go-version-file: infrastructure/dns/compat/go.mod
