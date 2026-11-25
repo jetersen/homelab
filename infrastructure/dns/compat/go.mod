@@ -3,7 +3,7 @@ module github.com/jetersen/homelab/infrastructure/dns/compat
 go 1.27.3
 
 require (
-	codeberg.org/miekg/dns v0.6.133
+	codeberg.org/miekg/dns v0.6.140
 	github.com/DNSControl/dnscontrol/v5 v5.9.0
 )
 
@@ -39,7 +39,7 @@ require (
 	github.com/xddxdd/ottoext v0.0.0-20221109171055-210517fa4419 // indirect
 	golang.org/x/crypto v0.59.0 // indirect
 	golang.org/x/mod v0.43.0 // indirect
-	golang.org/x/net v0.62.0 // indirect
+	golang.org/x/net v0.63.0 // indirect
 	golang.org/x/oauth2 v0.38.0 // indirect
 	golang.org/x/sync v0.25.0 // indirect
 	golang.org/x/sys v0.50.0 // indirect
