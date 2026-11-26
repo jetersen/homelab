@@ -84,6 +84,7 @@ spec:
           configMap:
             name: forgejo-ci-config
   volumeClaimTemplates:
+    # Initial size only: templates are immutable. Resize ordinal zero in docker-storage.yaml.
     - metadata:
         name: docker-data
       spec:

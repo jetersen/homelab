@@ -55,8 +55,11 @@ into multiple daemons. [Startup](docker-entrypoint.sh) removes stale stopped
 containers, networks, and job volumes before becoming ready, while retaining image
 layers and volumes labelled `ci.persistent=true`. Cache budgets are defined in the
 backend configuration; startup and periodic cleanup are defined in the entrypoint.
-The entrypoint also trims the Docker filesystem at startup and daily so deleted
+Unused images older than a day are pruned when free space falls below 25%.
+The entrypoint also trims the Docker filesystem at startup, hourly, and after pruning so deleted
 blocks return to the thin pool. Monitor PVC and thin-pool capacity.
+Resize the existing backend claim in [docker-storage.yaml](docker-storage.yaml);
+the StatefulSet claim template supplies only the initial size and is immutable.
 
 The backend uses `OnDelete` updates to avoid restarting the shared engine during
 CI. For an engine or configuration update, pause KEDA, let active Kubernetes jobs

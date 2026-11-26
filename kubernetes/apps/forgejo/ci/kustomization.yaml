@@ -6,6 +6,7 @@ resources:
   - dotfiles-scaledjob.yaml
   - dotfiles-credentials.sops.yaml
   - docker-backend.yaml
+  - docker-storage.yaml
   - networkpolicy.yaml
   - credentials.sops.yaml
 configMapGenerator:
