@@ -3,7 +3,7 @@ module forgejo.jetersen.dev/jetersen/homelab/backup-helper
 go 1.27.1
 
 require (
-	github.com/eclipse/paho.mqtt.golang v1.5.1
+	github.com/eclipse/paho.mqtt.golang v1.5.2
 	modernc.org/sqlite v1.63.0
 )
 
